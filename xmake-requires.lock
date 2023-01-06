@@ -6,12 +6,12 @@
         ["cmake#31fecfc4"] = {
             repo = {
                 branch = "master",
-                commit = "3774c705b83a323e66b789ce2475925e6e85cd9a",
+                commit = "846377ed776dd579655c4cd00e211d8dc4462315",
                 url = "https://github.com/xmake-io/xmake-repo.git"
             },
             version = "3.24.2"
         },
-        ["commonlibsse-ng#6cab6700"] = {
+        ["commonlibsse-ng#20cfb5c0"] = {
             repo = {
                 branch = "master",
                 commit = "846377ed776dd579655c4cd00e211d8dc4462315",
@@ -42,6 +42,14 @@
                 url = "https://github.com/xmake-io/xmake-repo.git"
             },
             version = "v1.11.0"
+        },
+        ["toml++#31fecfc4"] = {
+            repo = {
+                branch = "master",
+                commit = "cd73fa71f4bb4b3a6f2b600c7a3c012be17d17f7",
+                url = "https://github.com/xmake-io/xmake-repo.git"
+            },
+            version = "v3.2.0"
         }
     }
 }

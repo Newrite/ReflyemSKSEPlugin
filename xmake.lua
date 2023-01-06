@@ -1,8 +1,8 @@
 set_xmakever("2.7.2")
 
 -- project
-set_project("template-commonlibsse-ng")
-set_version("0.0.0")
+set_project("Reflyem")
+set_version("1.0.0")
 set_license("MIT")
 set_languages("c++20")
 set_optimize("faster")
@@ -24,21 +24,23 @@ add_rules("plugin.vsxmake.autoupdate")
 set_policy("package.requires_lock", true)
 
 -- packages
-add_requires("fmt", "spdlog")
-add_requires("commonlibsse-ng", { configs = { skyrim_vr = false }})
+add_requires("fmt", "spdlog", "toml++")
+add_requires("commonlibsse-ng", { configs = { skyrim_vr = false, skyrim_ae = false }})
 
 -- includes
 includes("res/package.lua")
 
 -- targets
-target("template-plugin")
-    add_packages("fmt", "spdlog", "commonlibsse-ng")
+target("Reflyem")
+    add_packages("fmt", "spdlog", "toml++", "commonlibsse-ng")
 
     add_rules("@commonlibsse-ng/plugin", {
-        name = "template-plugin",
-        author = "Qudix",
-        description = "SKSE64 plugin template using CommonLibSSE-NG"
+        name = "Reflyem",
+        author = "Newrite",
+        description = "Reflyem additions"
     })
+
+    set_targetdir("G:\\MO2Enderal\\mods\\Reflyem\\SKSE\\Plugins")
 
     add_files("src/plugin/**.cpp")
     add_headerfiles("src/plugin/**.h")
