@@ -32,6 +32,7 @@ namespace reflyem
   constexpr auto CastOnCrit = "CastOnCrit";
   constexpr auto FormListSpellsId = "FormListSpellsId";
   constexpr auto FormListKeywordId = "FormListKeywordId";
+  constexpr auto CastOnHit = "CastOnHit";
 
   const config& config::get_singleton() noexcept
   {
@@ -150,6 +151,18 @@ namespace reflyem
           data_handler->LookupForm<RE::BGSListForm>(cnc_form_idkw.value(), instance.mod_name);
         instance.cast_on_crit_formlist_spells =
           data_handler->LookupForm<RE::BGSListForm>(cnc_form_idsp.value(), instance.mod_name);
+      }
+
+      logger::info("config init: cast on hit");
+      instance.cast_on_hit_enable = tbl[CastOnHit][Enable].value_or(false);
+      if (instance.cast_on_hit_enable)
+      {
+        auto cnh_form_idkw = tbl[CastOnHit][FormListKeywordId].value<RE::FormID>();
+        auto cnh_form_idsp = tbl[CastOnHit][FormListSpellsId].value<RE::FormID>();
+        instance.cast_on_hit_formlist_needkw =
+          data_handler->LookupForm<RE::BGSListForm>(cnh_form_idkw.value(), instance.mod_name);
+        instance.cast_on_hit_formlist_spells =
+          data_handler->LookupForm<RE::BGSListForm>(cnh_form_idsp.value(), instance.mod_name);
       }
 
       logger::info("finish init config");

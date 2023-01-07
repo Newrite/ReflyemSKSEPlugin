@@ -6,50 +6,6 @@ namespace reflyem
   namespace weapon_crit
   {
 
-    auto cast_on_crit_handle(
-      RE::TESForm* keyword,
-      RE::TESForm* spell,
-      RE::Actor& target,
-      RE::Actor& caster) -> void
-    {
-      if (!keyword || !spell) { return; }
-
-      auto keyword_ptr = keyword->As<RE::BGSKeyword>();
-      auto spell_ptr = spell->As<RE::SpellItem>();
-
-      if (!keyword_ptr || !spell_ptr) { return; }
-
-      if (spell_ptr->data.delivery == RE::MagicSystem::Delivery::kSelf)
-      {
-        caster
-          .GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)
-          ->CastSpellImmediate(
-            spell_ptr,
-            true,
-            &caster,
-            1.00f,
-            false,
-            0.0f,
-            &caster
-          );
-      }
-      else
-      {
-        caster
-          .GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)
-          ->CastSpellImmediate(
-            spell_ptr,
-            true,
-            &target,
-            1.00f,
-            false,
-            0.0f,
-            &caster
-          );
-      }
-      
-    }
-
     auto on_weapon_hit(
       RE::Actor* target,
       RE::HitData& hit_data,
@@ -86,7 +42,7 @@ namespace reflyem
             config.cast_on_crit_formlist_spells->forms.size();
           for (std::uint32_t index = 0u; index < length_kw && index < length_sp; index++)
           {
-            cast_on_crit_handle(
+            reflyem::core::cast_on_handle(
               config.cast_on_crit_formlist_needkw->forms[index],
               config.cast_on_crit_formlist_spells->forms[index],
               *target,

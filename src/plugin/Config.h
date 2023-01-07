@@ -60,7 +60,11 @@ namespace reflyem
     bool cast_on_crit_enable;
     RE::BGSListForm* cast_on_crit_formlist_spells;
     RE::BGSListForm* cast_on_crit_formlist_needkw;
-    
+
+    // cast on hit
+    bool cast_on_hit_enable;
+    RE::BGSListForm* cast_on_hit_formlist_spells;
+    RE::BGSListForm* cast_on_hit_formlist_needkw;
 
   };
 

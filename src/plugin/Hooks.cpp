@@ -1,10 +1,12 @@
 #include "Hooks.h"
+#include "Core.h"
 #include "Vampirism.h"
 #include "MagicShield.h"
 #include "PetrifiedBlood.h"
 #include "CheatDeath.h"
 #include "SpeedCasting.h"
-#include "Core.h"
+#include "CastOnHit.h"
+#include "WeaponCrit.h"
 
 namespace hooks
 {
@@ -50,6 +52,16 @@ namespace hooks
     }
 
     auto& config = reflyem::config::get_singleton();
+
+    if (config.weapon_crit_enable)
+    {
+      reflyem::weapon_crit::on_weapon_hit(target, hit_data, config);
+    }
+
+    if (config.cast_on_hit_enable)
+    {
+      reflyem::cast_on_hit::on_weapon_hit(target, hit_data, config);
+    }
 
     if (config.cheat_death_enable)
     {
