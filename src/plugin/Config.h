@@ -29,6 +29,19 @@ namespace reflyem
     bool vampirism_enable;
     RE::ActorValue vampirism_av;
 
+    // vampirism magick effect
+    // health
+    bool vampirism_mgef_health_enable;
+    RE::BGSKeyword* vampirism_mgef_health_keyword;
+
+    // stamina
+    bool vampirism_mgef_stamina_enable;
+    RE::BGSKeyword* vampirism_mgef_stamina_keyword;
+
+    // magicka
+    bool vampirism_mgef_magicka_enable;
+    RE::BGSKeyword* vampirism_mgef_magicka_keyword;
+
     // FenixSpeedCasting addon
     // speed casting
     bool speed_casting_enable;
@@ -36,6 +49,18 @@ namespace reflyem
     RE::ActorValue speed_casting_av;
     float speed_casting_high;
     float speed_casting_low;
+
+    // weapon crit
+    bool weapon_crit_enable;
+    RE::ActorValue weapon_crit_chance_av;
+    RE::ActorValue weapon_crit_damage_av;
+    std::int32_t weapon_crit_high;
+
+    // cast on crit
+    bool cast_on_crit_enable;
+    RE::BGSListForm* cast_on_crit_formlist_spells;
+    RE::BGSListForm* cast_on_crit_formlist_needkw;
+    
 
   };
 

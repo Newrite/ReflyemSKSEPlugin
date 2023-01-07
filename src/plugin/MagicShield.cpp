@@ -1,5 +1,5 @@
 #include "MagicShield.h"
-#include "Utils.h"
+#include "Core.h"
 
 namespace reflyem
 {
@@ -17,7 +17,7 @@ namespace reflyem
       if (magic_shield_percent <= 0.f) { return; }
       if (magic_shield_percent > 100.f) { magic_shield_percent = 100.f; }
 
-      auto damage_mult = reflyem::utils::getting_damage_mult(*target);
+      auto damage_mult = reflyem::core::getting_damage_mult(*target);
 
       auto absorb_damage = (hit_data.totalDamage * damage_mult) * (magic_shield_percent / 100.f);
       auto magicka = target->GetActorValue(RE::ActorValue::kMagicka);
@@ -26,7 +26,7 @@ namespace reflyem
       auto magicka_damage = 0.f;
       auto cost_per_damage =
         reflyem
-        ::utils
+        ::core
         ::get_effect_with_keyword_value(*target, *config.magic_shield_cost_keyword).value_or(1.f);
 
       for (auto absorb = 0.f; absorb < absorb_damage; absorb++)

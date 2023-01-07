@@ -1,4 +1,5 @@
 #include "Hooks.h"
+#include "ActionEventHandler.h"
 
 auto init_logger() -> void
 {
@@ -65,6 +66,9 @@ SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 
   SKSE::Init(a_skse);
   initialize_messaging();
+  auto source = SKSE::GetActionEventSource();
+  auto action_event_handler = reflyem::action_event_handler::get_singleton();
+  source->AddEventSink(action_event_handler);
 
   logger::info("{} loaded"sv, plugin->GetName());
 

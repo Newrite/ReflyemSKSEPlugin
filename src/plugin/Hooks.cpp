@@ -4,15 +4,31 @@
 #include "PetrifiedBlood.h"
 #include "CheatDeath.h"
 #include "SpeedCasting.h"
+#include "Core.h"
 
 namespace hooks
 {
+
+  static float timer = 0.f;
+
+  auto on_adjust_active_effect::adjust_active_effect(RE::ActiveEffect* a_this, float a_power, bool a_arg3) -> void
+  {
+    logger::info("adjust effect, magnitude {}: power {}: arg3 {}:", a_this->magnitude, a_power, a_arg3);
+    _adjust_active_effect(a_this, a_power, a_arg3);
+    return;
+  }
+
   auto on_main_update::main_update(RE::Main* a_this, float a2) -> void
   {
+
+    auto r_int = reflyem::core::get_rundom_int();
+    logger::info("update standart: rint {}: timer: {} delta: {}", r_int, timer, a2);
 
     timer += a2;
     if (timer >= 0.5f)
     {
+      timer = 0.f;
+      logger::info("update timer: {}", timer);
       auto& config = reflyem::config::get_singleton();
 
       if (config.speed_casting_enable)
@@ -50,10 +66,7 @@ namespace hooks
       reflyem::magic_shield::on_weapon_hit(target, hit_data, config);
     }
 
-    if (config.vampirism_enable)
-    {
-      reflyem::vampirism::on_weapon_hit(target, hit_data, config);
-    }
+    reflyem::vampirism::on_weapon_hit(target, hit_data, config);
 
     _weapon_hit(target, hit_data);
     return;
@@ -66,6 +79,7 @@ namespace hooks
     trampoline.create(64);
     on_weapon_hit::install_hook(trampoline);
     on_main_update::install_hook(trampoline);
+    on_adjust_active_effect::install_hook(trampoline);
     logger::info("finish install hooks");
   }
 }

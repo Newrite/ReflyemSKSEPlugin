@@ -4,11 +4,11 @@
 
 namespace reflyem
 {
-  namespace petrified_blood
+  namespace weapon_crit
   {
     auto on_weapon_hit(
       RE::Actor* target,
       RE::HitData& hit_data,
-      const  reflyem::config& config) -> void;
+      const reflyem::config& config) -> void;
   }
 }

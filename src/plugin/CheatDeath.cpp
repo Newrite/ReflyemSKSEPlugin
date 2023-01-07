@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CheatDeath.h"
-#include "Utils.h"
+#include "Core.h"
 
 namespace reflyem
 {
@@ -15,13 +15,13 @@ namespace reflyem
 
       auto cheat_death_percent = 
         reflyem
-        ::utils
+        ::core
         ::get_effect_with_keyword_value(*target, *config.cheat_death_percent_keyword).value_or(100.0f);
 
       if (cheat_death_percent >= 100.f) { return; }
       if (cheat_death_percent < 0.f) { cheat_death_percent = 0.f; }
 
-      auto damage_mult = reflyem::utils::getting_damage_mult(*target);
+      auto damage_mult = reflyem::core::getting_damage_mult(*target);
 
       auto health_treshold = target->GetActorValue(RE::ActorValue::kHealth) * (cheat_death_percent / 100.f);
 

@@ -1,7 +1,18 @@
+#include <random>
+
 namespace reflyem
 {
-  namespace utils
+  namespace core
   {
+
+    std::random_device rd;     // Only used once to initialise (seed) engine
+    std::mt19937 rng(rd());    // Random-number engine used (Mersenne-Twister in this case)
+    std::uniform_int_distribution<int> uni(0, 100); // Guaranteed unbiased
+
+    auto get_rundom_int() -> int
+    {
+      return uni(rng);
+    }
 
     auto get_effect_with_keyword_value(
       RE::Actor& actor,
@@ -75,6 +86,29 @@ namespace reflyem
         return fDiffMultHPByPCL->GetFloat();
       }
 
+    }
+
+    auto actor_has_active_mgef_with_keyword(RE::Actor& actor, RE::BGSKeyword& keyword) -> bool
+    {
+      auto active_effects = actor.GetActiveEffectList();
+      for (auto active_effect : *active_effects)
+      {
+
+        if (!active_effect || active_effect->flags.any(RE::ActiveEffect::Flag::kInactive)
+          || !active_effect->effect
+          || !active_effect->effect->baseEffect)
+        {
+          continue;
+        }
+        auto effect = active_effect->effect;
+        auto base_effect = effect->baseEffect;
+
+        if (base_effect->HasKeywordID(keyword.formID))
+        {
+          return true;
+        }
+      }
+      return false;
     }
   }
 }
