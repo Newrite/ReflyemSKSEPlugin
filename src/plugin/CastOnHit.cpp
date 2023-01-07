@@ -14,7 +14,7 @@ namespace reflyem
 
       auto agressor = hit_data.aggressor.get();
 
-      if (!agressor) { return; }
+      if (!agressor || target->IsDead()) { return; }
 
       auto length_kw =
         config.cast_on_crit_formlist_needkw->forms.size();

@@ -14,7 +14,7 @@ namespace reflyem
 
       auto agressor = hit_data.aggressor.get();
 
-      if (!agressor) { return; }
+      if (!agressor || target->IsDead()) { return; }
 
       auto crit_chance = 
         static_cast<int>(agressor->GetActorValue(config.weapon_crit_chance_av));
