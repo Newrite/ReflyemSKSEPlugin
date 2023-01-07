@@ -4,7 +4,7 @@
 
 namespace reflyem
 {
-  namespace magic_shield
+  namespace petrified_blood
   {
     auto on_weapon_hit(
       RE::Actor* target,

@@ -15,5 +15,5 @@ using namespace std::literals;
 
 namespace stl
 {
-	using namespace SKSE::stl;
+  using namespace SKSE::stl;
 }
