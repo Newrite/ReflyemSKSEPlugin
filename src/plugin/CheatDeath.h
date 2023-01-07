@@ -4,7 +4,7 @@
 
 namespace reflyem
 {
-  namespace vampirism
+  namespace cheat_death
   {
     auto on_weapon_hit(
       RE::Actor* target,

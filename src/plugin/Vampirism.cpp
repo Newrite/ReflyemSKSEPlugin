@@ -1,4 +1,5 @@
 #include "Vampirism.h"
+#include "Utils.h"
 
 namespace reflyem
 {

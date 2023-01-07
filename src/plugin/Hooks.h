@@ -3,16 +3,36 @@
 namespace addresses
 {
   constexpr auto on_weapon_hit = 37673;
+  constexpr auto on_main_update = 35551;
 }
 
 namespace offsets
 {
   constexpr auto on_weapon_hit = 0x3C0;
+  constexpr auto on_main_update = 0x11f;
 }
 
 namespace hooks
 {
-  class on_weapon_hit
+
+  struct on_main_update
+  {
+  public:
+    static auto install_hook(SKSE::Trampoline& trampoline) -> void
+    {
+      logger::info("start hoon on_main_update");
+      REL::Relocation<uintptr_t> hook{ RELOCATION_ID(addresses::on_main_update, 0) };
+      _main_update = trampoline.write_call<5>(hook.address() + RELOCATION_OFFSET(offsets::on_main_update, 0), main_update);
+      logger::info("on_main_update hook install");
+    }
+
+  private:
+    static auto main_update(RE::Main* a_this, float a2) -> void;
+    static inline REL::Relocation<decltype(main_update)> _main_update;
+    static float timer;
+  };
+
+  struct on_weapon_hit
   {
   public:
     static auto install_hook(SKSE::Trampoline& trampoline) -> void

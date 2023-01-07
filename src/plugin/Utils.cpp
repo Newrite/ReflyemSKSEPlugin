@@ -66,7 +66,7 @@ namespace reflyem
       auto fDiffMultHPByPCL = settings_collection->GetSetting("fDiffMultHPByPCL");
       auto fDiffMultHPToPCL = settings_collection->GetSetting("fDiffMultHPToPCL");
 
-      if (actor.IsPlayer() || actor.IsPlayerTeammate() || actor.IsHostileToActor(player))
+      if (actor.IsPlayer() || actor.IsPlayerTeammate() || !actor.IsHostileToActor(player))
       {
         return fDiffMultHPToPCL->GetFloat();
       }

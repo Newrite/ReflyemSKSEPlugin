@@ -4,11 +4,11 @@
 
 namespace reflyem
 {
-  namespace vampirism
+  namespace speed_casting
   {
-    auto on_weapon_hit(
-      RE::Actor* target,
-      RE::HitData& hit_data,
+    auto on_main_update(
+      RE::Main* a_this,
+      float a2,
       const reflyem::config& config) -> void;
   }
 }

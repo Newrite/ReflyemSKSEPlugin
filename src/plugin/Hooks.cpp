@@ -1,9 +1,30 @@
 #include "Hooks.h"
 #include "Vampirism.h"
 #include "MagicShield.h"
+#include "PetrifiedBlood.h"
+#include "CheatDeath.h"
+#include "SpeedCasting.h"
 
 namespace hooks
 {
+  auto on_main_update::main_update(RE::Main* a_this, float a2) -> void
+  {
+
+    timer += a2;
+    if (timer >= 0.5f)
+    {
+      auto& config = reflyem::config::get_singleton();
+
+      if (config.speed_casting_enable)
+      {
+        reflyem::speed_casting::on_main_update(a_this, a2, config);
+      }
+    }
+
+    _main_update(a_this, a2);
+    return;
+  }
+
   auto on_weapon_hit::weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void
   {
 
@@ -14,14 +35,24 @@ namespace hooks
 
     auto& config = reflyem::config::get_singleton();
 
-    if (config.vampirism_enable)
+    if (config.cheat_death_enable)
     {
-      reflyem::vampirism::on_weapon_hit(target, hit_data, config);
+      reflyem::cheat_death::on_weapon_hit(target, hit_data, config);
+    }
+
+    if (config.petrified_blood_enable)
+    {
+      reflyem::petrified_blood::on_weapon_hit(target, hit_data, config);
     }
 
     if (config.magic_shield_enable)
     {
       reflyem::magic_shield::on_weapon_hit(target, hit_data, config);
+    }
+
+    if (config.vampirism_enable)
+    {
+      reflyem::vampirism::on_weapon_hit(target, hit_data, config);
     }
 
     _weapon_hit(target, hit_data);
@@ -34,6 +65,7 @@ namespace hooks
     auto& trampoline = SKSE::GetTrampoline();
     trampoline.create(64);
     on_weapon_hit::install_hook(trampoline);
+    on_main_update::install_hook(trampoline);
     logger::info("finish install hooks");
   }
 }
