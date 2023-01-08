@@ -29,10 +29,34 @@ namespace reflyem
   constexpr auto WeaponCrit = "WeaponCrit";
   constexpr auto ActorValueIndexCritChance = "ActorValueIndexCritChance";
   constexpr auto ActorValueIndexCritDamage = "ActorValueIndexCritDamage";
-  constexpr auto CastOnCrit = "CastOnCrit";
+  constexpr auto CastOnCrit = "CastOnCrit"; 
   constexpr auto FormListSpellsId = "FormListSpellsId";
   constexpr auto FormListKeywordId = "FormListKeywordId";
   constexpr auto CastOnHit = "CastOnHit";
+
+  constexpr auto ResourceManager = "ResourceManager";
+  constexpr auto EnableInfamy = "EnableInfamy";
+  constexpr auto WeightMult = "WeightMult";
+  constexpr auto GlobalMult = "GlobalMult";
+  constexpr auto DamageMult = "DamageMult";
+  constexpr auto JumpCost = "JumpCost";
+  constexpr auto PowerAttackMult = "PowerAttackMult";
+  constexpr auto ActorValueAttackCostIndex = "ActorValueAttackCostIndex";
+  constexpr auto AttackCostHigh = "AttackCostHigh";
+  constexpr auto AttackCostLow = "AttackCostLow";
+  constexpr auto ActorValuePowerAttackCostIndex = "ActorValuePowerAttackCostIndex";
+  constexpr auto PowerAttackCostHigh = "PowerAttackCostHigh";
+  constexpr auto PowerAttackCostLow = "PowerAttackCostLow";
+  constexpr auto UnarmedWeaponId = "UnarmedWeaponId";
+  constexpr auto KeywordHealthId = "KeywordHealthId";
+  constexpr auto KeywordMagickaId = "KeywordMagickaId";
+  constexpr auto KeywordStaminaId = "KeywordStaminaId";
+  constexpr auto ConvertionStaminaToHealthId = "ConvertionStaminaToHealthId";
+  constexpr auto ConvertionMagickaToHealthId = "ConvertionMagickaToHealthId";
+  constexpr auto ConvertionStaminaToMagickaId = "ConvertionStaminaToMagickaId";
+  constexpr auto ConvertionMagickaToStaminaId = "ConvertionMagickaToStaminaId";
+  constexpr auto ConvertionHealthToStaminaId = "ConvertionHealthToStaminaId";
+  constexpr auto ConvertionHealthToMagickaId = "ConvertionHealthToMagickaId";
 
   const config& config::get_singleton() noexcept
   {
@@ -163,6 +187,63 @@ namespace reflyem
           data_handler->LookupForm<RE::BGSListForm>(cnh_form_idkw.value(), instance.mod_name);
         instance.cast_on_hit_formlist_spells =
           data_handler->LookupForm<RE::BGSListForm>(cnh_form_idsp.value(), instance.mod_name);
+      }
+
+      logger::info("config init: resource manager");
+      instance.resource_manager_enable = tbl[ResourceManager][Enable].value_or(false);
+      if (instance.resource_manager_enable)
+      {
+        instance.resource_manager_infamy_enable = tbl[ResourceManager][EnableInfamy].value_or(false);
+        instance.resource_manager_attack_cost_av =
+          static_cast<RE::ActorValue>(tbl[ResourceManager][ActorValueAttackCostIndex].value_or(120));
+        instance.resource_manager_power_attack_cost_av =
+          static_cast<RE::ActorValue>(tbl[ResourceManager][ActorValuePowerAttackCostIndex].value_or(120));
+        instance.resource_manager_attack_cost_high = tbl[ResourceManager][AttackCostHigh].value_or(100);
+        instance.resource_manager_attack_cost_low = tbl[ResourceManager][AttackCostLow].value_or(-100);
+        instance.resource_manager_power_attack_cost_high = tbl[ResourceManager][PowerAttackCostHigh].value_or(100);
+        instance.resource_manager_power_attack_cost_low = tbl[ResourceManager][PowerAttackCostLow].value_or(-100);
+        instance.resource_manager_weight_mult = tbl[ResourceManager][WeightMult].value_or(1.0f);
+        instance.resource_manager_global_mult = tbl[ResourceManager][GlobalMult].value_or(1.0f);
+        instance.resource_manager_jump_cost = tbl[ResourceManager][JumpCost].value_or(15.f);
+        instance.resource_manager_damage_mult = tbl[ResourceManager][DamageMult].value_or(1.f);
+        instance.resource_manager_power_attack_mult = tbl[ResourceManager][PowerAttackMult].value_or(2.f);
+
+        auto rm_unarmed_weapon = tbl[ResourceManager][UnarmedWeaponId].value<RE::FormID>();
+
+        auto rm_health = tbl[ResourceManager][KeywordHealthId].value<RE::FormID>();
+        auto rm_stamina = tbl[ResourceManager][KeywordStaminaId].value<RE::FormID>();
+        auto rm_magicka = tbl[ResourceManager][KeywordMagickaId].value<RE::FormID>();
+
+        auto rm_stamina_health = tbl[ResourceManager][ConvertionStaminaToHealthId].value<RE::FormID>();
+        auto rm_stamina_magicka = tbl[ResourceManager][ConvertionStaminaToMagickaId].value<RE::FormID>();
+        auto rm_health_stamina = tbl[ResourceManager][ConvertionHealthToStaminaId].value<RE::FormID>();
+        auto rm_health_magicka = tbl[ResourceManager][ConvertionHealthToMagickaId].value<RE::FormID>();
+        auto rm_magicka_stamina = tbl[ResourceManager][ConvertionMagickaToStaminaId].value<RE::FormID>();
+        auto rm_magicka_health = tbl[ResourceManager][ConvertionMagickaToHealthId].value<RE::FormID>();
+
+        instance.resource_manager_unarmed_weapon =
+          data_handler->LookupForm<RE::TESObjectWEAP>(rm_unarmed_weapon.value(), instance.mod_name);
+
+        instance.resource_manager_health_kw =
+          data_handler->LookupForm<RE::BGSKeyword>(rm_health.value(), instance.mod_name);
+        instance.resource_manager_stamina_kw =
+          data_handler->LookupForm<RE::BGSKeyword>(rm_stamina.value(), instance.mod_name);
+        instance.resource_manager_magicka_kw =
+          data_handler->LookupForm<RE::BGSKeyword>(rm_magicka.value(), instance.mod_name);
+
+        instance.resource_manager_convert_stamina_health_kw =
+          data_handler->LookupForm<RE::BGSKeyword>(rm_stamina_health.value(), instance.mod_name);
+        instance.resource_manager_convert_stamina_magicka_kw =
+          data_handler->LookupForm<RE::BGSKeyword>(rm_stamina_magicka.value(), instance.mod_name);
+        instance.resource_manager_convert_health_stamina_kw =
+          data_handler->LookupForm<RE::BGSKeyword>(rm_health_stamina.value(), instance.mod_name);
+        instance.resource_manager_convert_health_magicka_kw =
+          data_handler->LookupForm<RE::BGSKeyword>(rm_health_magicka.value(), instance.mod_name);
+        instance.resource_manager_convert_magicka_stamina_kw =
+          data_handler->LookupForm<RE::BGSKeyword>(rm_magicka_stamina.value(), instance.mod_name);
+        instance.resource_manager_convert_magicka_health_kw =
+          data_handler->LookupForm<RE::BGSKeyword>(rm_magicka_health.value(), instance.mod_name);
+
       }
 
       logger::info("finish init config");

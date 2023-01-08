@@ -7,15 +7,44 @@
 #include "SpeedCasting.h"
 #include "CastOnHit.h"
 #include "WeaponCrit.h"
+#include "ResourceManager.h"
 
 namespace hooks
 {
 
-  static float timer = 0.f;
+  static ULONGLONG timer500 = 0;
+  static ULONGLONG timer100 = 0;
+
+  auto on_animation_event_npc::process_event(
+    RE::BSTEventSink<RE::BSAnimationGraphEvent>* a_this,
+    RE::BSAnimationGraphEvent* a_event,
+    RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_dispatcher) -> void
+  {
+    if (a_event && a_event->holder)
+    {
+      auto& config = reflyem::config::get_singleton();
+      reflyem::animation_event_handler::animation_handler(a_event, config);
+    }
+    _process_event(a_this, a_event, a_dispatcher);
+    return;
+  }
+
+  auto on_animation_event_pc::process_event(
+    RE::BSTEventSink<RE::BSAnimationGraphEvent>* a_this,
+    RE::BSAnimationGraphEvent* a_event,
+    RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_dispatcher) -> void
+  {
+    if (a_event && a_event->holder)
+    {
+      auto& config = reflyem::config::get_singleton();
+      reflyem::animation_event_handler::animation_handler(a_event, config);
+    }
+    _process_event(a_this, a_event, a_dispatcher);
+    return;
+  }
 
   auto on_adjust_active_effect::adjust_active_effect(RE::ActiveEffect* a_this, float a_power, bool a_arg3) -> void
   {
-    logger::info("adjust effect, magnitude {}: power {}: arg3 {}:", a_this->magnitude, a_power, a_arg3);
     _adjust_active_effect(a_this, a_power, a_arg3);
     return;
   }
@@ -23,19 +52,34 @@ namespace hooks
   auto on_main_update::main_update(RE::Main* a_this, float a2) -> void
   {
 
-    auto r_int = reflyem::core::get_rundom_int();
-    logger::info("update standart: rint {}: timer: {} delta: {}", r_int, timer, a2);
+    auto ui = RE::UI::GetSingleton();
 
-    timer += a2;
-    if (timer >= 0.5f)
+    if (ui->GameIsPaused())
     {
-      timer = 0.f;
-      logger::info("update timer: {}", timer);
+      _main_update(a_this, a2);
+      return;
+    }
+
+    auto tick = GetTickCount64();
+
+    if (tick - timer500 >= 500)
+    {
+      timer500 = tick;
       auto& config = reflyem::config::get_singleton();
 
       if (config.speed_casting_enable)
       {
         reflyem::speed_casting::on_main_update(a_this, a2, config);
+      }
+    }
+    
+    if (tick - timer100 >= 100)
+    {
+      timer100 = tick;
+      auto& config = reflyem::config::get_singleton();
+      if (config.resource_manager_enable)
+      {
+        reflyem::resource_manager::ranged_spend_handler();
       }
     }
 
@@ -88,10 +132,12 @@ namespace hooks
   {
     logger::info("start install hooks");
     auto& trampoline = SKSE::GetTrampoline();
-    trampoline.create(64);
+    trampoline.create(1024);
     on_weapon_hit::install_hook(trampoline);
     on_main_update::install_hook(trampoline);
     on_adjust_active_effect::install_hook(trampoline);
+    on_animation_event_npc::install_hook();
+    on_animation_event_pc::install_hook();
     logger::info("finish install hooks");
   }
 }

@@ -5,6 +5,8 @@ namespace addresses
   constexpr auto on_weapon_hit = 37673;
   constexpr auto on_main_update = 35551;
   constexpr auto on_adjust_active_effect = 33763;
+  constexpr auto on_animation_event_npc = 261399;
+  constexpr auto on_animation_event_pc = 261918;
 }
 
 namespace offsets
@@ -12,10 +14,50 @@ namespace offsets
   constexpr auto on_weapon_hit = 0x3C0;
   constexpr auto on_main_update = 0x11f;
   constexpr auto on_adjust_active_effect = 0x4A3;
+  constexpr auto on_animation_event_npc = 0x1;
+  constexpr auto on_animation_event_pc = 0x1;
 }
 
 namespace hooks
 {
+
+  struct on_animation_event_pc
+  {
+  public:
+    static auto install_hook() -> void
+    {
+      logger::info("start hook on_animation_event_pc");
+      REL::Relocation<uintptr_t> hook{ RELOCATION_ID(addresses::on_animation_event_pc, 0) };
+      _process_event = hook.write_vfunc(offsets::on_animation_event_pc, process_event);
+      logger::info("finish hook on_animation_event_pc");
+    }
+  private:
+    static auto process_event(
+      RE::BSTEventSink<RE::BSAnimationGraphEvent>* a_this,
+      RE::BSAnimationGraphEvent* a_event,
+      RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_dispatcher) -> void;
+
+    static inline REL::Relocation<decltype(process_event)> _process_event;
+  };
+
+  struct on_animation_event_npc
+  {
+  public:
+    static auto install_hook() -> void
+    {
+      logger::info("start hook on_animation_event_npc");
+      REL::Relocation<uintptr_t> hook{ RELOCATION_ID(addresses::on_animation_event_npc, 0) };
+      _process_event = hook.write_vfunc(offsets::on_animation_event_pc, process_event);
+      logger::info("finish hook on_animation_event_npc");
+    }
+  private:
+    static auto process_event(
+      RE::BSTEventSink<RE::BSAnimationGraphEvent>* a_this,
+      RE::BSAnimationGraphEvent* a_event,
+      RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_dispatcher) -> void;
+
+    static inline REL::Relocation<decltype(process_event)> _process_event;
+  };
 
   struct on_adjust_active_effect
   {

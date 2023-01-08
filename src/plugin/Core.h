@@ -21,5 +21,9 @@ namespace reflyem
       RE::Actor& target,
       RE::Actor& caster) -> void;
 
+    auto is_power_attacking(RE::Actor& actor) -> bool;
+
+    auto has_absolute_keyword(RE::Actor& actor, RE::BGSKeyword& keyword) -> bool;
+
   }
 }

@@ -157,5 +157,29 @@ namespace reflyem
 
     }
 
+    auto is_power_attacking(RE::Actor& actor) -> bool
+    {
+
+      auto current_process = actor.GetActorRuntimeData().currentProcess;
+      if (!current_process) { return false; }
+
+      auto hight_process = current_process->high;
+      if (!hight_process) { return false; }
+
+      auto& attack_data = hight_process->attackData;
+      if (!attack_data) { return false; }
+
+      auto flags = attack_data->data.flags;
+      return flags.any(RE::AttackData::AttackFlag::kPowerAttack);
+
+    }
+
+    auto has_absolute_keyword(RE::Actor& actor, RE::BGSKeyword& keyword) -> bool
+    {
+      return 
+        actor.HasKeyword(&keyword)
+        || actor_has_active_mgef_with_keyword(actor, keyword);
+    }
+
   }
 }

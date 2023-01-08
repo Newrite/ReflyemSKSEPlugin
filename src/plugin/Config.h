@@ -66,6 +66,41 @@ namespace reflyem
     RE::BGSListForm* cast_on_hit_formlist_spells;
     RE::BGSListForm* cast_on_hit_formlist_needkw;
 
+    // resource manager
+    bool resource_manager_enable;
+    bool resource_manager_infamy_enable;
+
+    float resource_manager_weight_mult;
+    float resource_manager_damage_mult;
+    float resource_manager_global_mult;
+    float resource_manager_power_attack_mult;
+    float resource_manager_jump_cost;
+
+    RE::TESObjectWEAP* resource_manager_unarmed_weapon;
+
+    RE::ActorValue resource_manager_attack_cost_av;
+    std::int32_t resource_manager_attack_cost_high;
+    std::int32_t resource_manager_attack_cost_low;
+
+    RE::ActorValue resource_manager_power_attack_cost_av;
+    std::int32_t resource_manager_power_attack_cost_high;
+    std::int32_t resource_manager_power_attack_cost_low;
+
+    // RE::BGSKeyword* resource_manager_shield_health_kw;
+    // RE::BGSKeyword* resource_manager_shield_stamina_kw;
+    // RE::BGSKeyword* resource_manager_shield_magicka_kw;
+
+    RE::BGSKeyword* resource_manager_health_kw;
+    RE::BGSKeyword* resource_manager_stamina_kw;
+    RE::BGSKeyword* resource_manager_magicka_kw;
+
+    RE::BGSKeyword* resource_manager_convert_stamina_health_kw;
+    RE::BGSKeyword* resource_manager_convert_stamina_magicka_kw;
+    RE::BGSKeyword* resource_manager_convert_magicka_health_kw;
+    RE::BGSKeyword* resource_manager_convert_magicka_stamina_kw;
+    RE::BGSKeyword* resource_manager_convert_health_stamina_kw;
+    RE::BGSKeyword* resource_manager_convert_health_magicka_kw;
+
   };
 
 }
