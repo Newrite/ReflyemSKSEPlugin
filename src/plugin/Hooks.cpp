@@ -15,6 +15,35 @@ namespace Hooks
   static ULONGLONG timer500 = 0;
   static ULONGLONG timer100 = 0;
 
+  auto OnAttackData::process_attack(RE::ActorValueOwner* value_owner, RE::BGSAttackData* attack_data) -> void
+  {
+    if (!value_owner)
+    {
+      logger::info("Value ownrer or attack data is null");
+      _process_attack(value_owner, attack_data);
+      return;
+    }
+    auto actor = static_cast<RE::Actor*>(value_owner);
+    if (actor)
+    {
+      logger::info("Success cast actor, level is: {}", actor->GetLevel());
+    }
+    else
+    {
+      logger::info("actor is null");
+    }
+    if (attack_data)
+    {
+      logger::info("attack_data, event: {}", attack_data->event);
+    }
+    else
+    {
+      logger::info("attack_data is null");
+    }
+    _process_attack(value_owner, attack_data);
+    return;
+  }
+
   auto OnAnimationEventNpc::process_event(
     RE::BSTEventSink<RE::BSAnimationGraphEvent>* a_this,
     RE::BSAnimationGraphEvent* a_event,
@@ -97,6 +126,11 @@ namespace Hooks
 
     auto& config = Reflyem::Config::get_singleton();
 
+    if (config.resource_manager_enable)
+    {
+      Reflyem::ResourceManager::on_weapon_hit(target, hit_data, config);
+    }
+
     if (config.weapon_crit_enable)
     {
       Reflyem::WeaponCrit::on_weapon_hit(target, hit_data, config);
@@ -138,6 +172,7 @@ namespace Hooks
     OnAdjustActiveEffect::install_hook(trampoline);
     OnAnimationEventNpc::install_hook();
     OnAnimationEventPc::install_hook();
+    // OnAttackData::install_hook(trampoline);
     logger::info("finish install hooks");
   }
 }

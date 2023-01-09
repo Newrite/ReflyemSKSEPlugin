@@ -72,6 +72,7 @@ namespace Reflyem
 
     float resource_manager_weight_mult;
     float resource_manager_damage_mult;
+    float resource_manager_armor_mult;
     float resource_manager_global_mult;
     float resource_manager_power_attack_mult;
     float resource_manager_jump_cost;

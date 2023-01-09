@@ -4,7 +4,7 @@ set_xmakever("2.7.2")
 set_project("Reflyem")
 set_version("1.0.0")
 set_license("MIT")
-set_languages("c++20")
+set_languages("cxxlatest")
 set_optimize("faster")
 set_warnings("allextra", "error")
 
@@ -32,6 +32,7 @@ includes("res/package.lua")
 
 -- targets
 target("Reflyem")
+
     add_packages("fmt", "spdlog", "toml++", "commonlibsse-ng")
 
     add_rules("@commonlibsse-ng/plugin", {

@@ -11,12 +11,14 @@ namespace Reflyem
     constexpr inline auto weaponSwingLeft = "weaponLeftSwing";
     constexpr inline auto JumpUp = "JumpUp";
     constexpr inline auto bowDrawStart = "bowDrawStart";
+    constexpr inline auto bashExit = "bashExit";
 
     static std::map<std::string, AnimationEvent> animation_map{
       {weaponSwing, AnimationEvent::kWeaponSwing},
       {weaponSwingLeft, AnimationEvent::kWeaponLeftSwing},
       {JumpUp, AnimationEvent::kJumpUp},
-      {bowDrawStart, AnimationEvent::kBowDrawStart} };
+      {bowDrawStart, AnimationEvent::kBowDrawStart},
+      {bashExit, AnimationEvent::kBashExit} };
 
     auto try_find_animation(std::string& key) -> AnimationEvent
     {
@@ -44,6 +46,7 @@ namespace Reflyem
         case AnimationEvent::kWeaponLeftSwing:
         case AnimationEvent::kJumpUp:
         case AnimationEvent::kBowDrawStart:
+        case AnimationEvent::kBashExit:
         {
           logger::debug("event proc {}", anim_event);
           Reflyem

@@ -20,7 +20,7 @@ namespace Reflyem
       auto drain(RE::Actor& actor) -> void;
     };
 
-    using WeapMask = std::array<std::array<std::int16_t, 3>, 1>;
+    using FormMask = std::array<std::array<std::int16_t, 3>, 1>;
     using ActorMask = std::array<std::array<std::int16_t, 3>, 3>;
 
     auto ranged_spend_handler() -> void;
@@ -30,6 +30,8 @@ namespace Reflyem
       RE::Actor& actor,
       bool is_power_attack,
       const Reflyem::Config config) -> void;
+
+    auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Reflyem::Config& config) -> void;
 
   }
 }

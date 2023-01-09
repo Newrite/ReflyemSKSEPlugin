@@ -7,6 +7,7 @@ namespace Adresses
   constexpr auto on_adjust_active_effect = 33763;
   constexpr auto on_animation_event_npc = 261399;
   constexpr auto on_animation_event_pc = 261918;
+  constexpr auto on_attack_data = 38047;
 }
 
 namespace Offsets
@@ -16,10 +17,26 @@ namespace Offsets
   constexpr auto on_adjust_active_effect = 0x4A3;
   constexpr auto on_animation_event_npc = 0x1;
   constexpr auto on_animation_event_pc = 0x1;
+  constexpr auto on_attack_data = 0xbb;
 }
 
 namespace Hooks
 {
+
+  struct OnAttackData
+  {
+  public:
+    static auto install_hook(SKSE::Trampoline& trampoline) -> void
+    {
+      logger::info("start hook on_attack_data");
+      REL::Relocation<uintptr_t> hook{ RELOCATION_ID(Adresses::on_attack_data,0) };
+      _process_attack = trampoline.write_call<5>(hook.address() + RELOCATION_OFFSET(Offsets::on_attack_data, 0), process_attack);
+      logger::info("finish hook on_attack_data");
+    }
+  private:
+    static auto process_attack(RE::ActorValueOwner* value_owner, RE::BGSAttackData* attack_data) -> void;
+    static inline REL::Relocation<decltype(process_attack)> _process_attack;
+  };
 
   struct OnAnimationEventPc
   {

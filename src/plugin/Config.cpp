@@ -39,6 +39,7 @@ namespace Reflyem
   constexpr auto WeightMult = "WeightMult";
   constexpr auto GlobalMult = "GlobalMult";
   constexpr auto DamageMult = "DamageMult";
+  constexpr auto ArmorMult = "ArmorMult";
   constexpr auto JumpCost = "JumpCost";
   constexpr auto PowerAttackMult = "PowerAttackMult";
   constexpr auto ActorValueAttackCostIndex = "ActorValueAttackCostIndex";
@@ -206,6 +207,7 @@ namespace Reflyem
         instance.resource_manager_global_mult = tbl[ResourceManager][GlobalMult].value_or(1.0f);
         instance.resource_manager_jump_cost = tbl[ResourceManager][JumpCost].value_or(15.f);
         instance.resource_manager_damage_mult = tbl[ResourceManager][DamageMult].value_or(1.f);
+        instance.resource_manager_armor_mult = tbl[ResourceManager][ArmorMult].value_or(1.f);
         instance.resource_manager_power_attack_mult = tbl[ResourceManager][PowerAttackMult].value_or(2.f);
 
         auto rm_unarmed_weapon = tbl[ResourceManager][UnarmedWeaponId].value<RE::FormID>();
