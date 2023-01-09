@@ -1,14 +1,14 @@
 #include "ResourceManager.h"
 #include "Core.h"
 
-namespace reflyem
+namespace Reflyem
 {
-  namespace resource_manager
+  namespace ResourceManager
   {
 
-    static std::map<RE::Actor*, std::shared_ptr<drain_values>> rm_map;
+    static std::map<RE::Actor*, std::shared_ptr<DrainValues>> rm_map;
 
-    drain_values::drain_values(float a_stamina, float a_health, float a_magicka)
+    DrainValues::DrainValues(float a_stamina, float a_health, float a_magicka)
     {
       logger::debug("create drain values: S{} H{} M{}", a_stamina, a_health, a_magicka);
       stamina = a_stamina * -1.f;
@@ -16,7 +16,7 @@ namespace reflyem
       magicka = a_magicka * -1.f;
     }
 
-    auto drain_values::drain(RE::Actor& actor) -> void
+    auto DrainValues::drain(RE::Actor& actor) -> void
     {
       logger::debug("drain values: S{} H{} M{}", stamina, health, magicka);
       actor.RestoreActorValue(
@@ -30,13 +30,13 @@ namespace reflyem
         RE::ActorValue::kStamina, stamina);
     }
 
-    auto weap_actor_mask_multiply(weap_mask& matrix1, actor_mask& matrix2) -> weap_mask
+    auto weap_actor_mask_multiply(WeapMask& matrix1, ActorMask& matrix2) -> WeapMask
     {
 
       const auto row = 1;
       const auto column = 3;
 
-      weap_mask result{ { {0,0,0} } };
+      WeapMask result{ { {0,0,0} } };
       for (auto x = 0; x < row; x++)
       {
         for (auto y = 0; y < column; y++)
@@ -55,31 +55,31 @@ namespace reflyem
     auto get_drain_value(
       RE::Actor& actor,
       RE::BGSKeywordForm& form,
-      const reflyem::config config,
-      float cost) -> std::shared_ptr<drain_values>
+      const Reflyem::Config config,
+      float cost) -> std::shared_ptr<DrainValues>
     {
 
       auto stamina_to_health =
-        reflyem::core::has_absolute_keyword(actor, *config.resource_manager_convert_stamina_health_kw);
+        Reflyem::Core::has_absolute_keyword(actor, *config.resource_manager_convert_stamina_health_kw);
       logger::debug("key conversion1");
       auto stamina_to_magicka =
-        reflyem::core::has_absolute_keyword(actor, *config.resource_manager_convert_stamina_magicka_kw);
+        Reflyem::Core::has_absolute_keyword(actor, *config.resource_manager_convert_stamina_magicka_kw);
       logger::debug("key conversion2");
       auto health_to_stamina =
-        reflyem::core::has_absolute_keyword(actor, *config.resource_manager_convert_health_stamina_kw);
+        Reflyem::Core::has_absolute_keyword(actor, *config.resource_manager_convert_health_stamina_kw);
       logger::debug("key conversion3");
       auto health_to_magicka =
-        reflyem::core::has_absolute_keyword(actor, *config.resource_manager_convert_health_magicka_kw);
+        Reflyem::Core::has_absolute_keyword(actor, *config.resource_manager_convert_health_magicka_kw);
       logger::debug("key conversion4");
       auto magicka_to_stamina =
-        reflyem::core::has_absolute_keyword(actor, *config.resource_manager_convert_magicka_stamina_kw);
+        Reflyem::Core::has_absolute_keyword(actor, *config.resource_manager_convert_magicka_stamina_kw);
       logger::debug("key conversion5");
       auto magicka_to_health =
-        reflyem::core::has_absolute_keyword(actor, *config.resource_manager_convert_magicka_health_kw);
+        Reflyem::Core::has_absolute_keyword(actor, *config.resource_manager_convert_magicka_health_kw);
       logger::debug("end get conversions");
 
-      weap_mask w_mask{ {{0,0,0}} };
-      actor_mask a_mask
+      WeapMask w_mask{ {{0,0,0}} };
+      ActorMask a_mask
       { {{1, 0, 0},
          {0, 1, 0},
          {0, 0, 1}} };
@@ -124,33 +124,33 @@ namespace reflyem
       switch (mask_sum)
       {
       case 1:
-        return std::make_shared<drain_values>(drain_values(cost, 0, 0));
+        return std::make_shared<DrainValues>(DrainValues(cost, 0, 0));
       case 2:
-        return std::make_shared<drain_values>(drain_values(0, cost, 0));
+        return std::make_shared<DrainValues>(DrainValues(0, cost, 0));
       case 4:
-        return std::make_shared<drain_values>(drain_values(0, 0, cost));
+        return std::make_shared<DrainValues>(DrainValues(0, 0, cost));
       case 3:
         cost = cost * 0.5f;
-        return std::make_shared<drain_values>(drain_values(cost, cost, 0));
+        return std::make_shared<DrainValues>(DrainValues(cost, cost, 0));
       case 5:
         cost = cost * 0.5f;
-        return std::make_shared<drain_values>(drain_values(cost, 0, cost));
+        return std::make_shared<DrainValues>(DrainValues(cost, 0, cost));
       case 6:
         cost = cost * 0.5f;
-        return std::make_shared<drain_values>(drain_values(0, cost, cost));
+        return std::make_shared<DrainValues>(DrainValues(0, cost, cost));
       case 7:
         cost = cost * 0.35f;
-        return std::make_shared<drain_values>(drain_values(cost, cost, cost));
+        return std::make_shared<DrainValues>(DrainValues(cost, cost, cost));
       default:
         logger::debug("default switch on eval drain value: mask {}", mask_sum);
-        return std::make_shared<drain_values>(drain_values(cost, 0, 0));
+        return std::make_shared<DrainValues>(DrainValues(cost, 0, 0));
       }
 
     }
 
     auto get_weapon_weight(
       RE::TESObjectWEAP& weapon,
-      const reflyem::config& config) -> float
+      const Reflyem::Config& config) -> float
     {
 
       auto weight = weapon.weight;
@@ -196,7 +196,7 @@ namespace reflyem
       RE::Actor& actor,
       RE::TESObjectWEAP& weapon,
       bool is_power_attack,
-      const reflyem::config& config) -> float
+      const Reflyem::Config& config) -> float
     {
 
       auto infamy = actor.GetActorValue(RE::ActorValue::kInfamy);
@@ -241,7 +241,7 @@ namespace reflyem
     auto melee_weapon_spend(RE::Actor& actor,
       RE::TESObjectWEAP& weapon,
       bool is_power_attack,
-      const reflyem::config config) -> void
+      const Reflyem::Config config) -> void
     {
       logger::debug("melee_weapon_spend");
       auto cost = get_drain_cost(actor, weapon, is_power_attack, config);
@@ -255,7 +255,7 @@ namespace reflyem
 
      auto ranged_weapon_spend(RE::Actor& actor,
        RE::TESObjectWEAP& weapon,
-       const reflyem::config config) -> void
+       const Reflyem::Config config) -> void
      {
        auto cost = get_drain_cost(actor, weapon, false, config) * 0.1f;
        auto drain_value = get_drain_value(actor, weapon, config, cost);
@@ -292,7 +292,7 @@ namespace reflyem
        }
      }
 
-    auto jump_spend(RE::Actor& actor, const reflyem::config config) -> void
+    auto jump_spend(RE::Actor& actor, const Reflyem::Config config) -> void
     {
       actor.RestoreActorValue(
         RE::ACTOR_VALUE_MODIFIER::kDamage, 
@@ -302,7 +302,7 @@ namespace reflyem
 
     auto get_weapon(RE::Actor& actor,
       bool is_left_hand,
-      const reflyem::config config) -> RE::TESObjectWEAP&
+      const Reflyem::Config config) -> RE::TESObjectWEAP&
     {
       logger::debug("get weapon start");
       auto weapon = actor.GetEquippedObject(is_left_hand);
@@ -317,41 +317,41 @@ namespace reflyem
     }
 
     auto handler(
-      reflyem::animation_event_handler::animation_event animation,
+      Reflyem::AnimationEventHandler::AnimationEvent animation,
       RE::Actor& actor,
       bool is_power_attack,
-      const reflyem::config config) -> void
+      const Reflyem::Config config) -> void
     {
 
       switch (animation)
       {
-      case reflyem::animation_event_handler::animation_event::kWeaponSwing:
+      case Reflyem::AnimationEventHandler::AnimationEvent::kWeaponSwing:
       {
         auto& weapon = get_weapon(actor, false, config);
         logger::debug("get weapon end");
         melee_weapon_spend(actor, weapon, is_power_attack, config);
         return;
       }
-      case reflyem::animation_event_handler::animation_event::kWeaponLeftSwing:
+      case Reflyem::AnimationEventHandler::AnimationEvent::kWeaponLeftSwing:
       {
         auto& weapon = get_weapon(actor, true, config);
         logger::debug("get weapon end");
         melee_weapon_spend(actor, weapon, is_power_attack, config);
         return;
       }
-      case reflyem::animation_event_handler::animation_event::kBowDrawStart:
+      case Reflyem::AnimationEventHandler::AnimationEvent::kBowDrawStart:
       {
         auto& weapon = get_weapon(actor, false, config);
         logger::debug("get weapon end");
         ranged_weapon_spend(actor, weapon, config);
         return;
       }
-      case reflyem::animation_event_handler::animation_event::kJumpUp:
+      case Reflyem::AnimationEventHandler::AnimationEvent::kJumpUp:
       {
         jump_spend(actor, config);
         return;
       }
-      case reflyem::animation_event_handler::animation_event::kNone:
+      case Reflyem::AnimationEventHandler::AnimationEvent::kNone:
         return;
       default:
         return;

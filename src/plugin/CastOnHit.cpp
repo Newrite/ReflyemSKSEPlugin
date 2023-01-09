@@ -1,15 +1,15 @@
 #include "CastOnHit.h"
 #include "Core.h"
 
-namespace reflyem
+namespace Reflyem
 {
-  namespace cast_on_hit
+  namespace CastOnHit
   {
 
     auto on_weapon_hit(
       RE::Actor* target,
       RE::HitData& hit_data,
-      const reflyem::config& config) -> void
+      const Reflyem::Config& config) -> void
     {
 
       auto agressor = hit_data.aggressor.get();
@@ -22,7 +22,7 @@ namespace reflyem
         config.cast_on_crit_formlist_spells->forms.size();
       for (std::uint32_t index = 0u; index < length_kw && index < length_sp; index++)
       {
-        reflyem::core::cast_on_handle(
+        Reflyem::Core::cast_on_handle(
           config.cast_on_crit_formlist_needkw->forms[index],
           config.cast_on_crit_formlist_spells->forms[index],
           *target,

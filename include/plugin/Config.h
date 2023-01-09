@@ -1,12 +1,12 @@
 #pragma once
 
-namespace reflyem
+namespace Reflyem
 {
-  struct config
+  struct Config
   {
   public:
 
-    [[nodiscard]] static const config& get_singleton() noexcept;
+    [[nodiscard]] static const Config& get_singleton() noexcept;
 
     // general
     std::string mod_name;

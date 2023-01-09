@@ -1,13 +1,13 @@
 #include "SpeedCasting.h"
 
-namespace reflyem
+namespace Reflyem
 {
-  namespace speed_casting
+  namespace SpeedCasting
   {
     auto on_main_update(
       RE::Main*,
       float,
-      const reflyem::config& config) -> void
+      const Reflyem::Config& config) -> void
     {
       auto player = RE::PlayerCharacter::GetSingleton();
 

@@ -1,9 +1,9 @@
 #include "Vampirism.h"
 #include "Core.h"
 
-namespace reflyem
+namespace Reflyem
 {
-  namespace vampirism
+  namespace Vampirism
   {
 
     auto vampirism(
@@ -18,7 +18,7 @@ namespace reflyem
 
       if (vampirism_percent > 100.f) { vampirism_percent = 100.f; }
 
-      auto damage_mult = reflyem::core::getting_damage_mult(target);
+      auto damage_mult = Reflyem::Core::getting_damage_mult(target);
       if (av != RE::ActorValue::kHealth) { damage_mult = 1.f; }
 
       auto target_value = target.GetActorValue(RE::ActorValue::kHealth);
@@ -38,7 +38,7 @@ namespace reflyem
       RE::Actor& target,
       RE::Actor& agressor,
       RE::HitData& hit_data,
-      const reflyem::config& config) -> void
+      const Reflyem::Config& config) -> void
     {
 
       auto vampirism_percent = agressor.GetActorValue(config.vampirism_av);
@@ -54,8 +54,8 @@ namespace reflyem
       RE::ActorValue av) -> void
     {
       auto vampirism_percent = 
-        reflyem
-        ::core
+        Reflyem
+        ::Core
         ::get_effect_with_keyword_value(agressor, key)
         .value_or(0.f);
 
@@ -65,7 +65,7 @@ namespace reflyem
     auto on_weapon_hit(
       RE::Actor* target,
       RE::HitData& hit_data,
-      const reflyem::config& config) -> void
+      const Reflyem::Config& config) -> void
     {
 
       auto agressor = hit_data.aggressor.get();

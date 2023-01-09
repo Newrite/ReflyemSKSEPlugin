@@ -3,7 +3,7 @@
 #include <latch>
 #include <toml++/toml.h>
 
-namespace reflyem
+namespace Reflyem
 {
   constexpr auto Reflyem = "Reflyem";
   constexpr auto ModName = "ModName";
@@ -58,9 +58,9 @@ namespace reflyem
   constexpr auto ConvertionHealthToStaminaId = "ConvertionHealthToStaminaId";
   constexpr auto ConvertionHealthToMagickaId = "ConvertionHealthToMagickaId";
 
-  const config& config::get_singleton() noexcept
+  const Config& Config::get_singleton() noexcept
   {
-    static config instance;
+    static Config instance;
 
     static std::atomic_bool initialized;
     static std::latch latch(1);

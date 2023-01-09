@@ -1,8 +1,8 @@
 #pragma once
 
-namespace reflyem
+namespace Reflyem
 {
-  namespace core
+  namespace Core
   {
 
     auto get_rundom_int() -> int;

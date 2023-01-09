@@ -43,9 +43,11 @@ target("Reflyem")
     set_targetdir("G:\\MO2Enderal\\mods\\Reflyem\\SKSE\\Plugins")
 
     add_files("src/plugin/**.cpp")
-    add_headerfiles("src/plugin/**.h")
+    add_headerfiles("include/plugin/**.h")
     add_includedirs("src/plugin")
-    set_pcxxheader("src/plugin/pch.h")
+    add_includedirs("include/plugin")
+    add_includedirs("include")
+    set_pcxxheader("include/pch.h")
 
     add_rules("mod.package", {
         ["@{target}-@{target_ver}.zip"] = {

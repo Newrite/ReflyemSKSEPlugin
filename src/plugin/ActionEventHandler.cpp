@@ -1,11 +1,11 @@
 #include "ActionEventHandler.h"
 
-namespace reflyem
+namespace Reflyem
 {
 
-  [[nodiscard]] action_event_handler* action_event_handler::get_singleton() noexcept
+  [[nodiscard]] ActionEventHandler* ActionEventHandler::get_singleton() noexcept
   {
-    static action_event_handler instance;
+    static ActionEventHandler instance;
 
     static std::atomic_bool initialized;
     static std::latch latch(1);
@@ -19,7 +19,7 @@ namespace reflyem
     return &instance;
   }
 
-  auto action_event_handler::ProcessEvent(
+  auto ActionEventHandler::ProcessEvent(
     const SKSE::ActionEvent* event,
     RE::BSTEventSource<SKSE::ActionEvent>*) -> RE::BSEventNotifyControl
   {

@@ -2,13 +2,13 @@
 
 #include <latch>
 
-namespace reflyem
+namespace Reflyem
 {
-  struct action_event_handler final : public RE::BSTEventSink<SKSE::ActionEvent>
+  struct ActionEventHandler final : public RE::BSTEventSink<SKSE::ActionEvent>
   {
   public:
 
-    [[nodiscard]] static action_event_handler* get_singleton() noexcept;
+    [[nodiscard]] static ActionEventHandler* get_singleton() noexcept;
 
     auto ProcessEvent(
       const SKSE::ActionEvent* event,

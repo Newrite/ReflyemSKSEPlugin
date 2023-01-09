@@ -2,13 +2,13 @@
 
 #include "Config.h"
 
-namespace reflyem
+namespace Reflyem
 {
-  namespace speed_casting
+  namespace SpeedCasting
   {
     auto on_main_update(
       RE::Main* a_this,
       float a2,
-      const reflyem::config& config) -> void;
+      const Reflyem::Config& config) -> void;
   }
 }

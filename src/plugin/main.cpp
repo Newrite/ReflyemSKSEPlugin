@@ -37,7 +37,7 @@ auto initialize_messaging() -> void {
       break;
     case SKSE::MessagingInterface::kDataLoaded: // All ESM/ESL/ESP plugins have loaded, main menu is now active.
       // It is now safe to access form data.
-      hooks::install_hooks();
+      Hooks::install_hooks();
       break;
 
       // Skyrim game events.

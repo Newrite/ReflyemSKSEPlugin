@@ -1,10 +1,11 @@
 #include <random>
 
-namespace reflyem
+namespace Reflyem
 {
-  namespace core
+  namespace Core
   {
 
+    // StackOverflow: https://stackoverflow.com/questions/5008804/generating-a-random-integer-from-a-range
     std::random_device rd;     // Only used once to initialise (seed) engine
     std::mt19937 rng(rd());    // Random-number engine used (Mersenne-Twister in this case)
     std::uniform_int_distribution<int> uni(0, 100); // Guaranteed unbiased
@@ -124,7 +125,7 @@ namespace reflyem
 
       if (!keyword_ptr || !spell_ptr) { return; }
 
-      if (!reflyem::core::actor_has_active_mgef_with_keyword(caster, *keyword_ptr)) { return; }
+      if (!Reflyem::Core::actor_has_active_mgef_with_keyword(caster, *keyword_ptr)) { return; }
 
       if (spell_ptr->data.delivery == RE::MagicSystem::Delivery::kSelf)
       {

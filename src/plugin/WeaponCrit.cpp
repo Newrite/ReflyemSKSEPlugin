@@ -1,15 +1,15 @@
 #include "WeaponCrit.h"
 #include "Core.h"
 
-namespace reflyem
+namespace Reflyem
 {
-  namespace weapon_crit
+  namespace WeaponCrit
   {
 
     auto on_weapon_hit(
       RE::Actor* target,
       RE::HitData& hit_data,
-      const reflyem::config& config) -> void
+      const Reflyem::Config& config) -> void
     {
 
       auto agressor = hit_data.aggressor.get();
@@ -25,7 +25,7 @@ namespace reflyem
       if (crit_chance > 100) { crit_chance = 100; }
       if (crit_damage > config.weapon_crit_high) { crit_damage = config.weapon_crit_high; }
 
-      auto random = reflyem::core::get_rundom_int();
+      auto random = Reflyem::Core::get_rundom_int();
 
       if (crit_chance > random)
       {
@@ -42,7 +42,7 @@ namespace reflyem
             config.cast_on_crit_formlist_spells->forms.size();
           for (std::uint32_t index = 0u; index < length_kw && index < length_sp; index++)
           {
-            reflyem::core::cast_on_handle(
+            Reflyem::Core::cast_on_handle(
               config.cast_on_crit_formlist_needkw->forms[index],
               config.cast_on_crit_formlist_spells->forms[index],
               *target,
