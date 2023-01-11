@@ -8,6 +8,8 @@ namespace Adresses
   constexpr auto on_animation_event_npc = 261399;
   constexpr auto on_animation_event_pc = 261918;
   constexpr auto on_attack_data = 38047;
+  constexpr auto on_modify_actor_value = 258043;
+  constexpr auto on_dual_modify_actor_value = 257681;
 }
 
 namespace Offsets
@@ -18,6 +20,8 @@ namespace Offsets
   constexpr auto on_animation_event_npc = 0x1;
   constexpr auto on_animation_event_pc = 0x1;
   constexpr auto on_attack_data = 0xbb;
+  constexpr auto on_modify_actor_value = 0x20;
+  constexpr auto on_dual_modify_actor_value = 0x20;
 }
 
 namespace Hooks
@@ -36,6 +40,44 @@ namespace Hooks
   private:
     static auto process_attack(RE::ActorValueOwner* value_owner, RE::BGSAttackData* attack_data) -> void;
     static inline REL::Relocation<decltype(process_attack)> _process_attack;
+  };
+
+  struct OnModifyActorValue
+  {
+  public:
+    static auto install_hook() -> void
+    {
+      logger::info("start hook OnModifyActorValue");
+      REL::Relocation<uintptr_t> hook{ RELOCATION_ID(Adresses::on_modify_actor_value, 0)};
+      _modify_actor_value = hook.write_vfunc(Offsets::on_modify_actor_value, modify_actor_value);
+      logger::info("finish hook OnModifyActorValue");
+    }
+
+    static auto modify_actor_value(
+      RE::ValueModifierEffect* a_this,
+      RE::Actor* a_actor, float a_value,
+      RE::ActorValue a_actorValue) -> void;
+
+    static inline REL::Relocation<decltype(modify_actor_value)> _modify_actor_value;
+  };
+
+  struct OnDualModifyActorValue
+  {
+  public:
+    static auto install_hook() -> void
+    {
+      logger::info("start hook OnDualModifyActorValue");
+      REL::Relocation<uintptr_t> hook{ RELOCATION_ID(Adresses::on_dual_modify_actor_value, 0) };
+      _dual_modify_actor_value = hook.write_vfunc(Offsets::on_dual_modify_actor_value, dual_modify_actor_value);
+      logger::info("finish hook OnDualModifyActorValue");
+    }
+  private:
+    static auto dual_modify_actor_value(
+      RE::ValueModifierEffect* a_this,
+      RE::Actor* a_actor, float a_value,
+      RE::ActorValue a_actorValue) -> void;
+
+    static inline REL::Relocation<decltype(dual_modify_actor_value)> _dual_modify_actor_value;
   };
 
   struct OnAnimationEventPc

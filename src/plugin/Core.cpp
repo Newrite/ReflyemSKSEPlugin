@@ -15,6 +15,15 @@ namespace Reflyem
       return uni(rng);
     }
 
+    auto damage_actor_value(RE::Actor& actor, RE::ActorValue av, float value) -> void
+    {
+      if (value > 0.f)
+      {
+        value = value * - 1.f;
+      }
+      actor.RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, av, value);
+    }
+
     auto get_effect_with_keyword_value(
       RE::Actor& actor,
       RE::BGSKeyword& keyword) -> std::optional<float>
@@ -64,6 +73,32 @@ namespace Reflyem
 
     }
 
+    auto get_dual_value_mult(RE::ValueModifierEffect& value_effect) -> float
+    {
+      if (!value_effect.effect || !value_effect.effect->baseEffect)
+      {
+        return 0.f;
+      }
+      return value_effect.effect->baseEffect->data.secondAVWeight;
+    }
+
+    auto get_second_av(RE::ValueModifierEffect& value_effect) -> RE::ActorValue
+    {
+
+      if (!value_effect.effect || !value_effect.effect->baseEffect)
+      {
+        return RE::ActorValue::kNone;
+      }
+
+      if (!value_effect.effect->baseEffect->HasArchetype(RE::EffectSetting::Archetype::kDualValueModifier))
+      {
+        return RE::ActorValue::kNone;
+      }
+
+      return value_effect.effect->baseEffect->data.secondaryAV;
+
+    }
+
     auto getting_damage_mult(RE::Actor& actor) -> float
     {
 
@@ -77,6 +112,11 @@ namespace Reflyem
 
       auto fDiffMultHPByPCL = settings_collection->GetSetting("fDiffMultHPByPCL");
       auto fDiffMultHPToPCL = settings_collection->GetSetting("fDiffMultHPToPCL");
+
+      if (!fDiffMultHPByPCL || !fDiffMultHPToPCL)
+      {
+        return 1.f;
+      }
 
       if (actor.IsPlayer() || actor.IsPlayerTeammate() || !actor.IsHostileToActor(player))
       {
@@ -101,8 +141,7 @@ namespace Reflyem
         {
           continue;
         }
-        auto effect = active_effect->effect;
-        auto base_effect = effect->baseEffect;
+        auto base_effect = active_effect->effect->baseEffect;
 
         if (base_effect->HasKeywordID(keyword.formID))
         {
@@ -112,27 +151,18 @@ namespace Reflyem
       return false;
     }
 
-    auto cast_on_handle(
-      RE::TESForm* keyword,
-      RE::TESForm* spell,
+    auto cast(
+      RE::SpellItem& spell,
       RE::Actor& target,
       RE::Actor& caster) -> void
     {
-      if (!keyword || !spell) { return; }
 
-      auto keyword_ptr = keyword->As<RE::BGSKeyword>();
-      auto spell_ptr = spell->As<RE::SpellItem>();
-
-      if (!keyword_ptr || !spell_ptr) { return; }
-
-      if (!Reflyem::Core::actor_has_active_mgef_with_keyword(caster, *keyword_ptr)) { return; }
-
-      if (spell_ptr->data.delivery == RE::MagicSystem::Delivery::kSelf)
+      if (spell.data.delivery == RE::MagicSystem::Delivery::kSelf)
       {
         caster
           .GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)
           ->CastSpellImmediate(
-            spell_ptr,
+            &spell,
             true,
             &caster,
             1.00f,
@@ -146,7 +176,7 @@ namespace Reflyem
         caster
           .GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)
           ->CastSpellImmediate(
-            spell_ptr,
+            &spell,
             true,
             &target,
             1.00f,
@@ -155,6 +185,31 @@ namespace Reflyem
             &caster
           );
       }
+
+    }
+
+    auto cast_on_handle(
+      RE::TESForm* keyword,
+      RE::TESForm* spell,
+      RE::Actor& target,
+      RE::Actor& caster) -> void
+    {
+      if (!spell) { return; }
+
+      bool allow_cast = false;
+
+      RE::BGSKeyword* keyword_ptr = nullptr;
+
+      if (keyword) { keyword_ptr = keyword->As<RE::BGSKeyword>(); }
+      auto spell_ptr = spell->As<RE::SpellItem>();
+
+      if (!spell_ptr) { return; }
+
+      if (!keyword_ptr) { allow_cast = true; }
+
+      if (!allow_cast && !Reflyem::Core::actor_has_active_mgef_with_keyword(caster, *keyword_ptr)) { return; }
+
+      cast(*spell_ptr, target, caster);
 
     }
 

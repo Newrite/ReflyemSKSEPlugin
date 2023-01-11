@@ -78,6 +78,46 @@ namespace Hooks
     return;
   }
 
+  auto OnModifyActorValue::modify_actor_value(
+    RE::ValueModifierEffect* a_this,
+    RE::Actor* a_actor, float a_value,
+    RE::ActorValue a_actorValue) -> void
+  {
+    logger::info("modify_actor_value");
+    if (!a_this)
+    {
+      _modify_actor_value(a_this, a_actor, a_value, a_actorValue);
+      return;
+    }
+    // auto& config = Reflyem::Config::get_singleton();
+    logger::info("value before: {}", a_value);
+    // Reflyem::MagicShield::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+    // logger::info("value after: {}", a_value);
+    // a_this->magnitude = 0.f;
+    // a_this->value = 0.f;
+    _modify_actor_value(a_this, a_actor, 0.f, a_actorValue);
+    return;
+  }
+
+  auto OnDualModifyActorValue::dual_modify_actor_value(
+    RE::ValueModifierEffect* a_this,
+    RE::Actor* a_actor, float a_value,
+    RE::ActorValue) -> void
+  {
+    if (a_actor && a_this)
+    {
+      OnModifyActorValue::_modify_actor_value(a_this, a_actor, a_value, RE::ActorValue::kNone);
+      auto second_av = Reflyem::Core::get_second_av(*a_this);
+      if (second_av != RE::ActorValue::kNone)
+      {
+        auto mult = Reflyem::Core::get_dual_value_mult(*a_this);
+        OnModifyActorValue::_modify_actor_value(a_this, a_actor, mult * a_value, second_av);
+      }
+      return;
+    }
+    return;
+  }
+
   auto OnMainUpdate::main_update(RE::Main* a_this, float a2) -> void
   {
 
@@ -126,14 +166,14 @@ namespace Hooks
 
     auto& config = Reflyem::Config::get_singleton();
 
-    if (config.resource_manager_enable)
-    {
-      Reflyem::ResourceManager::on_weapon_hit(target, hit_data, config);
-    }
-
     if (config.weapon_crit_enable)
     {
       Reflyem::WeaponCrit::on_weapon_hit(target, hit_data, config);
+    }
+
+    if (config.resource_manager_enable)
+    {
+      Reflyem::ResourceManager::on_weapon_hit(target, hit_data, config);
     }
 
     if (config.cast_on_hit_enable)
@@ -172,6 +212,8 @@ namespace Hooks
     OnAdjustActiveEffect::install_hook(trampoline);
     OnAnimationEventNpc::install_hook();
     OnAnimationEventPc::install_hook();
+    OnModifyActorValue::install_hook();
+    OnDualModifyActorValue::install_hook();
     // OnAttackData::install_hook(trampoline);
     logger::info("finish install hooks");
   }
