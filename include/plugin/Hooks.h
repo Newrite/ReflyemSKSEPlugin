@@ -10,6 +10,7 @@ namespace Adresses
   constexpr auto on_attack_data = 38047;
   constexpr auto on_modify_actor_value = 258043;
   constexpr auto on_dual_modify_actor_value = 257681;
+  constexpr auto on_dual_modify_actor_value_second_inner_call = 33545;
 }
 
 namespace Offsets
@@ -22,6 +23,7 @@ namespace Offsets
   constexpr auto on_attack_data = 0xbb;
   constexpr auto on_modify_actor_value = 0x20;
   constexpr auto on_dual_modify_actor_value = 0x20;
+  constexpr auto on_dual_modify_actor_value_second_inner_call = 0x5a;
 }
 
 namespace Hooks
@@ -53,6 +55,7 @@ namespace Hooks
       logger::info("finish hook OnModifyActorValue");
     }
 
+  private:
     static auto modify_actor_value(
       RE::ValueModifierEffect* a_this,
       RE::Actor* a_actor, float a_value,
@@ -78,6 +81,27 @@ namespace Hooks
       RE::ActorValue a_actorValue) -> void;
 
     static inline REL::Relocation<decltype(dual_modify_actor_value)> _dual_modify_actor_value;
+  };
+
+  struct OnDualModifyActorValueSecondInnerCall
+  {
+  public:
+    static auto install_hook(SKSE::Trampoline& trampoline) -> void
+    {
+      logger::info("start hook OnDualModifyActorValueSecondInnerCall");
+      REL::Relocation<uintptr_t> hook{ RELOCATION_ID(Adresses::on_dual_modify_actor_value_second_inner_call, 0) };
+      _dual_modify_actor_value_second_inner_call =
+        trampoline.write_call<5>(
+          hook.address() + RELOCATION_OFFSET(Offsets::on_dual_modify_actor_value_second_inner_call, 0), dual_modify_actor_value_second_inner_call);
+      logger::info("finish hook OnDualModifyActorValueSecondInnerCall");
+    }
+  private:
+    static auto dual_modify_actor_value_second_inner_call(
+      RE::ValueModifierEffect* a_this,
+      RE::Actor* a_actor, float a_value,
+      RE::ActorValue a_actorValue) -> void;
+
+    static inline REL::Relocation<decltype(dual_modify_actor_value_second_inner_call)> _dual_modify_actor_value_second_inner_call;
   };
 
   struct OnAnimationEventPc

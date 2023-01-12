@@ -53,10 +53,12 @@ namespace Reflyem
       RE::BGSKeyword& key,
       RE::ActorValue av) -> void
     {
-      auto vampirism_percent = 
+      auto effects =
+        Reflyem::Core::get_effects_by_keyword(agressor, key);
+      auto vampirism_percent =
         Reflyem
         ::Core
-        ::get_effect_with_keyword_value(agressor, key)
+        ::get_effects_magnitude_sum(effects)
         .value_or(0.f);
 
       vampirism(target, agressor, hit_data, av, vampirism_percent);

@@ -22,10 +22,12 @@ namespace Reflyem
       auto absorb_damage = (damage_value * damage_mult) * (magic_shield_percent / 100.f);
       auto magicka = target.GetActorValue(RE::ActorValue::kMagicka);
 
+      auto effects =
+        Reflyem::Core::get_effects_by_keyword(target, *config.magic_shield_cost_keyword);
       auto cost_per_damage =
         Reflyem
         ::Core
-        ::get_effect_with_keyword_value(target, *config.magic_shield_cost_keyword).value_or(1.f);
+        ::get_effects_magnitude_sum(effects).value_or(1.f);
 
       auto absorb_cost = magicka - (absorb_damage * cost_per_damage);
       if (absorb_cost >= 0.f)

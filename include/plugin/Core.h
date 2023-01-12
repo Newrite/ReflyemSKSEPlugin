@@ -26,15 +26,18 @@ namespace Reflyem
       }
     };
 
-    auto get_rundom_int() -> int;
+    auto get_random_int() -> int;
 
     auto damage_actor_value(RE::Actor& actor, RE::ActorValue av, float value) -> void;
 
     auto actor_has_active_mgef_with_keyword(RE::Actor& actor, RE::BGSKeyword& keyword) -> bool;
 
-    auto get_effect_with_keyword_value(
+    auto get_effects_magnitude_sum(
+      std::vector<RE::ActiveEffect*>& effects) -> std::optional<float>;
+
+    auto get_effects_by_keyword(
       RE::Actor& actor,
-      RE::BGSKeyword& keyword) -> std::optional<float>;
+      RE::BGSKeyword& keyword) -> std::vector<RE::ActiveEffect*>;
 
     auto get_dual_value_mult(RE::ValueModifierEffect& value_effect) -> float;
 

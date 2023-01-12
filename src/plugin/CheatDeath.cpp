@@ -13,10 +13,12 @@ namespace Reflyem
       const Reflyem::Config& config) -> void
     {
 
+      auto effects =
+        Reflyem::Core::get_effects_by_keyword(*target, *config.cheat_death_percent_keyword);
       auto cheat_death_percent = 
         Reflyem
         ::Core
-        ::get_effect_with_keyword_value(*target, *config.cheat_death_percent_keyword).value_or(100.0f);
+        ::get_effects_magnitude_sum(effects).value_or(100.0f);
 
       if (cheat_death_percent >= 100.f) { return; }
       if (cheat_death_percent < 0.f) { cheat_death_percent = 0.f; }

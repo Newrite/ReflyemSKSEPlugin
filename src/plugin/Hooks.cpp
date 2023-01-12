@@ -102,19 +102,30 @@ namespace Hooks
   auto OnDualModifyActorValue::dual_modify_actor_value(
     RE::ValueModifierEffect* a_this,
     RE::Actor* a_actor, float a_value,
-    RE::ActorValue) -> void
+    RE::ActorValue a_actorValue) -> void
   {
-    if (a_actor && a_this)
+    logger::info("main virtual call, a_value: {}, actor_value: {}, actor_value_data: {}", a_value, a_actorValue, a_this->actorValue);
+    if (!a_actor || !a_this)
     {
-      OnModifyActorValue::_modify_actor_value(a_this, a_actor, a_value, RE::ActorValue::kNone);
-      auto second_av = Reflyem::Core::get_second_av(*a_this);
-      if (second_av != RE::ActorValue::kNone)
-      {
-        auto mult = Reflyem::Core::get_dual_value_mult(*a_this);
-        OnModifyActorValue::_modify_actor_value(a_this, a_actor, mult * a_value, second_av);
-      }
+      _dual_modify_actor_value(a_this, a_actor, a_value, a_actorValue);
       return;
     }
+    _dual_modify_actor_value(a_this, a_actor, a_value, a_actorValue);
+    return;
+  }
+
+  auto OnDualModifyActorValueSecondInnerCall::dual_modify_actor_value_second_inner_call(
+    RE::ValueModifierEffect* a_this,
+    RE::Actor* a_actor, float a_value,
+    RE::ActorValue a_actorValue) -> void
+  {
+    logger::info("second inner call, a_value: {}, actor_value: {}, actor_value_data: {}", a_value, a_actorValue, a_this->actorValue);
+    if (!a_actor || !a_this)
+    {
+      _dual_modify_actor_value_second_inner_call(a_this, a_actor, a_value, a_actorValue);
+      return;
+    }
+    _dual_modify_actor_value_second_inner_call(a_this, a_actor, a_value, a_actorValue);
     return;
   }
 
@@ -214,6 +225,7 @@ namespace Hooks
     OnAnimationEventPc::install_hook();
     OnModifyActorValue::install_hook();
     OnDualModifyActorValue::install_hook();
+    OnDualModifyActorValueSecondInnerCall::install_hook(trampoline);
     // OnAttackData::install_hook(trampoline);
     logger::info("finish install hooks");
   }

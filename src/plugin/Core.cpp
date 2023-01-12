@@ -10,7 +10,7 @@ namespace Reflyem
     std::mt19937 rng(rd());    // Random-number engine used (Mersenne-Twister in this case)
     std::uniform_int_distribution<int> uni(0, 100); // Guaranteed unbiased
 
-    auto get_rundom_int() -> int
+    auto get_random_int() -> int
     {
       return uni(rng);
     }
@@ -24,16 +24,14 @@ namespace Reflyem
       actor.RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, av, value);
     }
 
-    auto get_effect_with_keyword_value(
-      RE::Actor& actor,
-      RE::BGSKeyword& keyword) -> std::optional<float>
+    auto get_effects_magnitude_sum(
+      std::vector<RE::ActiveEffect*>& effects) -> std::optional<float>
     {
 
       auto pos_value = 0.f;
       auto neg_value = 0.f;
 
-      auto active_effects = actor.GetActiveEffectList();
-      for (auto active_effect : *active_effects)
+      for (auto active_effect : effects)
       {
 
         if (!active_effect || active_effect->flags.any(RE::ActiveEffect::Flag::kInactive)
@@ -45,11 +43,6 @@ namespace Reflyem
 
         auto effect = active_effect->effect;
         auto base_effect = effect->baseEffect;
-
-        if (!base_effect->HasKeywordID(keyword.formID))
-        {
-          continue;
-        }
 
         if (base_effect->data.flags.any(RE::EffectSetting::EffectSettingData::Flag::kDetrimental))
         {
@@ -70,6 +63,39 @@ namespace Reflyem
       {
         return std::nullopt;
       }
+
+    }
+
+    auto get_effects_by_keyword(
+      RE::Actor& actor,
+      RE::BGSKeyword& keyword) -> std::vector<RE::ActiveEffect*>
+    {
+
+      auto active_effects = actor.GetActiveEffectList();
+      std::vector<RE::ActiveEffect*> effects = {};
+      for (auto active_effect : *active_effects)
+      {
+
+        if (!active_effect || active_effect->flags.any(RE::ActiveEffect::Flag::kInactive)
+          || !active_effect->effect
+          || !active_effect->effect->baseEffect)
+        {
+          continue;
+        }
+
+        auto effect = active_effect->effect;
+        auto base_effect = effect->baseEffect;
+
+        if (!base_effect->HasKeywordID(keyword.formID))
+        {
+          continue;
+        }
+
+        effects.push_back(active_effect);
+
+      }
+
+      return effects;
 
     }
 

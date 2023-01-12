@@ -25,7 +25,7 @@ namespace Reflyem
       if (crit_chance > 100) { crit_chance = 100; }
       if (crit_damage > config.weapon_crit_high) { crit_damage = config.weapon_crit_high; }
 
-      auto random = Reflyem::Core::get_rundom_int();
+      auto random = Reflyem::Core::get_random_int();
 
       if (crit_chance > random)
       {
