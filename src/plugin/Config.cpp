@@ -11,6 +11,7 @@ namespace Reflyem
   constexpr auto ActorValueIndex = "ActorValueIndex";
   constexpr auto MagicShield = "MagicShield";
   constexpr auto Vampirism = "Vampirism";
+  constexpr auto MagicVampirism = "MagicVampirism";
   constexpr auto PetrifiedBlood = "PetrifiedBlood";
   constexpr auto SpellId = "SpellId";
   constexpr auto CheatDeath = "CheatDeath";
@@ -36,6 +37,9 @@ namespace Reflyem
 
   constexpr auto ResourceManager = "ResourceManager";
   constexpr auto EnableInfamy = "EnableInfamy";
+  constexpr auto EnableWeaponSpend = "EnableWeaponSpend";
+  constexpr auto EnableBashSpend = "EnableBashSpend";
+  constexpr auto EnableBlock = "EnableBlock";
   constexpr auto WeightMult = "WeightMult";
   constexpr auto GlobalMult = "GlobalMult";
   constexpr auto DamageMult = "DamageMult";
@@ -58,6 +62,10 @@ namespace Reflyem
   constexpr auto ConvertionMagickaToStaminaId = "ConvertionMagickaToStaminaId";
   constexpr auto ConvertionHealthToStaminaId = "ConvertionHealthToStaminaId";
   constexpr auto ConvertionHealthToMagickaId = "ConvertionHealthToMagickaId";
+
+  constexpr auto Physical = "Physical";
+  constexpr auto Magick = "Magick";
+
 
   const Config& Config::get_singleton() noexcept
   {
@@ -83,6 +91,9 @@ namespace Reflyem
 
         instance.magic_shield_av =
           static_cast<RE::ActorValue>(tbl[MagicShield][ActorValueIndex].value_or(120));
+
+        instance.magic_shield_magick = tbl[MagicShield][Magick].value_or(false);
+        instance.magic_shield_physical = tbl[MagicShield][Physical].value_or(false);
       }
 
       logger::info("config init: vampirism...");
@@ -120,6 +131,41 @@ namespace Reflyem
           data_handler->LookupForm<RE::BGSKeyword>(v_form_id.value(), instance.mod_name);
       }
 
+      logger::info("config init: magic vampirism...");
+      instance.magic_vampirism_enable = tbl[MagicVampirism][Enable].value_or(false);
+      if (instance.magic_vampirism_enable)
+      {
+        instance.magic_vampirism_av =
+          static_cast<RE::ActorValue>(tbl[MagicVampirism][ActorValueIndex].value_or(120));
+      }
+
+      logger::info("config init: magic vampirism mgef health...");
+      instance.magic_vampirism_mgef_health_enable = tbl[MagicVampirism][EnableMGEFHealth].value_or(false);
+      if (instance.magic_vampirism_mgef_health_enable)
+      {
+        auto v_form_id = tbl[MagicVampirism][MGEFHealthKeywordId].value<RE::FormID>();
+        instance.magic_vampirism_mgef_health_keyword =
+          data_handler->LookupForm<RE::BGSKeyword>(v_form_id.value(), instance.mod_name);
+      }
+
+      logger::info("config init: magic vampirism mgef stamina...");
+      instance.magic_vampirism_mgef_stamina_enable = tbl[MagicVampirism][EnableMGEFStamina].value_or(false);
+      if (instance.magic_vampirism_mgef_stamina_enable)
+      {
+        auto v_form_id = tbl[MagicVampirism][MGEFStaminaKeywordId].value<RE::FormID>();
+        instance.magic_vampirism_mgef_stamina_keyword =
+          data_handler->LookupForm<RE::BGSKeyword>(v_form_id.value(), instance.mod_name);
+      }
+
+      logger::info("config init: magic vampirism mgef magicka...");
+      instance.magic_vampirism_mgef_magicka_enable = tbl[MagicVampirism][EnableMGEFMagicka].value_or(false);
+      if (instance.magic_vampirism_mgef_magicka_enable)
+      {
+        auto v_form_id = tbl[MagicVampirism][MGEFMagickaKeywordId].value<RE::FormID>();
+        instance.magic_vampirism_mgef_magicka_keyword =
+          data_handler->LookupForm<RE::BGSKeyword>(v_form_id.value(), instance.mod_name);
+      }
+
       logger::info("config init: petrified blood...");
       instance.petrified_blood_enable = tbl[PetrifiedBlood][Enable].value_or(false);
       if (instance.petrified_blood_enable)
@@ -130,6 +176,9 @@ namespace Reflyem
         auto pb_form_id = tbl[PetrifiedBlood][SpellId].value<RE::FormID>();
         instance.petrified_blood_spell =
           data_handler->LookupForm<RE::SpellItem>(pb_form_id.value(), instance.mod_name);
+
+        instance.petrified_blood_magick = tbl[PetrifiedBlood][Magick].value_or(false);
+        instance.petrified_blood_physical = tbl[PetrifiedBlood][Physical].value_or(false);
       }
 
       logger::info("config init: cheat death");
@@ -139,6 +188,9 @@ namespace Reflyem
         auto cd_form_id = tbl[CheatDeath][CheatDeathPercentKeywordId].value<RE::FormID>();
         instance.cheat_death_percent_keyword =
           data_handler->LookupForm<RE::BGSKeyword>(cd_form_id.value(), instance.mod_name);
+
+        instance.cheat_death_magick = tbl[CheatDeath][Magick].value_or(false);
+        instance.cheat_death_physical = tbl[CheatDeath][Physical].value_or(false);
       }
 
       logger::info("config init: speed casting");
@@ -195,6 +247,10 @@ namespace Reflyem
       if (instance.resource_manager_enable)
       {
         instance.resource_manager_infamy_enable = tbl[ResourceManager][EnableInfamy].value_or(false);
+        instance.resource_manager_weapon_spend_enable = tbl[ResourceManager][EnableWeaponSpend].value_or(false);
+        instance.resource_manager_block_spend_enable = tbl[ResourceManager][EnableBlock].value_or(false);
+        instance.resource_manager_bash_spend_enable = tbl[ResourceManager][EnableBashSpend].value_or(false);
+
         instance.resource_manager_attack_cost_av =
           static_cast<RE::ActorValue>(tbl[ResourceManager][ActorValueAttackCostIndex].value_or(120));
         instance.resource_manager_power_attack_cost_av =

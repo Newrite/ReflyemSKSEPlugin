@@ -113,10 +113,6 @@ namespace Reflyem
     std::int32_t resource_manager_power_attack_cost_high;
     std::int32_t resource_manager_power_attack_cost_low;
 
-    // RE::BGSKeyword* resource_manager_shield_health_kw;
-    // RE::BGSKeyword* resource_manager_shield_stamina_kw;
-    // RE::BGSKeyword* resource_manager_shield_magicka_kw;
-
     RE::BGSKeyword* resource_manager_health_kw;
     RE::BGSKeyword* resource_manager_stamina_kw;
     RE::BGSKeyword* resource_manager_magicka_kw;
