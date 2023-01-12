@@ -34,7 +34,7 @@ namespace Reflyem
 
     auto can_modify_actor_value(
       RE::ValueModifierEffect* a_this,
-      RE::Actor* a_actor, float& a_value,
+      RE::Actor* a_actor, float a_value,
       RE::ActorValue av) -> bool;
 
     auto actor_has_active_mgef_with_keyword(RE::Actor& actor, RE::BGSKeyword& keyword) -> bool;

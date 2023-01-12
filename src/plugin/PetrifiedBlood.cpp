@@ -19,7 +19,7 @@ namespace Reflyem
 
       auto blood_duration = config.petrified_blood_spell->effects[0]->effectItem.duration;
 
-      auto damage_mult = Reflyem::Core::getting_damage_mult(*target);
+      auto damage_mult = Reflyem::Core::getting_damage_mult(target);
       auto blood_damage = (damage_value * damage_mult) * (petrified_blood_percent / 100.f);
       auto blood_damage_tick = (blood_damage / blood_duration) / damage_mult;
 

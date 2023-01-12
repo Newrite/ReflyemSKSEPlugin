@@ -30,6 +30,8 @@ namespace Reflyem
         ::get_effects_magnitude_sum(effects).value_or(1.f);
 
       auto absorb_cost = magicka - (absorb_damage * cost_per_damage);
+      logger::info("magicka: {}, percent: {}, absorb_cost: {}, absorb_damage: {}, cost_per_damage: {}"
+        , magicka, magic_shield_percent, absorb_cost, absorb_damage, cost_per_damage);
       if (absorb_cost >= 0.f)
       {
         Reflyem::Core::damage_actor_value(target, RE::ActorValue::kMagicka, magicka - absorb_cost);
@@ -37,9 +39,11 @@ namespace Reflyem
       }
       else
       {
-        auto weapon_damage = std::abs(absorb_cost) / cost_per_damage;
+        auto damage = std::abs(absorb_cost) / cost_per_damage;
         Reflyem::Core::damage_actor_value(target, RE::ActorValue::kMagicka, magicka);
-        damage_value -= weapon_damage / damage_mult;
+        auto calc = damage / damage_mult + (damage_value * ((100.f - magic_shield_percent) / 100.f));
+        logger::info("else damage: {}, damage_value: {}, calc: {}", damage, damage_value, calc);
+        damage_value = calc;
       }
 
     }
@@ -53,9 +57,11 @@ namespace Reflyem
 
       if (Reflyem::Core::can_modify_actor_value(a_this, a_actor, a_value, av))
       {
+        logger::info("magic shield value before: {}", a_value); 
         a_value = std::abs(a_value);
         magic_shield(*a_actor, a_value, config);
         a_value = -a_value;
+        logger::info("magic shield value after: {}", a_value);
       }
 
     }

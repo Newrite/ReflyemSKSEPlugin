@@ -11,7 +11,7 @@ namespace Reflyem
     auto cheat_death(
       RE::Actor& target,
       float& damage_value,
-      const Reflyem::Config& config) -> float
+      const Reflyem::Config& config) -> void
     {
 
       auto effects =
