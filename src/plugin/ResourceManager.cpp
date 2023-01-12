@@ -478,6 +478,9 @@ namespace Reflyem
       {
       case Reflyem::AnimationEventHandler::AnimationEvent::kBashExit:
       {
+
+        if (!config.resource_manager_bash_spend_enable) { return; }
+
         auto weapon_or_shield = get_weapon_or_shield(actor);
         if (!weapon_or_shield.has_value()) { return; }
 
@@ -488,6 +491,9 @@ namespace Reflyem
       }
       case Reflyem::AnimationEventHandler::AnimationEvent::kWeaponSwing:
       {
+
+        if (!config.resource_manager_weapon_spend_enable) { return; }
+
         auto& weapon = get_weapon(actor, false, config);
         logger::debug("get weapon end");
         melee_weapon_spend(actor, weapon, is_power_attack, config);
@@ -495,6 +501,9 @@ namespace Reflyem
       }
       case Reflyem::AnimationEventHandler::AnimationEvent::kWeaponLeftSwing:
       {
+
+        if (!config.resource_manager_weapon_spend_enable) { return; }
+
         auto& weapon = get_weapon(actor, true, config);
         logger::debug("get weapon end");
         melee_weapon_spend(actor, weapon, is_power_attack, config);
@@ -502,6 +511,9 @@ namespace Reflyem
       }
       case Reflyem::AnimationEventHandler::AnimationEvent::kBowDrawStart:
       {
+
+        if (!config.resource_manager_weapon_spend_enable) { return; }
+
         auto& weapon = get_weapon(actor, false, config);
         logger::debug("get weapon end");
         ranged_weapon_spend(actor, weapon, config);

@@ -1,4 +1,5 @@
 #include <random>
+#include "Core.h"
 
 namespace Reflyem
 {
@@ -22,6 +23,35 @@ namespace Reflyem
         value = value * - 1.f;
       }
       actor.RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, av, value);
+    }
+
+    auto can_modify_actor_value(
+      RE::ValueModifierEffect* a_this,
+      RE::Actor* a_actor, float a_value,
+      RE::ActorValue av) -> bool
+    {
+
+      if (av != RE::ActorValue::kNone && av != RE::ActorValue::kHealth) { return false; }
+
+      if (a_value >= 0.f) { return false; }
+
+      auto caster_ptr = a_this->GetCasterActor();
+      if (!caster_ptr || !a_actor || !a_this->effect || !a_this->effect->baseEffect) { return false; }
+
+      auto caster = caster_ptr.get();
+      if (!caster) { return false; }
+
+      if (caster == a_actor) { return false; }
+
+      auto flag_detrimental = RE::EffectSetting::EffectSettingData::Flag::kDetrimental;
+      auto flag_recovery = RE::EffectSetting::EffectSettingData::Flag::kRecover;
+
+      if (a_this->effect->baseEffect->data.flags.any(flag_recovery)) { return false; }
+
+      if (!a_this->effect->baseEffect->data.flags.any(flag_detrimental)) { return false; }
+
+      return true;
+
     }
 
     auto get_effects_magnitude_sum(

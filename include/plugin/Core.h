@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Config.h"
+
 namespace Reflyem
 {
   namespace Core
@@ -29,6 +31,11 @@ namespace Reflyem
     auto get_random_int() -> int;
 
     auto damage_actor_value(RE::Actor& actor, RE::ActorValue av, float value) -> void;
+
+    auto can_modify_actor_value(
+      RE::ValueModifierEffect* a_this,
+      RE::Actor* a_actor, float& a_value,
+      RE::ActorValue av) -> bool;
 
     auto actor_has_active_mgef_with_keyword(RE::Actor& actor, RE::BGSKeyword& keyword) -> bool;
 

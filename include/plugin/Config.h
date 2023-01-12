@@ -13,16 +13,22 @@ namespace Reflyem
 
     // magic shield
     bool magic_shield_enable;
+    bool magic_shield_physical;
+    bool magic_shield_magick;
     RE::ActorValue magic_shield_av;
     RE::BGSKeyword* magic_shield_cost_keyword;
 
     // petrified blood
     bool petrified_blood_enable;
+    bool petrified_blood_physical;
+    bool petrified_blood_magick;
     RE::ActorValue petrified_blood_av;
     RE::SpellItem* petrified_blood_spell;
 
     // cheat death
     bool cheat_death_enable;
+    bool cheat_death_physical;
+    bool cheat_death_magick;
     RE::BGSKeyword* cheat_death_percent_keyword;
 
     // vampirism
@@ -41,6 +47,23 @@ namespace Reflyem
     // magicka
     bool vampirism_mgef_magicka_enable;
     RE::BGSKeyword* vampirism_mgef_magicka_keyword;
+
+    // magic vampirism
+    bool magic_vampirism_enable;
+    RE::ActorValue magic_vampirism_av;
+
+    // magic vampirism magick effect
+    // health
+    bool magic_vampirism_mgef_health_enable;
+    RE::BGSKeyword* magic_vampirism_mgef_health_keyword;
+
+    // stamina
+    bool magic_vampirism_mgef_stamina_enable;
+    RE::BGSKeyword* magic_vampirism_mgef_stamina_keyword;
+
+    // magicka
+    bool magic_vampirism_mgef_magicka_enable;
+    RE::BGSKeyword* magic_vampirism_mgef_magicka_keyword;
 
     // FenixSpeedCasting addon
     // speed casting
@@ -68,6 +91,9 @@ namespace Reflyem
 
     // resource manager
     bool resource_manager_enable;
+    bool resource_manager_weapon_spend_enable;
+    bool resource_manager_bash_spend_enable;
+    bool resource_manager_block_spend_enable;
     bool resource_manager_infamy_enable;
 
     float resource_manager_weight_mult;

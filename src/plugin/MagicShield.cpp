@@ -47,22 +47,16 @@ namespace Reflyem
     auto modify_actor_value(
       RE::ValueModifierEffect* a_this,
       RE::Actor* a_actor, float& a_value,
-      RE::ActorValue,
-      const Reflyem::Config&) -> void
+      RE::ActorValue av,
+      const Reflyem::Config& config) -> void
     {
-      logger::info("caster ptr");
-      auto caster_ptr = a_this->GetCasterActor();
-      if (!caster_ptr || !a_actor || !a_this->effect || !a_this->effect->baseEffect) { return; }
 
-      logger::info("caster");
-      auto caster = caster_ptr.get();
-      if (!caster) { return; }
-
-      logger::info("caster equal actor");
-      if (caster == a_actor) { return; }
-
-      logger::info("actor value: {}, value: {}, magnitude: {}, valueeffect: {}", a_this->actorValue, a_value, a_this->magnitude, a_this->value);
-      a_value = 0.f;
+      if (Reflyem::Core::can_modify_actor_value(a_this, a_actor, a_value, av))
+      {
+        a_value = std::abs(a_value);
+        magic_shield(*a_actor, a_value, config);
+        a_value = -a_value;
+      }
 
     }
 

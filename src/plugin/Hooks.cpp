@@ -83,18 +83,27 @@ namespace Hooks
     RE::Actor* a_actor, float a_value,
     RE::ActorValue a_actorValue) -> void
   {
-    logger::info("modify_actor_value");
+
     if (!a_this)
     {
       _modify_actor_value(a_this, a_actor, a_value, a_actorValue);
       return;
     }
-    // auto& config = Reflyem::Config::get_singleton();
-    logger::info("value before: {}", a_value);
-    // Reflyem::MagicShield::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
-    // logger::info("value after: {}", a_value);
-    // a_this->magnitude = 0.f;
-    // a_this->value = 0.f;
+
+    auto& config = Reflyem::Config::get_singleton();
+
+    if (config.petrified_blood_enable && config.petrified_blood_magick)
+    {
+      Reflyem::PetrifiedBlood::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+    }
+
+    if (config.magic_shield_enable && config.magic_shield_magick)
+    {
+      Reflyem::MagicShield::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+    }
+
+    Reflyem::Vampirism::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+
     _modify_actor_value(a_this, a_actor, 0.f, a_actorValue);
     return;
   }
@@ -104,12 +113,27 @@ namespace Hooks
     RE::Actor* a_actor, float a_value,
     RE::ActorValue a_actorValue) -> void
   {
-    logger::info("main virtual call, a_value: {}, actor_value: {}, actor_value_data: {}", a_value, a_actorValue, a_this->actorValue);
+
     if (!a_actor || !a_this)
     {
       _dual_modify_actor_value(a_this, a_actor, a_value, a_actorValue);
       return;
     }
+
+    auto& config = Reflyem::Config::get_singleton();
+
+    if (config.petrified_blood_enable && config.petrified_blood_magick)
+    {
+      Reflyem::PetrifiedBlood::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+    }
+
+    if (config.magic_shield_enable && config.magic_shield_magick)
+    {
+      Reflyem::MagicShield::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+    }
+
+    Reflyem::Vampirism::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+
     _dual_modify_actor_value(a_this, a_actor, a_value, a_actorValue);
     return;
   }
@@ -119,12 +143,27 @@ namespace Hooks
     RE::Actor* a_actor, float a_value,
     RE::ActorValue a_actorValue) -> void
   {
-    logger::info("second inner call, a_value: {}, actor_value: {}, actor_value_data: {}", a_value, a_actorValue, a_this->actorValue);
+
     if (!a_actor || !a_this)
     {
       _dual_modify_actor_value_second_inner_call(a_this, a_actor, a_value, a_actorValue);
       return;
     }
+
+    auto& config = Reflyem::Config::get_singleton();
+
+    if (config.petrified_blood_enable && config.petrified_blood_magick)
+    {
+      Reflyem::PetrifiedBlood::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+    }
+
+    if (config.magic_shield_enable && config.magic_shield_magick)
+    {
+      Reflyem::MagicShield::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+    }
+
+    Reflyem::Vampirism::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+
     _dual_modify_actor_value_second_inner_call(a_this, a_actor, a_value, a_actorValue);
     return;
   }
@@ -182,7 +221,7 @@ namespace Hooks
       Reflyem::WeaponCrit::on_weapon_hit(target, hit_data, config);
     }
 
-    if (config.resource_manager_enable)
+    if (config.resource_manager_enable && config.resource_manager_block_spend_enable)
     {
       Reflyem::ResourceManager::on_weapon_hit(target, hit_data, config);
     }
@@ -192,17 +231,17 @@ namespace Hooks
       Reflyem::CastOnHit::on_weapon_hit(target, hit_data, config);
     }
 
-    if (config.cheat_death_enable)
+    if (config.cheat_death_enable && config.cheat_death_physical)
     {
       Reflyem::CheatDeath::on_weapon_hit(target, hit_data, config);
     }
 
-    if (config.petrified_blood_enable)
+    if (config.petrified_blood_enable && config.petrified_blood_physical)
     {
       Reflyem::PetrifiedBlood::on_weapon_hit(target, hit_data, config);
     }
 
-    if (config.magic_shield_enable)
+    if (config.magic_shield_enable && config.magic_shield_physical)
     {
       Reflyem::MagicShield::on_weapon_hit(target, hit_data, config);
     }
