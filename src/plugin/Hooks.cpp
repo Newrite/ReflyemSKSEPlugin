@@ -104,7 +104,7 @@ namespace Hooks
 
     Reflyem::Vampirism::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
 
-    _modify_actor_value(a_this, a_actor, 0.f, a_actorValue);
+    _modify_actor_value(a_this, a_actor, a_value, a_actorValue);
     return;
   }
 

@@ -33,6 +33,8 @@ namespace Reflyem
 
       if (av != RE::ActorValue::kNone && av != RE::ActorValue::kHealth) { return false; }
 
+      if (av == RE::ActorValue::kNone && a_this->actorValue != RE::ActorValue::kHealth) { return false; }
+
       if (a_value >= 0.f) { return false; }
 
       auto caster_ptr = a_this->GetCasterActor();
@@ -44,9 +46,9 @@ namespace Reflyem
       if (caster == a_actor) { return false; }
 
       auto flag_detrimental = RE::EffectSetting::EffectSettingData::Flag::kDetrimental;
-      auto flag_recovery = RE::EffectSetting::EffectSettingData::Flag::kRecover;
+      auto flag_recover = RE::EffectSetting::EffectSettingData::Flag::kRecover;
 
-      if (a_this->effect->baseEffect->data.flags.any(flag_recovery)) { return false; }
+      if (a_this->effect->baseEffect->data.flags.any(flag_recover)) { return false; }
 
       if (!a_this->effect->baseEffect->data.flags.any(flag_detrimental)) { return false; }
 

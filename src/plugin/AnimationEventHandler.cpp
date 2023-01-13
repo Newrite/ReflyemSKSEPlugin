@@ -40,6 +40,11 @@ namespace Reflyem
         auto anim_event = fmt::format("{}", a_event->tag);
         auto is_power_attack = Reflyem::Core::is_power_attacking(*actor);
         auto animation = try_find_animation(anim_event);
+
+        auto isDrawn = actor->IsWeaponDrawn();
+        if ((animation == AnimationEvent::kWeaponLeftSwing 
+          || animation == AnimationEvent::kWeaponSwing) && !isDrawn) { return; }
+
         switch (animation)
         {
         case AnimationEvent::kWeaponSwing:
