@@ -1,5 +1,7 @@
 #include "Hooks.h"
 #include "ActionEventHandler.h"
+#include "InputEventHandler.h"
+#include "Config.h"
 
 auto init_logger() -> void
 {
@@ -38,6 +40,7 @@ auto initialize_messaging() -> void {
     case SKSE::MessagingInterface::kDataLoaded: // All ESM/ESL/ESP plugins have loaded, main menu is now active.
       // It is now safe to access form data.
       Hooks::install_hooks();
+      Reflyem::InputEventHandler::Register();
       break;
 
       // Skyrim game events.

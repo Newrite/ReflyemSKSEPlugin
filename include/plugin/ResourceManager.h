@@ -8,6 +8,9 @@ namespace Reflyem
   namespace ResourceManager
   {
 
+    using FormMask = std::array<std::array<std::int16_t, 3>, 1>;
+    using ActorMask = std::array<std::array<std::int16_t, 3>, 3>;
+
     struct DrainValues
     {
     public:
@@ -20,8 +23,10 @@ namespace Reflyem
       auto drain(RE::Actor& actor) -> void;
     };
 
-    using FormMask = std::array<std::array<std::int16_t, 3>, 1>;
-    using ActorMask = std::array<std::array<std::int16_t, 3>, 3>;
+    auto calc_mask_sum(FormMask& f_mask) -> std::int32_t;
+
+    auto handle_mask_sum_for_drain_values(
+      std::int32_t mask_sum, float cost) -> std::shared_ptr<DrainValues>;
 
     auto ranged_spend_handler() -> void;
 

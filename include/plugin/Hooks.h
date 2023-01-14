@@ -11,6 +11,7 @@ namespace Adresses
   constexpr auto on_modify_actor_value = 258043;
   constexpr auto on_dual_modify_actor_value = 257681;
   constexpr auto on_dual_modify_actor_value_second_inner_call = 33545;
+  constexpr auto on_attack_action = 48139;
 }
 
 namespace Offsets
@@ -24,6 +25,7 @@ namespace Offsets
   constexpr auto on_modify_actor_value = 0x20;
   constexpr auto on_dual_modify_actor_value = 0x20;
   constexpr auto on_dual_modify_actor_value_second_inner_call = 0x5a;
+  constexpr auto on_attack_action = 0x4D7;
 }
 
 namespace Hooks
@@ -42,6 +44,21 @@ namespace Hooks
   private:
     static auto process_attack(RE::ActorValueOwner* value_owner, RE::BGSAttackData* attack_data) -> void;
     static inline REL::Relocation<decltype(process_attack)> _process_attack;
+  };
+
+  struct OnAttackAction
+  {
+  public:
+    static auto install_hook(SKSE::Trampoline& trampoline) -> void
+    {
+      logger::info("start hook OnAttackAction");
+      REL::Relocation<uintptr_t> hook{ RELOCATION_ID(Adresses::on_attack_action,0) };
+      _attack_action = trampoline.write_call<5>(hook.address() + RELOCATION_OFFSET(Offsets::on_attack_action, 0), attack_action);
+      logger::info("finish hook OnAttackAction");
+    }
+  private:
+    static auto attack_action(RE::TESActionData* a_actionData) -> bool;
+    static inline REL::Relocation<decltype(attack_action)> _attack_action;
   };
 
   struct OnModifyActorValue

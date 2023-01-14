@@ -17,31 +17,14 @@ namespace Hooks
 
   auto OnAttackData::process_attack(RE::ActorValueOwner* value_owner, RE::BGSAttackData* attack_data) -> void
   {
-    if (!value_owner)
-    {
-      logger::info("Value ownrer or attack data is null");
-      _process_attack(value_owner, attack_data);
-      return;
-    }
-    auto actor = static_cast<RE::Actor*>(value_owner);
-    if (actor)
-    {
-      logger::info("Success cast actor, level is: {}", actor->GetLevel());
-    }
-    else
-    {
-      logger::info("actor is null");
-    }
-    if (attack_data)
-    {
-      logger::info("attack_data, event: {}", attack_data->event);
-    }
-    else
-    {
-      logger::info("attack_data is null");
-    }
     _process_attack(value_owner, attack_data);
     return;
+  }
+
+  auto OnAttackAction::attack_action(RE::TESActionData* a_actionData) -> bool
+  {
+    logger::info("Attack Action: {}", static_cast<std::uint32_t>(a_actionData->GetSourceActorState()->GetAttackState()));
+    return false;
   }
 
   auto OnAnimationEventNpc::process_event(
@@ -265,6 +248,7 @@ namespace Hooks
     OnModifyActorValue::install_hook();
     OnDualModifyActorValue::install_hook();
     OnDualModifyActorValueSecondInnerCall::install_hook(trampoline);
+    // OnAttackAction::install_hook(trampoline);
     // OnAttackData::install_hook(trampoline);
     logger::info("finish install hooks");
   }

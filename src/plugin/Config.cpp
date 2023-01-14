@@ -66,6 +66,15 @@ namespace Reflyem
   constexpr auto Physical = "Physical";
   constexpr auto Magick = "Magick";
 
+  constexpr auto TKDodge = "TKDodge";
+  constexpr auto DodgeKey = "DodgeKey";
+  constexpr auto EnableTappingDodge = "EnableTappingDodge";
+  constexpr auto StepDodge = "StepDodge";
+  constexpr auto iFrameDuration = "iFrameDuration";
+  constexpr auto KeyUpDelay = "KeyUpDelay";
+  constexpr auto MaxCost = "MaxCost";
+  constexpr auto MinCost = "MinCost";
+
 
   const Config& Config::get_singleton() noexcept
   {
@@ -302,6 +311,31 @@ namespace Reflyem
         instance.resource_manager_convert_magicka_health_kw =
           data_handler->LookupForm<RE::BGSKeyword>(rm_magicka_health.value(), instance.mod_name);
 
+      }
+
+      logger::info("config init: tk dodge");
+      instance.tk_dodge_enable = tbl[TKDodge][Enable].value_or(false);
+      if (instance.tk_dodge_enable)
+      {
+        instance.tk_dodge_gamepad_treshold = 0.15f;
+        instance.tk_dodge_iframe_duration = tbl[TKDodge][iFrameDuration].value_or(0.5f);
+        instance.tk_dodge_step = tbl[TKDodge][StepDodge].value_or(false);
+        instance.tk_dodge_key = tbl[TKDodge][DodgeKey].value_or(277);
+        instance.tk_dodge_sprint_tapping_dodge = tbl[TKDodge][EnableTappingDodge].value_or(false);
+        instance.tk_dodge_key_up_delay = tbl[TKDodge][KeyUpDelay].value_or(0.2f);
+        instance.tk_dodge_max_cost = tbl[TKDodge][MaxCost].value_or(40.f);
+        instance.tk_dodge_min_cost = tbl[TKDodge][MinCost].value_or(10.f);
+
+        auto tk_health = tbl[TKDodge][KeywordHealthId].value<RE::FormID>();
+        auto tk_stamina = tbl[TKDodge][KeywordStaminaId].value<RE::FormID>();
+        auto tk_magicka = tbl[TKDodge][KeywordMagickaId].value<RE::FormID>();
+
+        instance.tk_dodge_health_kw =
+          data_handler->LookupForm<RE::BGSKeyword>(tk_health.value(), instance.mod_name);
+        instance.tk_dodge_stamina_kw =
+          data_handler->LookupForm<RE::BGSKeyword>(tk_stamina.value(), instance.mod_name);
+        instance.tk_dodge_magicka_kw =
+          data_handler->LookupForm<RE::BGSKeyword>(tk_magicka.value(), instance.mod_name);
       }
 
       logger::info("finish init config");

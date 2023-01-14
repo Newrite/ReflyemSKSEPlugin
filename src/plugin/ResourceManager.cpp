@@ -8,8 +8,6 @@ namespace Reflyem
 
     using WeaponOrArmor = Reflyem::Core::Either<RE::TESObjectWEAP*, RE::TESObjectARMO*>;
 
-    static std::map<RE::Actor*, std::shared_ptr<DrainValues>> rm_map;
-
     DrainValues::DrainValues(float a_stamina, float a_health, float a_magicka)
     {
       logger::debug("create drain values: S{} H{} M{}", a_stamina, a_health, a_magicka);
@@ -31,6 +29,8 @@ namespace Reflyem
         RE::ACTOR_VALUE_MODIFIER::kDamage,
         RE::ActorValue::kStamina, stamina);
     }
+
+    static std::map<RE::Actor*, std::shared_ptr<DrainValues>> rm_map;
 
     auto weap_actor_mask_multiply(FormMask& matrix1, ActorMask& matrix2) -> std::unique_ptr<FormMask>
     {
@@ -117,7 +117,7 @@ namespace Reflyem
     auto get_drain_value(
       RE::Actor& actor,
       RE::BGSKeywordForm& form,
-      const Reflyem::Config config,
+      const Reflyem::Config& config,
       float cost,
       bool enable_conversions) -> std::shared_ptr<DrainValues>
     {

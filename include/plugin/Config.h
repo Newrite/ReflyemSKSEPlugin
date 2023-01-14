@@ -124,6 +124,21 @@ namespace Reflyem
     RE::BGSKeyword* resource_manager_convert_health_stamina_kw;
     RE::BGSKeyword* resource_manager_convert_health_magicka_kw;
 
+    // TK Dodge reimplement
+    bool tk_dodge_enable;
+    std::uint32_t tk_dodge_key;
+    std::int32_t tk_dodge_step;
+    float tk_dodge_iframe_duration;
+    float tk_dodge_gamepad_treshold;
+    bool tk_dodge_sprint_tapping_dodge;
+    float tk_dodge_key_up_delay;
+    float tk_dodge_max_cost;
+    float tk_dodge_min_cost;
+    RE::BGSKeyword* tk_dodge_health_kw;
+    RE::BGSKeyword* tk_dodge_stamina_kw;
+    RE::BGSKeyword* tk_dodge_magicka_kw;
+
+
   };
 
 }
