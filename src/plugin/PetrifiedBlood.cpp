@@ -3,67 +3,109 @@
 
 namespace Reflyem
 {
-  namespace PetrifiedBlood
-  {
+	namespace PetrifiedBlood
+	{
 
-    auto petrified_blood(
-      RE::Actor& target,
-      float& damage_value,
-      const Reflyem::Config& config) -> void
-    {
+		auto petrified_blood_cast(
+			RE::Actor&             target,
+			float                  blood_damage_tick,
+			const Reflyem::Config& config) -> void
+		{
+			config.petrified_blood_spell
+				->effects[0]
+				->effectItem.magnitude = blood_damage_tick;
 
-      auto petrified_blood_percent = target.GetActorValue(config.petrified_blood_av);
-      if (petrified_blood_percent <= 0.f) { return; }
+			Reflyem::Core::cast(*config.petrified_blood_spell, target, target);
+		}
 
-      if (petrified_blood_percent > 100.f) { petrified_blood_percent = 100.f; }
+		auto petrified_blood(
+			RE::Actor&             target,
+			float&                 damage_value,
+			const Reflyem::Config& config) -> float
+		{
+			auto petrified_blood_percent = target.GetActorValue(config.petrified_blood_av);
+			if (petrified_blood_percent <= 0.f) {
+				return 0.f;
+			}
 
-      auto blood_duration = config.petrified_blood_spell->effects[0]->effectItem.duration;
+			if (petrified_blood_percent > 100.f) {
+				petrified_blood_percent = 100.f;
+			}
 
-      auto damage_mult = Reflyem::Core::getting_damage_mult(target);
-      auto blood_damage = (damage_value * damage_mult) * (petrified_blood_percent / 100.f);
-      auto blood_damage_tick = (blood_damage / blood_duration) / damage_mult;
+			auto blood_duration = config.petrified_blood_spell->effects[0]->effectItem.duration;
 
-      config.petrified_blood_spell
-        ->effects[0]
-        ->effectItem.magnitude = blood_damage_tick;
+			auto damage_mult = Reflyem::Core::getting_damage_mult(target);
+			auto blood_damage = (damage_value * damage_mult) * (petrified_blood_percent / 100.f);
+			auto blood_damage_tick = (blood_damage / blood_duration) / damage_mult;
 
-      target.GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)
-        ->CastSpellImmediate(
-          config.petrified_blood_spell,
-          true,
-          &target,
-          1.00f,
-          false,
-          0.0f,
-          nullptr
-        );
+			damage_value -= (blood_damage / damage_mult);
 
-      damage_value -= (blood_damage / damage_mult);
-    }
+			return blood_damage_tick;
+		}
 
-    auto modify_actor_value(
-      RE::ValueModifierEffect* a_this,
-      RE::Actor* a_actor, float& a_value,
-      RE::ActorValue av,
-      const Reflyem::Config& config) -> void
-    {
+		auto character_update(RE::Actor* a_this, float delta, const Reflyem::Config& config) -> void
+		{
+			auto effects_timer =
+				Reflyem ::Core ::get_effects_by_keyword(*a_this, *config.petrified_blood_timer_mgef_kw);
 
-      if (Reflyem::Core::can_modify_actor_value(a_this, a_actor, a_value, av))
-      {
-        a_value = std::abs(a_value);
-        petrified_blood(*a_actor, a_value, config);
-        a_value = -a_value;
-      }
+			if (effects_timer.size() <= 0) {
+				return;
+			}
 
-    }
+			effects_timer[0]->magnitude += delta;
+			if (effects_timer[0]->magnitude >= 1.0f) {
+				effects_timer[0]->magnitude = 0.f;
+				auto effects_damage =
+					Reflyem ::Core ::get_effects_by_keyword(*a_this, *config.petrified_blood_acc_mgef_kw);
 
-    auto on_weapon_hit(
-      RE::Actor* target,
-      RE::HitData& hit_data,
-      const Reflyem::Config& config) -> void
-    {
-      petrified_blood(*target, hit_data.totalDamage, config);
-    }
-  }
+				if (effects_damage.size() <= 0) {
+					return;
+				}
+
+				auto blood_damage_tick = effects_damage[0]->magnitude;
+				effects_damage[0]->magnitude = 0.f;
+				petrified_blood_cast(*a_this, blood_damage_tick, config);
+			}
+		}
+
+		auto modify_actor_value(
+			RE::ValueModifierEffect* a_this,
+			RE::Actor* a_actor, float& a_value,
+			RE::ActorValue         av,
+			const Reflyem::Config& config) -> void
+		{
+			if (Reflyem::Core::can_modify_actor_value(a_this, a_actor, a_value, av)) {
+				auto effects_damage =
+					Reflyem ::Core ::get_effects_by_keyword(*a_actor, *config.petrified_blood_acc_mgef_kw);
+
+				auto effects_timer =
+					Reflyem ::Core ::get_effects_by_keyword(*a_actor, *config.petrified_blood_timer_mgef_kw);
+
+				if (effects_damage.size() <= 0 || effects_timer.size() <= 0) {
+					return;
+				}
+
+				a_value = std::abs(a_value);
+				auto blood_damage_tick = petrified_blood(*a_actor, a_value, config);
+
+				if (blood_damage_tick > 0.f) {
+					effects_damage[0]->magnitude += blood_damage_tick;
+				}
+
+				a_value = -a_value;
+			}
+		}
+
+		auto on_weapon_hit(
+			RE::Actor*             target,
+			RE::HitData&           hit_data,
+			const Reflyem::Config& config) -> void
+		{
+			auto blood_damage_tick = petrified_blood(*target, hit_data.totalDamage, config);
+
+			if (blood_damage_tick > 0.f) {
+				petrified_blood_cast(*target, blood_damage_tick, config);
+			}
+		}
+	}
 }
-  
