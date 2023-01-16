@@ -52,6 +52,18 @@ OnAnimationEventPc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>   
 
 auto
 OnAdjustActiveEffect::adjust_active_effect(RE::ActiveEffect *a_this, float a_power, bool a_arg3) -> void {
+  if (a_this) {
+    auto caster = a_this->GetCasterActor();
+    auto target = a_this->GetTargetActor();
+    if (caster && target) {
+      logger::info("Target HP: {} Caster HP: {} Target Level: {} Caster Level: {}",
+                   target->GetActorValue(RE::ActorValue::kHealth), caster->GetActorValue(RE::ActorValue::kHealth),
+                   target->GetLevel(), caster->GetLevel());
+      logger::info("Effect, mag: {}, dur: {}", a_this->magnitude, a_this->duration);
+    } else {
+      logger::info("Caster or target is null");
+    }
+  }
   _adjust_active_effect(a_this, a_power, a_arg3);
   return;
 }

@@ -75,6 +75,8 @@ constexpr auto MaxCost                   = "MaxCost";
 constexpr auto MinCost                   = "MinCost";
 constexpr auto AccumulateEffectKeywordId = "AccumulateEffectKeywordId";
 constexpr auto TimerKeywordId            = "TimerKeywordId";
+constexpr auto FlatCost                  = "FlatCost";
+constexpr auto BlockDodgeWhenAttack      = "BlockDodgeWhenAttack";
 
 const Config &
 Config::get_singleton() noexcept {
@@ -299,14 +301,17 @@ Config::get_singleton() noexcept {
     logger::info("config init: tk dodge");
     instance.tk_dodge_enable = tbl[TKDodge][Enable].value_or(false);
     if (instance.tk_dodge_enable) {
-      instance.tk_dodge_gamepad_treshold     = 0.15f;
-      instance.tk_dodge_iframe_duration      = tbl[TKDodge][iFrameDuration].value_or(0.5f);
-      instance.tk_dodge_step                 = tbl[TKDodge][StepDodge].value_or(false);
-      instance.tk_dodge_key                  = tbl[TKDodge][DodgeKey].value_or(277);
-      instance.tk_dodge_sprint_tapping_dodge = tbl[TKDodge][EnableTappingDodge].value_or(false);
-      instance.tk_dodge_key_up_delay         = tbl[TKDodge][KeyUpDelay].value_or(0.2f);
-      instance.tk_dodge_max_cost             = tbl[TKDodge][MaxCost].value_or(40.f);
-      instance.tk_dodge_min_cost             = tbl[TKDodge][MinCost].value_or(10.f);
+      instance.tk_dodge_gamepad_treshold        = 0.15f;
+      instance.tk_dodge_iframe_duration         = tbl[TKDodge][iFrameDuration].value_or(0.5f);
+      instance.tk_dodge_step                    = tbl[TKDodge][StepDodge].value_or(false);
+      instance.tk_dodge_key                     = tbl[TKDodge][DodgeKey].value_or(277);
+      instance.tk_dodge_sprint_tapping_dodge    = tbl[TKDodge][EnableTappingDodge].value_or(false);
+      instance.tk_dodge_block_dodge_when_attack = tbl[TKDodge][BlockDodgeWhenAttack].value_or(false);
+      instance.tk_dodge_key_up_delay            = tbl[TKDodge][KeyUpDelay].value_or(0.2f);
+      instance.tk_dodge_equipped_weight_mult    = tbl[TKDodge][WeightMult].value_or(1.0f);
+      instance.tk_dodge_flat_cost               = tbl[TKDodge][FlatCost].value_or(0.f);
+      instance.tk_dodge_max_cost                = tbl[TKDodge][MaxCost].value_or(40.f);
+      instance.tk_dodge_min_cost                = tbl[TKDodge][MinCost].value_or(10.f);
 
       auto tk_health  = tbl[TKDodge][KeywordHealthId].value<RE::FormID>();
       auto tk_stamina = tbl[TKDodge][KeywordStaminaId].value<RE::FormID>();

@@ -133,16 +133,19 @@ public:
   RE::ActorValue magic_crit_damage_av;
   std::int32_t   magic_crit_high;
 
-  // TK Dodge reimplement
+  // TK Dodge RE reimplement
   bool            tk_dodge_enable;
   std::uint32_t   tk_dodge_key;
   std::int32_t    tk_dodge_step;
   float           tk_dodge_iframe_duration;
   float           tk_dodge_gamepad_treshold;
   bool            tk_dodge_sprint_tapping_dodge;
+  bool            tk_dodge_block_dodge_when_attack;
   float           tk_dodge_key_up_delay;
   float           tk_dodge_max_cost;
   float           tk_dodge_min_cost;
+  float           tk_dodge_flat_cost;
+  float           tk_dodge_equipped_weight_mult;
   RE::BGSKeyword *tk_dodge_health_kw;
   RE::BGSKeyword *tk_dodge_stamina_kw;
   RE::BGSKeyword *tk_dodge_magicka_kw;

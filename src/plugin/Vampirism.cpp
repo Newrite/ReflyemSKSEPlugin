@@ -84,6 +84,16 @@ on_weapon_hit(RE::Actor *target, RE::HitData &hit_data, const Reflyem::Config &c
     return;
   }
 
+  // if (target->IsPlayerRef()) {
+  //   auto damage_resist = 100.f;
+  //   RE::BGSEntryPoint::HandleEntryPoint(RE::BGSEntryPoint::ENTRY_POINT::kModIncomingDamage, target, hit_data.weapon, agressor.get(),
+  //                                       std::addressof(damage_resist));
+  //   logger::info("D_Resist: {}, T_Damage: {}, P_Damage: {}, H_Damage: {}, R_Damage: {}", damage_resist,
+  //                hit_data.totalDamage, hit_data.physicalDamage, hit_data.bonusHealthDamageMult,
+  //                hit_data.reflectedDamage);
+  //   logger::info("RPD_damage: {}, RTD_damage: {}", hit_data.resistedPhysicalDamage, hit_data.resistedTypedDamage);
+  // }
+
   if (config.vampirism_enable) {
     av_vampirism(*target, *agressor, hit_data.totalDamage, config);
   }

@@ -45,7 +45,8 @@ get_actor_effects_mask(RE::Actor &actor, const Reflyem::Config &config) -> std::
 
 auto
 calc_dodge_cost(RE::Actor &actor, const Reflyem::Config &config) -> float {
-  auto cost = actor.equippedWeight / 2.f;
+  auto cost = actor.equippedWeight * config.tk_dodge_equipped_weight_mult;
+  cost += config.tk_dodge_flat_cost;
 
   if (cost > config.tk_dodge_max_cost) {
     cost = config.tk_dodge_max_cost;
@@ -69,10 +70,14 @@ get_drain_value(RE::Actor &actor, const Reflyem::Config &config) -> std::shared_
 }
 
 auto
-is_allow_pc_control_for_dodge(RE::PlayerCharacter &player) -> bool {
+is_allow_pc_control_for_dodge(RE::PlayerCharacter &player, bool check_attack) -> bool {
+  auto isAttacking = false;
+  if (check_attack) {
+    isAttacking = player.IsAttacking();
+  }
   return player.GetSitSleepState() == RE::SIT_SLEEP_STATE::kNormal &&
          player.GetKnockState() == RE::KNOCK_STATE_ENUM::kNormal && player.GetFlyState() == RE::FLY_STATE::kNone &&
-         !player.IsSneaking() && !player.IsSwimming() && !player.IsInKillMove();
+         !player.IsSneaking() && !isAttacking && !player.IsSwimming() && !player.IsInKillMove();
 }
 
 auto
@@ -104,8 +109,8 @@ is_enough_resource_for_dodge(RE::Actor &actor, DrainValues &drain_values) -> boo
 }
 
 auto
-is_allow_dodge(RE::PlayerCharacter &player, DrainValues &drain_values) -> bool {
-  return is_allow_pc_control_for_dodge(player) && is_enough_resource_for_dodge(player, drain_values);
+is_allow_dodge(RE::PlayerCharacter &player, DrainValues &drain_values, bool check_attack) -> bool {
+  return is_allow_pc_control_for_dodge(player, check_attack) && is_enough_resource_for_dodge(player, drain_values);
 }
 
 auto
@@ -424,7 +429,8 @@ process_event_input_handler(RE::InputEvent *const *a_event, RE::BSTEventSource<R
         return RE::BSEventNotifyControl::kContinue;
       }
 
-      if (!dodge_event.empty() && is_allow_dodge(*player_character, *drain_values)) {
+      if (!dodge_event.empty() &&
+          is_allow_dodge(*player_character, *drain_values, config.tk_dodge_block_dodge_when_attack)) {
         logger::debug(FMT_STRING("{} Trigger!"), dodge_event);
         bool IsDodging = false;
         if (player_character->GetGraphVariableBool("bIsDodging", IsDodging) && IsDodging) {
