@@ -5,7 +5,7 @@ namespace Reflyem {
 namespace CastOnHit {
 
 auto
-on_weapon_hit(RE::Actor *target, RE::HitData &hit_data, const Reflyem::Config &config) -> void {
+on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Reflyem::Config& config) -> void {
   auto agressor = hit_data.aggressor.get();
 
   if (!agressor || target->IsDead()) {

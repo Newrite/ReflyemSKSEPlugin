@@ -74,11 +74,18 @@ constexpr auto KeyUpDelay                = "KeyUpDelay";
 constexpr auto MaxCost                   = "MaxCost";
 constexpr auto MinCost                   = "MinCost";
 constexpr auto AccumulateEffectKeywordId = "AccumulateEffectKeywordId";
-constexpr auto TimerKeywordId            = "TimerKeywordId";
+constexpr auto Timer100KeywordId         = "Timer100KeywordId";
 constexpr auto FlatCost                  = "FlatCost";
 constexpr auto BlockDodgeWhenAttack      = "BlockDodgeWhenAttack";
+constexpr auto BlockDodgeWhenPowerAttack = "BlockDodgeWhenPowerAttack";
+constexpr auto BlockDodgeWhenCasting     = "BlockDodgeWhenCasting";
+constexpr auto SpellBlockAttackId        = "SpellBlockAttackId";
+constexpr auto SpellBlockPowerAttackId   = "SpellBlockPowerAttackId";
+constexpr auto SpellBlockBashId          = "SpellBlockBashId";
+constexpr auto SpellMoveDebuffId         = "SpellMoveDebuffId";
+constexpr auto CasterDebuff              = "CasterDebuff";
 
-const Config &
+const Config&
 Config::get_singleton() noexcept {
   static Config instance;
 
@@ -176,10 +183,6 @@ Config::get_singleton() noexcept {
       instance.petrified_blood_acc_mgef_kw =
           data_handler->LookupForm<RE::BGSKeyword>(pb_kw_form_id.value(), instance.mod_name);
 
-      auto pb_timer_form_id = tbl[PetrifiedBlood][TimerKeywordId].value<RE::FormID>();
-      instance.petrified_blood_timer_mgef_kw =
-          data_handler->LookupForm<RE::BGSKeyword>(pb_timer_form_id.value(), instance.mod_name);
-
       instance.petrified_blood_magick   = tbl[PetrifiedBlood][Magick].value_or(false);
       instance.petrified_blood_physical = tbl[PetrifiedBlood][Physical].value_or(false);
     }
@@ -246,6 +249,17 @@ Config::get_singleton() noexcept {
       instance.resource_manager_block_spend_enable  = tbl[ResourceManager][EnableBlock].value_or(false);
       instance.resource_manager_bash_spend_enable   = tbl[ResourceManager][EnableBashSpend].value_or(false);
 
+      auto rm_block_attack       = tbl[ResourceManager][SpellBlockAttackId].value<RE::FormID>();
+      auto rm_block_power_attack = tbl[ResourceManager][SpellBlockPowerAttackId].value<RE::FormID>();
+      auto rm_block_bash         = tbl[ResourceManager][SpellBlockBashId].value<RE::FormID>();
+
+      instance.resource_manage_spell_block_attack =
+          data_handler->LookupForm<RE::SpellItem>(rm_block_attack.value(), instance.mod_name);
+      instance.resource_manage_spell_block_power_attack =
+          data_handler->LookupForm<RE::SpellItem>(rm_block_power_attack.value(), instance.mod_name);
+      instance.resource_manage_spell_block_bash =
+          data_handler->LookupForm<RE::SpellItem>(rm_block_bash.value(), instance.mod_name);
+
       instance.resource_manager_attack_cost_av =
           static_cast<RE::ActorValue>(tbl[ResourceManager][ActorValueAttackCostIndex].value_or(120));
       instance.resource_manager_power_attack_cost_av =
@@ -301,17 +315,19 @@ Config::get_singleton() noexcept {
     logger::info("config init: tk dodge");
     instance.tk_dodge_enable = tbl[TKDodge][Enable].value_or(false);
     if (instance.tk_dodge_enable) {
-      instance.tk_dodge_gamepad_treshold        = 0.15f;
-      instance.tk_dodge_iframe_duration         = tbl[TKDodge][iFrameDuration].value_or(0.5f);
-      instance.tk_dodge_step                    = tbl[TKDodge][StepDodge].value_or(false);
-      instance.tk_dodge_key                     = tbl[TKDodge][DodgeKey].value_or(277);
-      instance.tk_dodge_sprint_tapping_dodge    = tbl[TKDodge][EnableTappingDodge].value_or(false);
-      instance.tk_dodge_block_dodge_when_attack = tbl[TKDodge][BlockDodgeWhenAttack].value_or(false);
-      instance.tk_dodge_key_up_delay            = tbl[TKDodge][KeyUpDelay].value_or(0.2f);
-      instance.tk_dodge_equipped_weight_mult    = tbl[TKDodge][WeightMult].value_or(1.0f);
-      instance.tk_dodge_flat_cost               = tbl[TKDodge][FlatCost].value_or(0.f);
-      instance.tk_dodge_max_cost                = tbl[TKDodge][MaxCost].value_or(40.f);
-      instance.tk_dodge_min_cost                = tbl[TKDodge][MinCost].value_or(10.f);
+      instance.tk_dodge_gamepad_treshold              = 0.15f;
+      instance.tk_dodge_iframe_duration               = tbl[TKDodge][iFrameDuration].value_or(0.5f);
+      instance.tk_dodge_step                          = tbl[TKDodge][StepDodge].value_or(false);
+      instance.tk_dodge_key                           = tbl[TKDodge][DodgeKey].value_or(277);
+      instance.tk_dodge_sprint_tapping_dodge          = tbl[TKDodge][EnableTappingDodge].value_or(false);
+      instance.tk_dodge_block_dodge_when_attack       = tbl[TKDodge][BlockDodgeWhenAttack].value_or(false);
+      instance.tk_dodge_block_dodge_when_power_attack = tbl[TKDodge][BlockDodgeWhenPowerAttack].value_or(false);
+      instance.tk_dodge_block_dodge_when_casting      = tbl[TKDodge][BlockDodgeWhenCasting].value_or(false);
+      instance.tk_dodge_key_up_delay                  = tbl[TKDodge][KeyUpDelay].value_or(0.2f);
+      instance.tk_dodge_equipped_weight_mult          = tbl[TKDodge][WeightMult].value_or(1.0f);
+      instance.tk_dodge_flat_cost                     = tbl[TKDodge][FlatCost].value_or(0.f);
+      instance.tk_dodge_max_cost                      = tbl[TKDodge][MaxCost].value_or(40.f);
+      instance.tk_dodge_min_cost                      = tbl[TKDodge][MinCost].value_or(10.f);
 
       auto tk_health  = tbl[TKDodge][KeywordHealthId].value<RE::FormID>();
       auto tk_stamina = tbl[TKDodge][KeywordStaminaId].value<RE::FormID>();
@@ -320,6 +336,16 @@ Config::get_singleton() noexcept {
       instance.tk_dodge_health_kw  = data_handler->LookupForm<RE::BGSKeyword>(tk_health.value(), instance.mod_name);
       instance.tk_dodge_stamina_kw = data_handler->LookupForm<RE::BGSKeyword>(tk_stamina.value(), instance.mod_name);
       instance.tk_dodge_magicka_kw = data_handler->LookupForm<RE::BGSKeyword>(tk_magicka.value(), instance.mod_name);
+    }
+
+    logger::info("config init: caster debuff");
+    instance.caster_debuff_enable = tbl[CasterDebuff][Enable].value_or(false);
+    if (instance.caster_debuff_enable) {
+
+      auto caster_spell_debuff_id = tbl[CasterDebuff][SpellMoveDebuffId].value<RE::FormID>();
+
+      instance.caster_debuff_spell =
+          data_handler->LookupForm<RE::SpellItem>(caster_spell_debuff_id.value(), instance.mod_name);
     }
 
     logger::info("finish init config");

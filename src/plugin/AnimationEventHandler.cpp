@@ -20,8 +20,8 @@ static std::map<std::string, AnimationEvent> animation_map{{weaponSwing, Animati
                                                            {bashExit, AnimationEvent::kBashExit}};
 
 auto
-try_find_animation(std::string &key) -> AnimationEvent {
-  auto it = animation_map.find(key);
+try_find_animation(std::string& key) -> AnimationEvent {
+  const auto it = animation_map.find(key);
   if (it == animation_map.end()) {
     return AnimationEvent::kNone;
   }
@@ -29,12 +29,12 @@ try_find_animation(std::string &key) -> AnimationEvent {
 }
 
 auto
-animation_handler(RE::BSAnimationGraphEvent *a_event, const Reflyem::Config &config) -> void {
+animation_handler(RE::BSAnimationGraphEvent* a_event, const Reflyem::Config& config) -> void {
   if (!config.resource_manager_enable) {
     return;
   }
 
-  auto actor = const_cast<RE::Actor *>(a_event->holder->As<RE::Actor>());
+  auto actor = const_cast<RE::Actor*>(a_event->holder->As<RE::Actor>());
   if (actor) {
     auto anim_event      = fmt::format("{}", a_event->tag);
     auto is_power_attack = Reflyem::Core::is_power_attacking(*actor);
@@ -51,7 +51,7 @@ animation_handler(RE::BSAnimationGraphEvent *a_event, const Reflyem::Config &con
     case AnimationEvent::kBowDrawStart:
     case AnimationEvent::kBashExit: {
       logger::debug("event proc {}", anim_event);
-      Reflyem ::ResourceManager ::handler(animation, *actor, is_power_attack, config);
+      Reflyem ::ResourceManager ::animation_handler(animation, *actor, is_power_attack, config);
       return;
     }
     default:
@@ -63,7 +63,7 @@ animation_handler(RE::BSAnimationGraphEvent *a_event, const Reflyem::Config &con
 } // namespace AnimationEventHandler
 
 auto
-PlayerAnimationHandler::register_sink(RE::Actor *actor) -> bool {
+PlayerAnimationHandler::register_sink(RE::Actor* actor) -> bool {
   static PlayerAnimationHandler g_eventhandler;
 
   RE::BSAnimationGraphManagerPtr graph_mgr;
@@ -85,10 +85,10 @@ PlayerAnimationHandler::register_sink(RE::Actor *actor) -> bool {
 }
 
 auto
-PlayerAnimationHandler::ProcessEvent(const RE::BSAnimationGraphEvent               *a_event,
-                                     RE::BSTEventSource<RE::BSAnimationGraphEvent> *a_eventSource)
+PlayerAnimationHandler::ProcessEvent(const RE::BSAnimationGraphEvent*               a_event,
+                                     RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource)
     -> RE::BSEventNotifyControl {
-  auto &config = Reflyem::Config::get_singleton();
+  auto& config = Reflyem::Config::get_singleton();
   if (config.tk_dodge_enable) {
     return Reflyem::TKDodge::process_event_player_animation(a_event, a_eventSource, config);
   }

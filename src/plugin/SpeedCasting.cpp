@@ -2,15 +2,11 @@
 
 namespace Reflyem {
 namespace SpeedCasting {
+
 auto
-on_main_update(RE::Main *, float, const Reflyem::Config &config) -> void {
-  auto player = RE::PlayerCharacter::GetSingleton();
+on_update_actor(RE::Character& player, float, const Reflyem::Config& config) -> void {
 
-  if (!player) {
-    return;
-  }
-
-  auto speed_casting_percent = player->GetActorValue(config.speed_casting_av);
+  auto speed_casting_percent = player.GetActorValue(config.speed_casting_av);
   auto float_percent         = (1.f - (speed_casting_percent / 100.f));
   if (float_percent > config.speed_casting_high) {
     float_percent = config.speed_casting_high;
@@ -21,5 +17,6 @@ on_main_update(RE::Main *, float, const Reflyem::Config &config) -> void {
 
   config.speed_casting_global->value = float_percent;
 }
+
 } // namespace SpeedCasting
 } // namespace Reflyem

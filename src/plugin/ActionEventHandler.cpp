@@ -2,7 +2,7 @@
 
 namespace Reflyem {
 
-[[nodiscard]] ActionEventHandler *
+[[nodiscard]] ActionEventHandler*
 ActionEventHandler::get_singleton() noexcept {
   static ActionEventHandler instance;
 
@@ -18,7 +18,7 @@ ActionEventHandler::get_singleton() noexcept {
 }
 
 auto
-ActionEventHandler::ProcessEvent(const SKSE::ActionEvent *event, RE::BSTEventSource<SKSE::ActionEvent> *)
+ActionEventHandler::ProcessEvent(const SKSE::ActionEvent* event, RE::BSTEventSource<SKSE::ActionEvent>*)
     -> RE::BSEventNotifyControl {
   logger::info("actor level: {}", event->actor->GetLevel());
   logger::info("get action event {}", static_cast<int>(event->type.get()));

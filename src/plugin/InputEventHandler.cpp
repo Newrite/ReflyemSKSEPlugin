@@ -12,15 +12,15 @@ InputEventHandler::Register() -> void {
 }
 
 auto
-InputEventHandler::get_singleton() -> InputEventHandler * {
+InputEventHandler::get_singleton() -> InputEventHandler* {
   static InputEventHandler singleton;
   return std::addressof(singleton);
 }
 
 auto
-InputEventHandler::ProcessEvent(RE::InputEvent *const *a_event, RE::BSTEventSource<RE::InputEvent *> *a_eventSource)
+InputEventHandler::ProcessEvent(RE::InputEvent* const* a_event, RE::BSTEventSource<RE::InputEvent*>* a_eventSource)
     -> RE::BSEventNotifyControl {
-  auto &config = Reflyem::Config::get_singleton();
+  auto& config = Reflyem::Config::get_singleton();
   if (config.tk_dodge_enable) {
     return Reflyem::TKDodge::process_event_input_handler(a_event, a_eventSource, config);
   }

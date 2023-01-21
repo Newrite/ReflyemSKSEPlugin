@@ -5,7 +5,7 @@ namespace Reflyem {
 namespace MagicShield {
 
 auto
-magic_shield(RE::Actor &target, float &damage_value, const Reflyem::Config &config) -> void {
+magic_shield(RE::Actor& target, float& damage_value, const Reflyem::Config& config) -> void {
   auto magic_shield_percent = target.GetActorValue(config.magic_shield_av);
 
   if (magic_shield_percent <= 0.f) {
@@ -39,8 +39,8 @@ magic_shield(RE::Actor &target, float &damage_value, const Reflyem::Config &conf
 }
 
 auto
-modify_actor_value(RE::ValueModifierEffect *a_this, RE::Actor *a_actor, float &a_value, RE::ActorValue av,
-                   const Reflyem::Config &config) -> void {
+modify_actor_value(RE::ValueModifierEffect* a_this, RE::Actor* a_actor, float& a_value, RE::ActorValue av,
+                   const Reflyem::Config& config) -> void {
   if (Reflyem::Core::can_modify_actor_value(a_this, a_actor, a_value, av)) {
     logger::info("magic shield value before: {}", a_value);
     a_value = std::abs(a_value);
@@ -51,7 +51,7 @@ modify_actor_value(RE::ValueModifierEffect *a_this, RE::Actor *a_actor, float &a
 }
 
 auto
-on_weapon_hit(RE::Actor *target, RE::HitData &hit_data, const Reflyem::Config &config) -> void {
+on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Reflyem::Config& config) -> void {
   magic_shield(*target, hit_data.totalDamage, config);
 }
 } // namespace MagicShield

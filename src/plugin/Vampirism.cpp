@@ -5,7 +5,7 @@ namespace Reflyem {
 namespace Vampirism {
 
 auto
-vampirism(RE::Actor &target, RE::Actor &agressor, float &damage_value, RE::ActorValue av, float vampirism_percent)
+vampirism(RE::Actor& target, RE::Actor& agressor, float& damage_value, RE::ActorValue av, float vampirism_percent)
     -> void {
   if (vampirism_percent <= 0.f) {
     return;
@@ -31,13 +31,13 @@ vampirism(RE::Actor &target, RE::Actor &agressor, float &damage_value, RE::Actor
 }
 
 auto
-av_vampirism(RE::Actor &target, RE::Actor &agressor, float &damage_value, const Reflyem::Config &config) -> void {
+av_vampirism(RE::Actor& target, RE::Actor& agressor, float& damage_value, const Reflyem::Config& config) -> void {
   auto vampirism_percent = agressor.GetActorValue(config.vampirism_av);
   vampirism(target, agressor, damage_value, RE::ActorValue::kHealth, vampirism_percent);
 }
 
 auto
-mgef_vampirism(RE::Actor &target, RE::Actor &agressor, float &damage_value, RE::BGSKeyword &key, RE::ActorValue av)
+mgef_vampirism(RE::Actor& target, RE::Actor& agressor, float& damage_value, RE::BGSKeyword& key, RE::ActorValue av)
     -> void {
   auto effects           = Reflyem::Core::get_effects_by_keyword(agressor, key);
   auto vampirism_percent = Reflyem ::Core ::get_effects_magnitude_sum(effects).value_or(0.f);
@@ -46,8 +46,8 @@ mgef_vampirism(RE::Actor &target, RE::Actor &agressor, float &damage_value, RE::
 }
 
 auto
-modify_actor_value(RE::ValueModifierEffect *a_this, RE::Actor *a_actor, float &a_value, RE::ActorValue av,
-                   const Reflyem::Config &config) -> void {
+modify_actor_value(RE::ValueModifierEffect* a_this, RE::Actor* a_actor, float& a_value, RE::ActorValue av,
+                   const Reflyem::Config& config) -> void {
   if (Reflyem::Core::can_modify_actor_value(a_this, a_actor, a_value, av)) {
     auto agressor = a_this->GetCasterActor().get();
 
@@ -77,7 +77,7 @@ modify_actor_value(RE::ValueModifierEffect *a_this, RE::Actor *a_actor, float &a
 }
 
 auto
-on_weapon_hit(RE::Actor *target, RE::HitData &hit_data, const Reflyem::Config &config) -> void {
+on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Reflyem::Config& config) -> void {
   auto agressor = hit_data.aggressor.get();
 
   if (!agressor || target->IsDead()) {
@@ -86,7 +86,8 @@ on_weapon_hit(RE::Actor *target, RE::HitData &hit_data, const Reflyem::Config &c
 
   // if (target->IsPlayerRef()) {
   //   auto damage_resist = 100.f;
-  //   RE::BGSEntryPoint::HandleEntryPoint(RE::BGSEntryPoint::ENTRY_POINT::kModIncomingDamage, target, hit_data.weapon, agressor.get(),
+  //   RE::BGSEntryPoint::HandleEntryPoint(RE::BGSEntryPoint::ENTRY_POINT::kModIncomingDamage, target, hit_data.weapon,
+  //   agressor.get(),
   //                                       std::addressof(damage_resist));
   //   logger::info("D_Resist: {}, T_Damage: {}, P_Damage: {}, H_Damage: {}, R_Damage: {}", damage_resist,
   //                hit_data.totalDamage, hit_data.physicalDamage, hit_data.bonusHealthDamageMult,
