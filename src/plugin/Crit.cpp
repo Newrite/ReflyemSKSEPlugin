@@ -1,13 +1,12 @@
-#include "Crit.h"
-#include "Core.h"
+#include "Crit.hpp"
+#include "Core.hpp"
 
 namespace Reflyem {
 namespace Crit {
 
-auto
-crit(RE::Actor& agressor, RE::Actor& target, float& damage, RE::ActorValue crit_chance_av,
-     RE::ActorValue crit_damage_av, std::int32_t crit_damage_high, bool physical_crit, const Reflyem::Config& config)
-    -> void {
+auto crit(RE::Actor& agressor, RE::Actor& target, float& damage, RE::ActorValue crit_chance_av,
+          RE::ActorValue crit_damage_av, std::int32_t crit_damage_high, bool physical_crit,
+          const Reflyem::Config& config) -> void {
   auto crit_chance = static_cast<int>(agressor.GetActorValue(crit_chance_av));
   auto crit_damage = static_cast<int>(agressor.GetActorValue(crit_damage_av));
 
@@ -39,8 +38,7 @@ crit(RE::Actor& agressor, RE::Actor& target, float& damage, RE::ActorValue crit_
   }
 }
 
-auto
-on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Reflyem::Config& config) -> void {
+auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Reflyem::Config& config) -> void {
   auto agressor = hit_data.aggressor.get();
 
   if (!agressor || target->IsDead()) {
@@ -51,9 +49,8 @@ on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Reflyem::Config& c
        config.weapon_crit_high, true, config);
 }
 
-auto
-modify_actor_value(RE::ValueModifierEffect* a_this, RE::Actor* a_actor, float& a_value, RE::ActorValue av,
-                   const Reflyem::Config& config) -> void {
+auto modify_actor_value(RE::ValueModifierEffect* a_this, RE::Actor* a_actor, float& a_value, RE::ActorValue av,
+                        const Reflyem::Config& config) -> void {
   if (Reflyem::Core::can_modify_actor_value(a_this, a_actor, a_value, av)) {
     auto caster = a_this->GetCasterActor().get();
     a_value     = std::abs(a_value);

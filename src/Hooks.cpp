@@ -1,14 +1,14 @@
-#include "Hooks.h"
-#include "CastOnHit.h"
-#include "CheatDeath.h"
-#include "Core.h"
-#include "Crit.h"
-#include "MagicShield.h"
-#include "PetrifiedBlood.h"
-#include "ResourceManager.h"
-#include "SpeedCasting.h"
-#include "Vampirism.h"
-#include "CasterDebuff.h"
+#include "Hooks.hpp"
+#include "CastOnHit.hpp"
+#include "CasterDebuff.hpp"
+#include "CheatDeath.hpp"
+#include "Core.hpp"
+#include "Crit.hpp"
+#include "MagicShield.hpp"
+#include "PetrifiedBlood.hpp"
+#include "ResourceManager.hpp"
+#include "SpeedCasting.hpp"
+#include "Vampirism.hpp"
 
 namespace Hooks {
 
@@ -16,29 +16,30 @@ static ULONGLONG timer1000 = 0;
 static ULONGLONG timer500  = 0;
 static ULONGLONG timer100  = 0;
 
-auto
-update_actor(RE::Character& character, float delta, const Reflyem::Config& config) -> void {
+auto update_actor(RE::Character& character, float delta, const Reflyem::Config& config) -> void {
 
   logger::debug("update actor"sv);
+
+  const auto ptr_key = 0; // reinterpret_cast<std::uintptr_t>(&character);
 
   const auto tick = GetTickCount64();
 
   ULONGLONG last_tick100  = 0;
   ULONGLONG last_tick1000 = 0;
 
-  if (Reflyem::Core::character_timer_map100.contains(&character)) {
+  if (Reflyem::Core::character_timer_map100.contains(ptr_key)) {
     logger::debug("update actor map100"sv);
-    last_tick100 = Reflyem::Core::character_timer_map100.at(&character);
+    last_tick100 = Reflyem::Core::character_timer_map100.at(ptr_key);
   }
 
-  if (Reflyem::Core::character_timer_map1000.contains(&character)) {
+  if (Reflyem::Core::character_timer_map1000.contains(ptr_key)) {
     logger::debug("update actor map1000"sv);
-    last_tick1000 = Reflyem::Core::character_timer_map1000.at(&character);
+    last_tick1000 = Reflyem::Core::character_timer_map1000.at(ptr_key);
   }
 
   if (tick - last_tick100 > 100) {
     logger::debug("update actor map100 tick"sv);
-    Reflyem::Core::character_timer_map100[&character] = tick;
+    Reflyem::Core::character_timer_map100[ptr_key] = tick;
     if (config.resource_manager_enable) {
       Reflyem::ResourceManager::update_actor(character, delta, config);
     }
@@ -49,7 +50,7 @@ update_actor(RE::Character& character, float delta, const Reflyem::Config& confi
 
   if (tick - last_tick1000 > 1000) {
     logger::debug("update actor map1000 tick"sv);
-    Reflyem::Core::character_timer_map1000[&character] = tick;
+    Reflyem::Core::character_timer_map1000[ptr_key] = tick;
     if (config.petrified_blood_enable && config.petrified_blood_magick) {
       Reflyem::PetrifiedBlood::character_update(character, delta, config);
     }
@@ -78,8 +79,7 @@ update_actor(RE::Character& character, float delta, const Reflyem::Config& confi
   return;
 }
 
-auto
-OnPlayerCharacterUpdate::update(RE::PlayerCharacter* a_this, float delta) -> void {
+auto OnPlayerCharacterUpdate::update(RE::PlayerCharacter* a_this, float delta) -> void {
   if (a_this) {
 
     auto& config = Reflyem::Config::get_singleton();
@@ -89,8 +89,7 @@ OnPlayerCharacterUpdate::update(RE::PlayerCharacter* a_this, float delta) -> voi
   return _update(a_this, delta);
 }
 
-auto
-OnCharacterUpdate::update(RE::Character* a_this, float delta) -> void {
+auto OnCharacterUpdate::update(RE::Character* a_this, float delta) -> void {
   if (a_this) {
 
     auto& config = Reflyem::Config::get_singleton();
@@ -100,22 +99,19 @@ OnCharacterUpdate::update(RE::Character* a_this, float delta) -> void {
   return _update(a_this, delta);
 }
 
-auto
-OnAttackData::process_attack(RE::ActorValueOwner* value_owner, RE::BGSAttackData* attack_data) -> void {
+auto OnAttackData::process_attack(RE::ActorValueOwner* value_owner, RE::BGSAttackData* attack_data) -> void {
   _process_attack(value_owner, attack_data);
   return;
 }
 
-auto
-OnAttackAction::attack_action(RE::TESActionData* a_actionData) -> bool {
+auto OnAttackAction::attack_action(RE::TESActionData* a_actionData) -> bool {
   logger::info("Attack Action: {}", static_cast<std::uint32_t>(a_actionData->GetSourceActorState()->GetAttackState()));
   return false;
 }
 
-auto
-OnAnimationEventNpc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   a_this,
-                                   RE::BSAnimationGraphEvent*                     a_event,
-                                   RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_dispatcher) -> void {
+auto OnAnimationEventNpc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   a_this,
+                                        RE::BSAnimationGraphEvent*                     a_event,
+                                        RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_dispatcher) -> void {
   if (a_event && a_event->holder) {
     auto& config = Reflyem::Config::get_singleton();
     Reflyem::AnimationEventHandler::animation_handler(a_event, config);
@@ -124,10 +120,9 @@ OnAnimationEventNpc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>* 
   return;
 }
 
-auto
-OnAnimationEventPc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   a_this,
-                                  RE::BSAnimationGraphEvent*                     a_event,
-                                  RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_dispatcher) -> void {
+auto OnAnimationEventPc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   a_this,
+                                       RE::BSAnimationGraphEvent*                     a_event,
+                                       RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_dispatcher) -> void {
   if (a_event && a_event->holder) {
     auto& config = Reflyem::Config::get_singleton();
     Reflyem::AnimationEventHandler::animation_handler(a_event, config);
@@ -136,8 +131,7 @@ OnAnimationEventPc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>*  
   return;
 }
 
-auto
-OnAdjustActiveEffect::adjust_active_effect(RE::ActiveEffect* a_this, float a_power, bool a_arg3) -> void {
+auto OnAdjustActiveEffect::adjust_active_effect(RE::ActiveEffect* a_this, float a_power, bool a_arg3) -> void {
   if (a_this) {
     auto caster = a_this->GetCasterActor();
     auto target = a_this->GetTargetActor();
@@ -154,9 +148,8 @@ OnAdjustActiveEffect::adjust_active_effect(RE::ActiveEffect* a_this, float a_pow
   return;
 }
 
-auto
-OnModifyActorValue::modify_actor_value(RE::ValueModifierEffect* a_this, RE::Actor* a_actor, float a_value,
-                                       RE::ActorValue a_actorValue) -> void {
+auto OnModifyActorValue::modify_actor_value(RE::ValueModifierEffect* a_this, RE::Actor* a_actor, float a_value,
+                                            RE::ActorValue a_actorValue) -> void {
   if (!a_actor || !a_this) {
     _modify_actor_value(a_this, a_actor, a_value, a_actorValue);
     return;
@@ -182,9 +175,8 @@ OnModifyActorValue::modify_actor_value(RE::ValueModifierEffect* a_this, RE::Acto
   return;
 }
 
-auto
-OnPeakModifyActorValue::peak_modify_actor_value(RE::ValueModifierEffect* a_this, RE::Actor* a_actor, float a_value,
-                                                RE::ActorValue a_actorValue) -> void {
+auto OnPeakModifyActorValue::peak_modify_actor_value(RE::ValueModifierEffect* a_this, RE::Actor* a_actor, float a_value,
+                                                     RE::ActorValue a_actorValue) -> void {
   logger::debug("peak mod actor value"sv);
 
   if (!a_actor || !a_this) {
@@ -212,9 +204,8 @@ OnPeakModifyActorValue::peak_modify_actor_value(RE::ValueModifierEffect* a_this,
   return;
 }
 
-auto
-OnDualModifyActorValue::dual_modify_actor_value(RE::ValueModifierEffect* a_this, RE::Actor* a_actor, float a_value,
-                                                RE::ActorValue a_actorValue) -> void {
+auto OnDualModifyActorValue::dual_modify_actor_value(RE::ValueModifierEffect* a_this, RE::Actor* a_actor, float a_value,
+                                                     RE::ActorValue a_actorValue) -> void {
   if (!a_actor || !a_this) {
     _dual_modify_actor_value(a_this, a_actor, a_value, a_actorValue);
     return;
@@ -240,10 +231,10 @@ OnDualModifyActorValue::dual_modify_actor_value(RE::ValueModifierEffect* a_this,
   return;
 }
 
-auto
-OnDualModifyActorValueSecondInnerCall::dual_modify_actor_value_second_inner_call(RE::ValueModifierEffect* a_this,
-                                                                                 RE::Actor* a_actor, float a_value,
-                                                                                 RE::ActorValue a_actorValue) -> void {
+auto OnDualModifyActorValueSecondInnerCall::dual_modify_actor_value_second_inner_call(RE::ValueModifierEffect* a_this,
+                                                                                      RE::Actor* a_actor, float a_value,
+                                                                                      RE::ActorValue a_actorValue)
+    -> void {
   if (!a_actor || !a_this) {
     _dual_modify_actor_value_second_inner_call(a_this, a_actor, a_value, a_actorValue);
     return;
@@ -269,8 +260,7 @@ OnDualModifyActorValueSecondInnerCall::dual_modify_actor_value_second_inner_call
   return;
 }
 
-auto
-OnMainUpdate::main_update(RE::Main* a_this, float a2) -> void {
+auto OnMainUpdate::main_update(RE::Main* a_this, float a2) -> void {
 
   if (const auto ui = RE::UI::GetSingleton(); ui->GameIsPaused()) {
     _main_update(a_this, a2);
@@ -281,8 +271,7 @@ OnMainUpdate::main_update(RE::Main* a_this, float a2) -> void {
   return;
 }
 
-auto
-OnWeaponHit::weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void {
+auto OnWeaponHit::weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void {
   if (!target) {
     _weapon_hit(target, hit_data);
     return;
@@ -320,8 +309,7 @@ OnWeaponHit::weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void {
   return;
 }
 
-auto
-install_hooks() -> void {
+auto install_hooks() -> void {
   logger::info("start install hooks");
   auto& trampoline = SKSE::GetTrampoline();
   trampoline.create(1024);

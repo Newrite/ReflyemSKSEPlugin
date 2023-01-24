@@ -1,10 +1,9 @@
-#include "SpeedCasting.h"
+#include "SpeedCasting.hpp"
 
 namespace Reflyem {
 namespace SpeedCasting {
 
-auto
-on_update_actor(RE::Character& player, float, const Reflyem::Config& config) -> void {
+auto on_update_actor(RE::Character& player, float, const Reflyem::Config& config) -> void {
 
   auto speed_casting_percent = player.GetActorValue(config.speed_casting_av);
   auto float_percent         = (1.f - (speed_casting_percent / 100.f));

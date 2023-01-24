@@ -1,9 +1,8 @@
-#include "CasterDebuff.h"
+#include "CasterDebuff.hpp"
 
 namespace Reflyem {
 namespace CasterDebuff {
-auto
-on_update_actor(RE::Character& actor, float, const Reflyem::Config& config) -> void {
+auto on_update_actor(RE::Character& actor, float, const Reflyem::Config& config) -> void {
 
   if (actor.IsDead()) {
     return;

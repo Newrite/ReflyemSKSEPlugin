@@ -1,7 +1,7 @@
 #pragma once
 
-#include "AnimationEventHandler.h"
-#include "Config.h"
+#include "AnimationEventHandler.hpp"
+#include "Config.hpp"
 
 // reimplement of https://github.com/max-su-2019/TK_Dodge_RE
 namespace Reflyem {

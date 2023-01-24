@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Config.h"
+#include "Config.hpp"
 
 namespace Reflyem {
 namespace Core {
@@ -21,16 +21,16 @@ template <typename L, typename R> struct Either {
   }
 };
 
-using CharcterUniquePtr = std::shared_ptr<RE::Character>;
+static std::map<std::uintptr_t, ULONGLONG> character_timer_map100;
+static std::map<std::uintptr_t, ULONGLONG> character_timer_map1000;
 
-static std::map<RE::Character*, ULONGLONG> character_timer_map100;
-static std::map<RE::Character*, ULONGLONG> character_timer_map1000;
-
-auto character_timer_map_handler(ULONGLONG now_time, std::map<RE::Character*, ULONGLONG>& character_timer_map) -> void;
+auto character_timer_map_handler(ULONGLONG now_time, std::map<std::uintptr_t, ULONGLONG>& character_timer_map) -> void;
 
 auto get_random_int() -> int;
 
 auto damage_actor_value(RE::Actor& actor, RE::ActorValue av, float value) -> void;
+
+auto set_av_regen_delay(RE::AIProcess* process, RE::ActorValue av, float time) -> void;
 
 auto can_modify_actor_value(RE::ValueModifierEffect* a_this, RE::Actor* a_actor, float a_value, RE::ActorValue av)
     -> bool;

@@ -1,4 +1,4 @@
-#include "Config.h"
+#include "Config.hpp"
 
 #include <latch>
 #include <toml++/toml.h>
@@ -85,8 +85,7 @@ constexpr auto SpellBlockBashId          = "SpellBlockBashId";
 constexpr auto SpellMoveDebuffId         = "SpellMoveDebuffId";
 constexpr auto CasterDebuff              = "CasterDebuff";
 
-const Config&
-Config::get_singleton() noexcept {
+const Config& Config::get_singleton() noexcept {
   static Config instance;
 
   static std::atomic_bool initialized;

@@ -1,10 +1,9 @@
-#include "ActionEventHandler.h"
-#include "Config.h"
-#include "Hooks.h"
-#include "InputEventHandler.h"
+#include "ActionEventHandler.hpp"
+#include "Config.hpp"
+#include "Hooks.hpp"
+#include "InputEventHandler.hpp"
 
-auto
-init_logger() -> void {
+auto init_logger() -> void {
   auto path = logger::log_directory();
   if (!path) return;
 
@@ -26,8 +25,7 @@ init_logger() -> void {
   spdlog::set_pattern("%s(%#): [%^%l%$] %v"s);
 }
 
-auto
-initialize_messaging() -> void {
+auto initialize_messaging() -> void {
   if (!SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message* message) {
         switch (message->type) {
           // Skyrim lifecycle events.

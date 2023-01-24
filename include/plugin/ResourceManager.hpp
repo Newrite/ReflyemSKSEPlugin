@@ -1,7 +1,7 @@
 #pragma once
 
-#include "AnimationEventHandler.h"
-#include "Config.h"
+#include "AnimationEventHandler.hpp"
+#include "Config.hpp"
 
 namespace Reflyem {
 namespace ResourceManager {
@@ -29,7 +29,7 @@ auto ranged_spend_handler() -> void;
 auto update_actor(RE::Character& character, float delta, const Reflyem::Config& config) -> void;
 
 auto animation_handler(Reflyem::AnimationEventHandler::AnimationEvent animation, RE::Actor& actor, bool is_power_attack,
-             const Reflyem::Config config) -> void;
+                       const Reflyem::Config config) -> void;
 
 auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Reflyem::Config& config) -> void;
 

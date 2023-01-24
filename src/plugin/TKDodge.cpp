@@ -1,6 +1,6 @@
-#include "TKDodge.h"
-#include "Core.h"
-#include "ResourceManager.h"
+#include "TKDodge.hpp"
+#include "Core.hpp"
+#include "ResourceManager.hpp"
 
 namespace Reflyem {
 namespace TKDodge {
@@ -23,8 +23,7 @@ const std::vector<MovementPair> Directions{
     MovementPair(MovementDirections::kForward, "Forward"), MovementPair(MovementDirections::kBackward, "Back"),
     MovementPair(MovementDirections::kLeft, "Strafe Left"), MovementPair(MovementDirections::kRight, "Strafe Right")};
 
-auto
-get_actor_effects_mask(RE::Actor& actor, const Reflyem::Config& config) -> std::unique_ptr<MGEFMask> {
+auto get_actor_effects_mask(RE::Actor& actor, const Reflyem::Config& config) -> std::unique_ptr<MGEFMask> {
   MGEFMask f_mask{{{0, 0, 0}}};
   logger::debug("start get actor mgef keyword");
   f_mask.at(0).at(0) = 1;
@@ -43,8 +42,7 @@ get_actor_effects_mask(RE::Actor& actor, const Reflyem::Config& config) -> std::
   return std::make_unique<MGEFMask>(f_mask);
 }
 
-auto
-calc_dodge_cost(RE::Actor& actor, const Reflyem::Config& config) -> float {
+auto calc_dodge_cost(RE::Actor& actor, const Reflyem::Config& config) -> float {
   auto cost = actor.equippedWeight * config.tk_dodge_equipped_weight_mult;
   cost += config.tk_dodge_flat_cost;
 
@@ -59,8 +57,7 @@ calc_dodge_cost(RE::Actor& actor, const Reflyem::Config& config) -> float {
   return cost;
 }
 
-auto
-get_drain_value(RE::Actor& actor, const Reflyem::Config& config) -> std::shared_ptr<DrainValues> {
+auto get_drain_value(RE::Actor& actor, const Reflyem::Config& config) -> std::shared_ptr<DrainValues> {
   auto mgef_mask    = get_actor_effects_mask(actor, config);
   auto mask_sum     = Reflyem ::ResourceManager ::calc_mask_sum(*mgef_mask);
   auto dodge_cost   = calc_dodge_cost(actor, config);
@@ -69,8 +66,7 @@ get_drain_value(RE::Actor& actor, const Reflyem::Config& config) -> std::shared_
   return drain_values;
 }
 
-auto
-is_allow_pc_control_for_dodge(RE::PlayerCharacter& player, bool check_attack, bool check_power_attack) -> bool {
+auto is_allow_pc_control_for_dodge(RE::PlayerCharacter& player, bool check_attack, bool check_power_attack) -> bool {
   auto is_attacking       = false;
   auto is_power_attacking = false;
   if (check_attack) {
@@ -84,8 +80,7 @@ is_allow_pc_control_for_dodge(RE::PlayerCharacter& player, bool check_attack, bo
          !player.IsSneaking() && !is_attacking && !is_power_attacking && !player.IsSwimming() && !player.IsInKillMove();
 }
 
-auto
-is_enough_resource_for_dodge(RE::Actor& actor, DrainValues& drain_values) -> bool {
+auto is_enough_resource_for_dodge(RE::Actor& actor, DrainValues& drain_values) -> bool {
   auto magicka = actor.GetActorValue(RE::ActorValue::kMagicka);
   auto health  = actor.GetActorValue(RE::ActorValue::kHealth);
   auto stamina = actor.GetActorValue(RE::ActorValue::kStamina);
@@ -112,15 +107,13 @@ is_enough_resource_for_dodge(RE::Actor& actor, DrainValues& drain_values) -> boo
   return true;
 }
 
-auto
-is_allow_dodge(RE::PlayerCharacter& player, DrainValues& drain_values, bool check_attack, bool check_power_attack)
+auto is_allow_dodge(RE::PlayerCharacter& player, DrainValues& drain_values, bool check_attack, bool check_power_attack)
     -> bool {
   return is_allow_pc_control_for_dodge(player, check_attack, check_power_attack) &&
          is_enough_resource_for_dodge(player, drain_values);
 }
 
-auto
-get_key_hold_duration(const std::uint32_t a_index, float& result) -> bool const {
+auto get_key_hold_duration(const std::uint32_t a_index, float& result) -> bool const {
   auto input_mgr = RE::BSInputDeviceManager::GetSingleton();
 
   if (input_mgr && input_mgr->GetKeyboard()->IsPressed(a_index) &&
@@ -132,8 +125,7 @@ get_key_hold_duration(const std::uint32_t a_index, float& result) -> bool const 
   return false;
 }
 
-auto
-get_keyboard_direction_value() -> MovementDirections {
+auto get_keyboard_direction_value() -> MovementDirections {
   auto ctrl_map = RE::ControlMap::GetSingleton();
 
   std::optional<MovementDirections> packed_dir;
@@ -153,8 +145,7 @@ get_keyboard_direction_value() -> MovementDirections {
   return packed_dir.has_value() ? packed_dir.value() : MovementDirections::kNone;
 }
 
-auto
-normal_absolute_angle(float angle) -> float {
+auto normal_absolute_angle(float angle) -> float {
   static const auto PI = 3.1415927f;
 
   while (angle < 0)
@@ -164,8 +155,7 @@ normal_absolute_angle(float angle) -> float {
   return angle;
 }
 
-auto
-get_game_pad_direction_value() -> MovementDirections {
+auto get_game_pad_direction_value() -> MovementDirections {
   auto input_mgr = RE::BSInputDeviceManager::GetSingleton();
 
   if (input_mgr && input_mgr->GetGamepad()) {
@@ -218,8 +208,7 @@ get_game_pad_direction_value() -> MovementDirections {
   return MovementDirections::kNone;
 }
 
-auto
-get_dodge_event() -> std::string {
+auto get_dodge_event() -> std::string {
   auto direction = MovementDirections::kNone;
 
   auto input_mgr = RE::BSInputDeviceManager::GetSingleton();
@@ -257,8 +246,7 @@ get_dodge_event() -> std::string {
   }
 }
 
-auto
-get_gamepad_index(RE::BSWin32GamepadDevice::Key a_key) -> std::uint32_t {
+auto get_gamepad_index(RE::BSWin32GamepadDevice::Key a_key) -> std::uint32_t {
   using Key = RE::BSWin32GamepadDevice::Key;
 
   std::uint32_t index;
@@ -319,8 +307,7 @@ get_gamepad_index(RE::BSWin32GamepadDevice::Key a_key) -> std::uint32_t {
   return index != kInvalid ? index + kGamepadOffset : kInvalid;
 }
 
-auto
-get_sprint_key(RE::INPUT_DEVICE a_device) -> std::uint32_t {
+auto get_sprint_key(RE::INPUT_DEVICE a_device) -> std::uint32_t {
   using DeviceType = RE::INPUT_DEVICE;
 
   const auto control_map = RE::ControlMap::GetSingleton();
@@ -343,9 +330,9 @@ get_sprint_key(RE::INPUT_DEVICE a_device) -> std::uint32_t {
   return key;
 }
 
-auto
-process_event_player_animation(const RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>*,
-                               const Reflyem::Config&           config) -> RE::BSEventNotifyControl {
+auto process_event_player_animation(const RE::BSAnimationGraphEvent* a_event,
+                                    RE::BSTEventSource<RE::BSAnimationGraphEvent>*, const Reflyem::Config& config)
+    -> RE::BSEventNotifyControl {
   if (!a_event) {
     return RE::BSEventNotifyControl::kContinue;
   }
@@ -371,24 +358,22 @@ process_event_player_animation(const RE::BSAnimationGraphEvent* a_event, RE::BST
   return RE::BSEventNotifyControl::kContinue;
 }
 
-auto
-is_dodge_button_actived(RE::ButtonEvent& button, std::uint32_t key, std::uint32_t const sprint_key,
-                        const Reflyem::Config& config) -> bool {
+auto is_dodge_button_actived(RE::ButtonEvent& button, std::uint32_t key, std::uint32_t const sprint_key,
+                             const Reflyem::Config& config) -> bool {
   return config.tk_dodge_sprint_tapping_dodge
              ? button.IsUp() && button.HeldDuration() <= config.tk_dodge_key_up_delay && key == sprint_key
              : button.IsPressed() && key == config.tk_dodge_key;
 };
 
-auto
-is_not_allow_control_for_dodge(RE::UI& ui, RE::ControlMap& control_map, RE::PlayerControls& player_controls) -> bool {
+auto is_not_allow_control_for_dodge(RE::UI& ui, RE::ControlMap& control_map, RE::PlayerControls& player_controls)
+    -> bool {
   return ui.GameIsPaused() || !control_map.IsMovementControlsEnabled() || !control_map.IsFightingControlsEnabled() ||
          !player_controls.attackBlockHandler || !player_controls.attackBlockHandler->inputEventHandlingEnabled ||
          !player_controls.movementHandler || !player_controls.movementHandler->inputEventHandlingEnabled;
 }
 
-auto
-process_event_input_handler(RE::InputEvent* const* a_event, RE::BSTEventSource<RE::InputEvent*>*,
-                            const Reflyem::Config& config) -> RE::BSEventNotifyControl {
+auto process_event_input_handler(RE::InputEvent* const* a_event, RE::BSTEventSource<RE::InputEvent*>*,
+                                 const Reflyem::Config& config) -> RE::BSEventNotifyControl {
   using EventType  = RE::INPUT_EVENT_TYPE;
   using DeviceType = RE::INPUT_DEVICE;
 

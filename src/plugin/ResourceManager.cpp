@@ -1,10 +1,12 @@
-#include "ResourceManager.h"
-#include "Core.h"
+#include "ResourceManager.hpp"
+#include "Core.hpp"
 
 namespace Reflyem {
 namespace ResourceManager {
 
 using WeaponOrArmor = Reflyem::Core::Either<RE::TESObjectWEAP*, RE::TESObjectARMO*>;
+
+constexpr const auto REGEN_DELAY = 2.5f;
 
 DrainValues::DrainValues(float a_stamina, float a_health, float a_magicka) {
   logger::debug("create drain values: S{} H{} M{}", a_stamina, a_health, a_magicka);
@@ -13,18 +15,25 @@ DrainValues::DrainValues(float a_stamina, float a_health, float a_magicka) {
   magicka = a_magicka * -1.f;
 }
 
-auto
-DrainValues::drain(RE::Actor& actor) -> void {
+auto DrainValues::drain(RE::Actor& actor) -> void {
   logger::debug("drain values: S{} H{} M{}", stamina, health, magicka);
-  actor.RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kHealth, health);
-  actor.RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kMagicka, magicka);
-  actor.RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kStamina, stamina);
+  if (health != 0.f) {
+    Reflyem::Core::damage_actor_value(actor, RE::ActorValue::kHealth, health);
+    Reflyem::Core::set_av_regen_delay(actor.currentProcess, RE::ActorValue::kHealth, REGEN_DELAY);
+  }
+  if (magicka != 0.f) {
+    Reflyem::Core::damage_actor_value(actor, RE::ActorValue::kMagicka, magicka);
+    Reflyem::Core::set_av_regen_delay(actor.currentProcess, RE::ActorValue::kMagicka, REGEN_DELAY);
+  }
+  if (stamina != 0.f) {
+    Reflyem::Core::damage_actor_value(actor, RE::ActorValue::kStamina, stamina);
+    Reflyem::Core::set_av_regen_delay(actor.currentProcess, RE::ActorValue::kStamina, REGEN_DELAY);
+  }
 }
 
 static std::map<RE::Actor*, std::shared_ptr<DrainValues>> rm_map;
 
-auto
-weap_actor_mask_multiply(FormMask& matrix1, ActorMask& matrix2) -> std::unique_ptr<FormMask> {
+auto weap_actor_mask_multiply(FormMask& matrix1, ActorMask& matrix2) -> std::unique_ptr<FormMask> {
   const auto row    = 1;
   const auto column = 3;
 
@@ -41,8 +50,7 @@ weap_actor_mask_multiply(FormMask& matrix1, ActorMask& matrix2) -> std::unique_p
   return std::make_unique<FormMask>(result);
 }
 
-auto
-handle_mask_sum_for_drain_values(std::int32_t mask_sum, float cost) -> std::shared_ptr<DrainValues> {
+auto handle_mask_sum_for_drain_values(std::int32_t mask_sum, float cost) -> std::shared_ptr<DrainValues> {
   switch (mask_sum) {
   case 1:
     return std::make_shared<DrainValues>(DrainValues(cost, 0, 0));
@@ -68,8 +76,7 @@ handle_mask_sum_for_drain_values(std::int32_t mask_sum, float cost) -> std::shar
   }
 }
 
-auto
-get_form_mask(RE::BGSKeywordForm& form, const Reflyem::Config& config) -> std::unique_ptr<FormMask> {
+auto get_form_mask(RE::BGSKeywordForm& form, const Reflyem::Config& config) -> std::unique_ptr<FormMask> {
   FormMask f_mask{{{0, 0, 0}}};
   logger::debug("start get weapon keyword");
   f_mask.at(0).at(0) = 1;
@@ -88,8 +95,7 @@ get_form_mask(RE::BGSKeywordForm& form, const Reflyem::Config& config) -> std::u
   return std::make_unique<FormMask>(f_mask);
 }
 
-auto
-calc_mask_sum(FormMask& f_mask) -> std::int32_t {
+auto calc_mask_sum(FormMask& f_mask) -> std::int32_t {
   auto mask_sum = 0;
   if (f_mask.at(0).at(0) > 0) {
     mask_sum += 1;
@@ -103,9 +109,8 @@ calc_mask_sum(FormMask& f_mask) -> std::int32_t {
   return mask_sum;
 }
 
-auto
-get_drain_value(RE::Actor& actor, RE::BGSKeywordForm& form, const Reflyem::Config& config, float cost,
-                bool enable_conversions) -> std::shared_ptr<DrainValues> {
+auto get_drain_value(RE::Actor& actor, RE::BGSKeywordForm& form, const Reflyem::Config& config, float cost,
+                     bool enable_conversions) -> std::shared_ptr<DrainValues> {
   auto f_mask = get_form_mask(form, config);
 
   auto mask_sum = 0;
@@ -167,9 +172,8 @@ get_drain_value(RE::Actor& actor, RE::BGSKeywordForm& form, const Reflyem::Confi
   return handle_mask_sum_for_drain_values(mask_sum, cost);
 }
 
-auto
-get_bash_drain_value(RE::Actor& actor, WeaponOrArmor& form, const Reflyem::Config config, float cost,
-                     bool enable_conversions) -> std::shared_ptr<DrainValues> {
+auto get_bash_drain_value(RE::Actor& actor, WeaponOrArmor& form, const Reflyem::Config config, float cost,
+                          bool enable_conversions) -> std::shared_ptr<DrainValues> {
   if (form.isL) {
     return get_drain_value(actor, *form.left, config, cost, enable_conversions);
   } else {
@@ -177,8 +181,7 @@ get_bash_drain_value(RE::Actor& actor, WeaponOrArmor& form, const Reflyem::Confi
   }
 }
 
-auto
-get_weapon_weight(RE::TESObjectWEAP& weapon, const Reflyem::Config& config) -> float {
+auto get_weapon_weight(RE::TESObjectWEAP& weapon, const Reflyem::Config& config) -> float {
 
   logger::debug("get weight of weapon");
   auto weight = weapon.weight;
@@ -203,8 +206,7 @@ get_weapon_weight(RE::TESObjectWEAP& weapon, const Reflyem::Config& config) -> f
   return 5.f;
 }
 
-auto
-get_shield_weight(RE::TESObjectARMO& shield, const Reflyem::Config& config) -> float {
+auto get_shield_weight(RE::TESObjectARMO& shield, const Reflyem::Config& config) -> float {
   auto weight = shield.weight;
   if (weight > 0.f) {
     return weight * config.resource_manager_weight_mult;
@@ -219,8 +221,7 @@ get_shield_weight(RE::TESObjectARMO& shield, const Reflyem::Config& config) -> f
   return 5.f;
 }
 
-auto
-get_sale_for_spend_from_av(std::int32_t av_value, std::int32_t high_value, std::int32_t low_value) -> float {
+auto get_sale_for_spend_from_av(std::int32_t av_value, std::int32_t high_value, std::int32_t low_value) -> float {
   if (high_value > 100) {
     high_value = 100;
   }
@@ -234,9 +235,8 @@ get_sale_for_spend_from_av(std::int32_t av_value, std::int32_t high_value, std::
   return 1.f - (av_value / 100.f);
 }
 
-auto
-get_attack_drain_cost(RE::Actor& actor, RE::TESObjectWEAP& weapon, bool is_power_attack, const Reflyem::Config& config)
-    -> float {
+auto get_attack_drain_cost(RE::Actor& actor, RE::TESObjectWEAP& weapon, bool is_power_attack,
+                           const Reflyem::Config& config) -> float {
 
   logger::debug("Get actor infamy for actor: {} with level: {}", actor.GetName(), actor.GetLevel());
   auto infamy = actor.GetActorValue(RE::ActorValue::kInfamy);
@@ -268,8 +268,7 @@ get_attack_drain_cost(RE::Actor& actor, RE::TESObjectWEAP& weapon, bool is_power
   return cost * config.resource_manager_global_mult;
 }
 
-auto
-get_bash_drain_cost(RE::Actor& actor, WeaponOrArmor& form, bool is_power_attack, const Reflyem::Config& config)
+auto get_bash_drain_cost(RE::Actor& actor, WeaponOrArmor& form, bool is_power_attack, const Reflyem::Config& config)
     -> float {
   auto infamy = actor.GetActorValue(RE::ActorValue::kInfamy);
   if (infamy < 1.f || !config.resource_manager_infamy_enable) {
@@ -301,8 +300,7 @@ get_bash_drain_cost(RE::Actor& actor, WeaponOrArmor& form, bool is_power_attack,
   return cost * config.resource_manager_global_mult;
 }
 
-auto
-melee_weapon_spend(RE::Actor& actor, RE::TESObjectWEAP& weapon, bool is_power_attack, const Reflyem::Config config)
+auto melee_weapon_spend(RE::Actor& actor, RE::TESObjectWEAP& weapon, bool is_power_attack, const Reflyem::Config config)
     -> void {
   logger::debug("melee_weapon_spend");
   auto cost = get_attack_drain_cost(actor, weapon, is_power_attack, config);
@@ -314,8 +312,7 @@ melee_weapon_spend(RE::Actor& actor, RE::TESObjectWEAP& weapon, bool is_power_at
   return;
 }
 
-auto
-bash_spend(RE::Actor& actor, WeaponOrArmor& form, bool is_power_attack, const Reflyem::Config config) -> void {
+auto bash_spend(RE::Actor& actor, WeaponOrArmor& form, bool is_power_attack, const Reflyem::Config config) -> void {
   logger::debug("bash_spend");
   auto cost = get_bash_drain_cost(actor, form, is_power_attack, config);
   logger::debug("end drain cost: cost {}", cost);
@@ -326,8 +323,7 @@ bash_spend(RE::Actor& actor, WeaponOrArmor& form, bool is_power_attack, const Re
   return;
 }
 
-auto
-ranged_weapon_spend(RE::Actor& actor, RE::TESObjectWEAP& weapon, const Reflyem::Config config) -> void {
+auto ranged_weapon_spend(RE::Actor& actor, RE::TESObjectWEAP& weapon, const Reflyem::Config config) -> void {
   auto cost        = get_attack_drain_cost(actor, weapon, false, config) * 0.1f;
   auto drain_value = get_drain_value(actor, weapon, config, cost, true);
   drain_value->drain(actor);
@@ -335,8 +331,7 @@ ranged_weapon_spend(RE::Actor& actor, RE::TESObjectWEAP& weapon, const Reflyem::
   return;
 }
 
-auto
-ranged_spend_handler() -> void {
+auto ranged_spend_handler() -> void {
   for (auto& [actor, drain_value] : rm_map) {
     if (actor && drain_value) {
       auto state  = actor->actorState1.meleeAttackState;
@@ -355,14 +350,12 @@ ranged_spend_handler() -> void {
   }
 }
 
-auto
-jump_spend(RE::Actor& actor, const Reflyem::Config config) -> void {
-  actor.RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, RE::ActorValue::kStamina,
-                          -config.resource_manager_jump_cost);
+auto jump_spend(RE::Actor& actor, const Reflyem::Config config) -> void {
+  Reflyem::Core::damage_actor_value(actor, RE::ActorValue::kStamina, -config.resource_manager_jump_cost);
+  Reflyem::Core::set_av_regen_delay(actor.currentProcess, RE::ActorValue::kStamina, REGEN_DELAY);
 }
 
-auto
-get_weapon(RE::Actor& actor, bool is_left_hand, const Reflyem::Config config) -> RE::TESObjectWEAP& {
+auto get_weapon(RE::Actor& actor, bool is_left_hand, const Reflyem::Config config) -> RE::TESObjectWEAP& {
   logger::debug("get weapon start");
   auto weapon = actor.GetEquippedObject(is_left_hand);
   if (!weapon) {
@@ -378,8 +371,7 @@ get_weapon(RE::Actor& actor, bool is_left_hand, const Reflyem::Config config) ->
   return *as_weapon;
 }
 
-auto
-get_weapon_or_shield(RE::Actor& actor) -> std::optional<WeaponOrArmor> {
+auto get_weapon_or_shield(RE::Actor& actor) -> std::optional<WeaponOrArmor> {
   logger::debug("get weapon or shield start");
   auto form = actor.GetEquippedObject(false);
   if (!form) {
@@ -400,8 +392,7 @@ get_weapon_or_shield(RE::Actor& actor) -> std::optional<WeaponOrArmor> {
   return std::nullopt;
 }
 
-auto
-handle_resource_for_action(RE::Character& actor, DrainValues& drain_values, RE::SpellItem& block_spell) -> void {
+auto handle_resource_for_action(RE::Character& actor, DrainValues& drain_values, RE::SpellItem& block_spell) -> void {
 
   logger::debug("handle_resource_for_action get AVs");
   auto magicka = actor.GetActorValue(RE::ActorValue::kMagicka);
@@ -439,8 +430,7 @@ handle_resource_for_action(RE::Character& actor, DrainValues& drain_values, RE::
   return;
 }
 
-auto
-update_actor(RE::Character& character, float, const Reflyem::Config& config) -> void {
+auto update_actor(RE::Character& character, float, const Reflyem::Config& config) -> void {
 
   if (config.resource_manager_weapon_spend_enable) {
     logger::debug("Update actor in resource get weapon");
@@ -473,7 +463,7 @@ update_actor(RE::Character& character, float, const Reflyem::Config& config) -> 
     }
 
     logger::debug("Update actor in resource get bash cost");
-    auto bash_cost        = get_bash_drain_cost(character, bash_form.value(), false, config);
+    auto bash_cost = get_bash_drain_cost(character, bash_form.value(), false, config);
 
     logger::debug("Update actor in resource get bash drains");
     auto bash_drain_value = get_bash_drain_value(character, bash_form.value(), config, bash_cost, false);
@@ -483,9 +473,8 @@ update_actor(RE::Character& character, float, const Reflyem::Config& config) -> 
   }
 }
 
-auto
-animation_handler(Reflyem::AnimationEventHandler::AnimationEvent animation, RE::Actor& actor, bool is_power_attack,
-                  const Reflyem::Config config) -> void {
+auto animation_handler(Reflyem::AnimationEventHandler::AnimationEvent animation, RE::Actor& actor, bool is_power_attack,
+                       const Reflyem::Config config) -> void {
   switch (animation) {
   case Reflyem::AnimationEventHandler::AnimationEvent::kBashExit: {
     if (!config.resource_manager_bash_spend_enable) {
@@ -543,8 +532,8 @@ animation_handler(Reflyem::AnimationEventHandler::AnimationEvent animation, RE::
   }
 }
 
-auto
-handle_block_hit(RE::Actor& target, float total_damage, float av_value, float damage_mult, RE::ActorValue av) -> float {
+auto handle_block_hit(RE::Actor& target, float total_damage, float av_value, float damage_mult, RE::ActorValue av)
+    -> float {
   if (total_damage >= av_value) {
     total_damage = av_value;
     target.RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, av, -av_value);
@@ -554,8 +543,7 @@ handle_block_hit(RE::Actor& target, float total_damage, float av_value, float da
   return total_damage / damage_mult;
 }
 
-auto
-handle_hit_data(RE::HitData& hit_data, float av_part_damge) -> void {
+auto handle_hit_data(RE::HitData& hit_data, float av_part_damge) -> void {
   hit_data.totalDamage -= av_part_damge;
   if (hit_data.totalDamage < 0.f) {
     hit_data.totalDamage = 0.f;
@@ -563,8 +551,7 @@ handle_hit_data(RE::HitData& hit_data, float av_part_damge) -> void {
   return;
 }
 
-auto
-on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Reflyem::Config& config) -> void {
+auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Reflyem::Config& config) -> void {
   logger::debug("on_weapon_hit resource manager");
 
   if (!hit_data.flags.any(RE::HitData::Flag::kBlocked) || hit_data.totalDamage <= 0.f) {

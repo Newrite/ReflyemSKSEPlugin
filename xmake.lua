@@ -1,4 +1,4 @@
-set_xmakever("2.7.2")
+set_xmakever("2.7.5")
 
 -- project
 set_project("Reflyem")
@@ -6,7 +6,8 @@ set_version("1.0.0")
 set_license("MIT")
 set_languages("cxxlatest")
 set_optimize("faster")
-set_warnings("allextra", "error")
+set_warnings("all", "error")
+set_toolchains("msvc")
 
 -- allowed
 set_allowedarchs("windows|x64")
@@ -19,9 +20,11 @@ set_defaultmode("releasedbg")
 -- rules
 add_rules("mode.debug", "mode.releasedbg")
 add_rules("plugin.vsxmake.autoupdate")
+add_rules("c++")
 
 -- policies
 set_policy("package.requires_lock", true)
+-- set_policy("build.c++.modules", true)
 
 -- packages
 add_requires("fmt", "spdlog", "toml++")
@@ -43,16 +46,11 @@ target("Reflyem")
 
     set_targetdir("G:\\MO2Enderal\\mods\\Reflyem\\SKSE\\Plugins")
 
-    add_files("src/plugin/**.cpp")
-    add_files("src/**.cpp")
-    -- add_files("src/plugin/**.ixx")
-    add_headerfiles("include/plugin/**.h")
-    add_headerfiles("include/**.h")
-    add_includedirs("src/plugin")
-    add_includedirs("src")
-    add_includedirs("include/plugin")
-    add_includedirs("include")
+    add_files("src/**.cpp", "src/plugin/**.cpp")
+    -- add_files("src/**.ixx", "src/plugin/**.ixx")
+    add_headerfiles("include/**.hpp", "include/plugin/**.hpp")
     set_pcxxheader("include/pch.h")
+    add_includedirs("src", "src/plugin", "include", "include/plugin")
 
     add_rules("mod.package", {
         ["@{target}-@{target_ver}.zip"] = {

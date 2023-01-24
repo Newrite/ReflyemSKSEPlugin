@@ -157,9 +157,8 @@ public:
   RE::BGSKeyword* tk_dodge_magicka_kw;
 
   // caster debuff movement
-  bool caster_debuff_enable;
+  bool           caster_debuff_enable;
   RE::SpellItem* caster_debuff_spell;
-
 };
 
 } // namespace Reflyem

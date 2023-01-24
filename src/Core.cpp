@@ -1,11 +1,10 @@
-#include "Core.h"
+#include "Core.hpp"
 #include <random>
 
 namespace Reflyem {
 namespace Core {
 
-auto
-get_random_int() -> int {
+auto get_random_int() -> int {
   // StackOverflow: https://stackoverflow.com/questions/5008804/generating-a-random-integer-from-a-range
   static std::random_device                 rd;          // Only used once to initialise (seed) engine
   static std::mt19937                       rng(rd());   // Random-number engine used (Mersenne-Twister in this case)
@@ -13,44 +12,29 @@ get_random_int() -> int {
   return uni(rng);
 }
 
-auto
-character_timer_map_handler(ULONGLONG now_time, std::map<RE::Character*, ULONGLONG>& character_timer_map) -> void {
+auto character_timer_map_handler(ULONGLONG now_time, std::map<std::uintptr_t, ULONGLONG>& character_timer_map) -> void {
   logger::debug("handle timer map");
-  for (auto& [character, old_time] : character_timer_map) {
-
-    logger::debug("Pre null check");
-    if (!character) {
-      character_timer_map.erase(character);
-      continue;
-    }
-
-    logger::debug("Pre dead check");
-    if (character->IsDead()) {
-      character_timer_map.erase(character);
-      continue;
-    }
+  for (auto& [character_ptr, old_time] : character_timer_map) {
 
     logger::debug("Pre time check");
     if (now_time - old_time >= 5000) {
-      character_timer_map.erase(character);
+      character_timer_map.erase(character_ptr);
       continue;
     }
 
     logger::debug("After time check");
-
   }
 }
 
-auto
-damage_actor_value(RE::Actor& actor, RE::ActorValue av, float value) -> void {
+auto damage_actor_value(RE::Actor& actor, RE::ActorValue av, float value) -> void {
   if (value > 0.f) {
     value = value * -1.f;
   }
   actor.RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, av, value);
 }
 
-auto
-can_modify_actor_value(RE::ValueModifierEffect* a_this, RE::Actor* a_actor, float a_value, RE::ActorValue av) -> bool {
+auto can_modify_actor_value(RE::ValueModifierEffect* a_this, RE::Actor* a_actor, float a_value, RE::ActorValue av)
+    -> bool {
   if (av != RE::ActorValue::kNone && av != RE::ActorValue::kHealth) {
     return false;
   }
@@ -91,8 +75,7 @@ can_modify_actor_value(RE::ValueModifierEffect* a_this, RE::Actor* a_actor, floa
   return true;
 }
 
-auto
-get_effects_magnitude_sum(std::vector<RE::ActiveEffect*>& effects) -> std::optional<float> {
+auto get_effects_magnitude_sum(std::vector<RE::ActiveEffect*>& effects) -> std::optional<float> {
   auto pos_value = 0.f;
   auto neg_value = 0.f;
 
@@ -119,8 +102,7 @@ get_effects_magnitude_sum(std::vector<RE::ActiveEffect*>& effects) -> std::optio
   }
 }
 
-auto
-get_effects_by_keyword(RE::Actor& actor, RE::BGSKeyword& keyword) -> std::vector<RE::ActiveEffect*> {
+auto get_effects_by_keyword(RE::Actor& actor, RE::BGSKeyword& keyword) -> std::vector<RE::ActiveEffect*> {
   auto                           active_effects = actor.GetActiveEffectList();
   std::vector<RE::ActiveEffect*> effects        = {};
   for (auto active_effect : *active_effects) {
@@ -142,16 +124,14 @@ get_effects_by_keyword(RE::Actor& actor, RE::BGSKeyword& keyword) -> std::vector
   return effects;
 }
 
-auto
-get_dual_value_mult(RE::ValueModifierEffect& value_effect) -> float {
+auto get_dual_value_mult(RE::ValueModifierEffect& value_effect) -> float {
   if (!value_effect.effect || !value_effect.effect->baseEffect) {
     return 0.f;
   }
   return value_effect.effect->baseEffect->data.secondAVWeight;
 }
 
-auto
-get_second_av(RE::ValueModifierEffect& value_effect) -> RE::ActorValue {
+auto get_second_av(RE::ValueModifierEffect& value_effect) -> RE::ActorValue {
   if (!value_effect.effect || !value_effect.effect->baseEffect) {
     return RE::ActorValue::kNone;
   }
@@ -163,8 +143,18 @@ get_second_av(RE::ValueModifierEffect& value_effect) -> RE::ActorValue {
   return value_effect.effect->baseEffect->data.secondaryAV;
 }
 
-auto
-getting_damage_mult(RE::Actor& actor) -> float {
+auto set_av_regen_delay(RE::AIProcess* process, RE::ActorValue av, float time) -> void {
+
+  if (!process) {
+    return;
+  }
+
+  using func_t = decltype(&set_av_regen_delay);
+  REL::Relocation<func_t> func{RELOCATION_ID(38526, 0)};
+  return func(process, av, time);
+}
+
+auto getting_damage_mult(RE::Actor& actor) -> float {
   auto settings_collection = RE::GameSettingCollection::GetSingleton();
   auto player              = RE::PlayerCharacter::GetSingleton();
 
@@ -186,8 +176,7 @@ getting_damage_mult(RE::Actor& actor) -> float {
   }
 }
 
-auto
-actor_has_active_mgef_with_keyword(RE::Actor& actor, RE::BGSKeyword& keyword) -> bool {
+auto actor_has_active_mgef_with_keyword(RE::Actor& actor, RE::BGSKeyword& keyword) -> bool {
   auto active_effects = actor.GetActiveEffectList();
   for (auto active_effect : *active_effects) {
     if (!active_effect || active_effect->flags.any(RE::ActiveEffect::Flag::kInactive) || !active_effect->effect ||
@@ -203,8 +192,7 @@ actor_has_active_mgef_with_keyword(RE::Actor& actor, RE::BGSKeyword& keyword) ->
   return false;
 }
 
-auto
-cast(RE::SpellItem& spell, RE::Actor& target, RE::Actor& caster) -> void {
+auto cast(RE::SpellItem& spell, RE::Actor& target, RE::Actor& caster) -> void {
   if (spell.data.delivery == RE::MagicSystem::Delivery::kSelf) {
     caster.GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)
         ->CastSpellImmediate(&spell, true, &caster, 1.00f, false, 0.0f, &caster);
@@ -214,8 +202,7 @@ cast(RE::SpellItem& spell, RE::Actor& target, RE::Actor& caster) -> void {
   }
 }
 
-auto
-cast_on_handle(RE::TESForm* keyword, RE::TESForm* spell, RE::Actor& target, RE::Actor& caster) -> void {
+auto cast_on_handle(RE::TESForm* keyword, RE::TESForm* spell, RE::Actor& target, RE::Actor& caster) -> void {
   if (!spell) {
     return;
   }
@@ -244,8 +231,7 @@ cast_on_handle(RE::TESForm* keyword, RE::TESForm* spell, RE::Actor& target, RE::
   cast(*spell_ptr, target, caster);
 }
 
-auto
-is_power_attacking(RE::Actor& actor) -> bool {
+auto is_power_attacking(RE::Actor& actor) -> bool {
   auto current_process = actor.GetActorRuntimeData().currentProcess;
   if (!current_process) {
     return false;
@@ -265,8 +251,7 @@ is_power_attacking(RE::Actor& actor) -> bool {
   return flags.any(RE::AttackData::AttackFlag::kPowerAttack);
 }
 
-auto
-has_absolute_keyword(RE::Actor& actor, RE::BGSKeyword& keyword) -> bool {
+auto has_absolute_keyword(RE::Actor& actor, RE::BGSKeyword& keyword) -> bool {
   return actor.HasKeyword(&keyword) || actor_has_active_mgef_with_keyword(actor, keyword);
 }
 

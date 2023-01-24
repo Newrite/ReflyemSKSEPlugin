@@ -8,12 +8,11 @@
 
 namespace WinAPI = SKSE::WinAPI;
 namespace logger = SKSE::log;
-namespace fs = std::filesystem;
+namespace fs     = std::filesystem;
 using namespace std::literals;
 
 #define RELOCATION_OFFSET(SE, AE) REL::VariantOffset(SE, AE, 0).offset()
 
-namespace stl
-{
-  using namespace SKSE::stl;
+namespace stl {
+using namespace SKSE::stl;
 }

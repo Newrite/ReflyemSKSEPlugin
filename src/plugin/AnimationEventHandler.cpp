@@ -1,7 +1,7 @@
-#include "AnimationEventHandler.h"
-#include "Core.h"
-#include "ResourceManager.h"
-#include "TKDodge.h"
+#include "AnimationEventHandler.hpp"
+#include "Core.hpp"
+#include "ResourceManager.hpp"
+#include "TKDodge.hpp"
 
 namespace Reflyem {
 namespace AnimationEventHandler {
@@ -19,8 +19,7 @@ static std::map<std::string, AnimationEvent> animation_map{{weaponSwing, Animati
                                                            {bowDrawStart, AnimationEvent::kBowDrawStart},
                                                            {bashExit, AnimationEvent::kBashExit}};
 
-auto
-try_find_animation(std::string& key) -> AnimationEvent {
+auto try_find_animation(std::string& key) -> AnimationEvent {
   const auto it = animation_map.find(key);
   if (it == animation_map.end()) {
     return AnimationEvent::kNone;
@@ -28,8 +27,7 @@ try_find_animation(std::string& key) -> AnimationEvent {
   return it->second;
 }
 
-auto
-animation_handler(RE::BSAnimationGraphEvent* a_event, const Reflyem::Config& config) -> void {
+auto animation_handler(RE::BSAnimationGraphEvent* a_event, const Reflyem::Config& config) -> void {
   if (!config.resource_manager_enable) {
     return;
   }
@@ -62,8 +60,7 @@ animation_handler(RE::BSAnimationGraphEvent* a_event, const Reflyem::Config& con
 
 } // namespace AnimationEventHandler
 
-auto
-PlayerAnimationHandler::register_sink(RE::Actor* actor) -> bool {
+auto PlayerAnimationHandler::register_sink(RE::Actor* actor) -> bool {
   static PlayerAnimationHandler g_eventhandler;
 
   RE::BSAnimationGraphManagerPtr graph_mgr;
@@ -84,9 +81,8 @@ PlayerAnimationHandler::register_sink(RE::Actor* actor) -> bool {
   return true;
 }
 
-auto
-PlayerAnimationHandler::ProcessEvent(const RE::BSAnimationGraphEvent*               a_event,
-                                     RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource)
+auto PlayerAnimationHandler::ProcessEvent(const RE::BSAnimationGraphEvent*               a_event,
+                                          RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource)
     -> RE::BSEventNotifyControl {
   auto& config = Reflyem::Config::get_singleton();
   if (config.tk_dodge_enable) {
