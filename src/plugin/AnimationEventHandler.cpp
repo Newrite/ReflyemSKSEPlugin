@@ -6,20 +6,20 @@
 namespace Reflyem {
 namespace AnimationEventHandler {
 
-constexpr inline auto weaponSwing     = "weaponSwing";
-constexpr inline auto weaponSwingLeft = "weaponLeftSwing";
-constexpr inline auto JumpUp          = "JumpUp";
-constexpr inline auto bowDrawStart    = "bowDrawStart";
-constexpr inline auto bashExit        = "bashExit";
+constexpr inline auto WEAPON_SWING      = "weaponSwing"sv;
+constexpr inline auto WEAPON_SWING_LEFT = "weaponLeftSwing"sv;
+constexpr inline auto JUMP_UP           = "JumpUp"sv;
+constexpr inline auto BOW_DRAW_START    = "bowDrawStart"sv;
+constexpr inline auto BASH_EXIT         = "bashExit"sv;
 // constexpr inline auto TKDR_DodgeStart = "TKDR_DodgeStart";
 
-static std::map<std::string, AnimationEvent> animation_map{{weaponSwing, AnimationEvent::kWeaponSwing},
-                                                           {weaponSwingLeft, AnimationEvent::kWeaponLeftSwing},
-                                                           {JumpUp, AnimationEvent::kJumpUp},
-                                                           {bowDrawStart, AnimationEvent::kBowDrawStart},
-                                                           {bashExit, AnimationEvent::kBashExit}};
+static std::map<std::string_view, AnimationEvent> animation_map{{WEAPON_SWING, AnimationEvent::kWeaponSwing},
+                                                                {WEAPON_SWING_LEFT, AnimationEvent::kWeaponLeftSwing},
+                                                                {JUMP_UP, AnimationEvent::kJumpUp},
+                                                                {BOW_DRAW_START, AnimationEvent::kBowDrawStart},
+                                                                {BASH_EXIT, AnimationEvent::kBashExit}};
 
-auto try_find_animation(std::string& key) -> AnimationEvent {
+auto try_find_animation(const std::string& key) -> AnimationEvent {
   const auto it = animation_map.find(key);
   if (it == animation_map.end()) {
     return AnimationEvent::kNone;
@@ -27,17 +27,17 @@ auto try_find_animation(std::string& key) -> AnimationEvent {
   return it->second;
 }
 
-auto animation_handler(RE::BSAnimationGraphEvent* a_event, const Reflyem::Config& config) -> void {
+auto animation_handler(const RE::BSAnimationGraphEvent* event, const Config& config) -> void {
   if (!config.resource_manager_enable) {
     return;
   }
 
-  auto actor = const_cast<RE::Actor*>(a_event->holder->As<RE::Actor>());
-  if (actor) {
-    auto anim_event      = fmt::format("{}", a_event->tag);
-    auto is_power_attack = Reflyem::Core::is_power_attacking(*actor);
+  // ReSharper disable once CppLocalVariableMayBeConst
+  if (auto actor = const_cast<RE::Actor*>(event->holder->As<RE::Actor>())) {
+    auto       anim_event      = fmt::format("{}"sv, event->tag);
+    const auto is_power_attack = Core::is_power_attacking(*actor);
 
-    switch (auto animation = try_find_animation(anim_event)) {
+    switch (const auto animation = try_find_animation(anim_event)) {
     // case AnimationEvent::kTKDR_DodgeStart:
     // {
     //   logger::info("TKDodge start");
@@ -49,9 +49,10 @@ auto animation_handler(RE::BSAnimationGraphEvent* a_event, const Reflyem::Config
     case AnimationEvent::kBowDrawStart:
     case AnimationEvent::kBashExit: {
       logger::debug("event proc {}", anim_event);
-      Reflyem ::ResourceManager ::animation_handler(animation, *actor, is_power_attack, config);
+      ResourceManager::animation_handler(animation, *actor, is_power_attack, config);
       return;
     }
+    case AnimationEvent::kNone:
     default:
       return;
     }
@@ -60,33 +61,33 @@ auto animation_handler(RE::BSAnimationGraphEvent* a_event, const Reflyem::Config
 
 } // namespace AnimationEventHandler
 
-auto PlayerAnimationHandler::register_sink(RE::Actor* actor) -> bool {
-  static PlayerAnimationHandler g_eventhandler;
+auto PlayerAnimationHandler::register_sink(const RE::Actor* actor) -> bool {
+  static PlayerAnimationHandler handler;
 
-  RE::BSAnimationGraphManagerPtr graph_mgr;
+  RE::BSAnimationGraphManagerPtr graph_manager;
 
   if (actor) {
-    actor->GetAnimationGraphManager(graph_mgr);
+    actor->GetAnimationGraphManager(graph_manager);
   }
 
-  if (!graph_mgr || !graph_mgr->graphs.cbegin()) {
-    logger::debug("Player Graph not found!");
+  if (!graph_manager || !graph_manager->graphs.cbegin()) {
+    logger::debug("Player Graph not found!"sv);
     return false;
   }
 
-  graph_mgr->graphs.cbegin()->get()->AddEventSink(&g_eventhandler);
+  graph_manager->graphs.cbegin()->get()->AddEventSink(&handler);
 
-  logger::debug("Register Animation Event Handler!");
+  logger::debug("Register Animation Event Handler!"sv);
 
   return true;
 }
 
-auto PlayerAnimationHandler::ProcessEvent(const RE::BSAnimationGraphEvent*               a_event,
-                                          RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource)
+auto PlayerAnimationHandler::ProcessEvent(const RE::BSAnimationGraphEvent*               event,
+                                          RE::BSTEventSource<RE::BSAnimationGraphEvent>* event_source)
     -> RE::BSEventNotifyControl {
-  auto& config = Reflyem::Config::get_singleton();
+  auto& config = Config::get_singleton();
   if (config.tk_dodge_enable) {
-    return Reflyem::TKDodge::process_event_player_animation(a_event, a_eventSource, config);
+    return TkDodge::process_event_player_animation(event, event_source, config);
   }
   return RE::BSEventNotifyControl::kContinue;
 }

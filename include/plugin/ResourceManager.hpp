@@ -20,18 +20,18 @@ public:
   auto drain(RE::Actor& actor) -> void;
 };
 
-auto calc_mask_sum(FormMask& f_mask) -> std::int32_t;
+auto calc_mask_sum(const FormMask& f_mask) -> std::int32_t;
 
 auto handle_mask_sum_for_drain_values(std::int32_t mask_sum, float cost) -> std::shared_ptr<DrainValues>;
 
 auto ranged_spend_handler() -> void;
 
-auto update_actor(RE::Character& character, float delta, const Reflyem::Config& config) -> void;
+auto update_actor(RE::Character& character, float delta, const Config& config) -> void;
 
-auto animation_handler(Reflyem::AnimationEventHandler::AnimationEvent animation, RE::Actor& actor, bool is_power_attack,
-                       const Reflyem::Config config) -> void;
+auto animation_handler(AnimationEventHandler::AnimationEvent animation, RE::Actor& actor, bool is_power_attack,
+                       const Config& config) -> void;
 
-auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Reflyem::Config& config) -> void;
+auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& config) -> void;
 
 } // namespace ResourceManager
 } // namespace Reflyem

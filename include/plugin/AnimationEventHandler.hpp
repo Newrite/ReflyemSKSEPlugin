@@ -14,7 +14,7 @@ enum class AnimationEvent {
   kNone            = 99,
 };
 
-auto animation_handler(RE::BSAnimationGraphEvent* a_event, const Reflyem::Config& config) -> void;
+auto animation_handler(const RE::BSAnimationGraphEvent* event, const Config& config) -> void;
 
 } // namespace AnimationEventHandler
 
@@ -22,10 +22,10 @@ auto animation_handler(RE::BSAnimationGraphEvent* a_event, const Reflyem::Config
 // https://github.com/max-su-2019/TK_Dodge_RE
 class PlayerAnimationHandler final : public RE::BSTEventSink<RE::BSAnimationGraphEvent> {
 public:
-  auto ProcessEvent(const RE::BSAnimationGraphEvent*               a_event,
-                    RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource) -> RE::BSEventNotifyControl override;
+  auto ProcessEvent(const RE::BSAnimationGraphEvent* event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* event_source)
+      -> RE::BSEventNotifyControl override;
 
-  static auto register_sink(RE::Actor* pc) -> bool;
+  static auto register_sink(const RE::Actor* actor) -> bool;
 };
 
 } // namespace Reflyem

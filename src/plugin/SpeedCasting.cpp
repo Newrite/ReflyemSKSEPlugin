@@ -3,10 +3,10 @@
 namespace Reflyem {
 namespace SpeedCasting {
 
-auto on_update_actor(RE::Character& player, float, const Reflyem::Config& config) -> void {
+auto on_update_actor(RE::Character& character, float, const Config& config) -> void {
 
-  auto speed_casting_percent = player.GetActorValue(config.speed_casting_av);
-  auto float_percent         = (1.f - (speed_casting_percent / 100.f));
+  const auto speed_casting_percent = character.GetActorValue(config.speed_casting_av);
+  auto       float_percent         = (1.f - (speed_casting_percent / 100.f));
   if (float_percent > config.speed_casting_high) {
     float_percent = config.speed_casting_high;
   }

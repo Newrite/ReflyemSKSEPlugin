@@ -32,18 +32,18 @@ auto damage_actor_value(RE::Actor& actor, RE::ActorValue av, float value) -> voi
 
 auto set_av_regen_delay(RE::AIProcess* process, RE::ActorValue av, float time) -> void;
 
-auto can_modify_actor_value(RE::ValueModifierEffect* a_this, RE::Actor* a_actor, float a_value, RE::ActorValue av)
-    -> bool;
+auto can_modify_actor_value(const RE::ValueModifierEffect* a_this, const RE::Actor* a_actor, float a_value,
+                            RE::ActorValue av) -> bool;
 
-auto actor_has_active_mgef_with_keyword(RE::Actor& actor, RE::BGSKeyword& keyword) -> bool;
+auto actor_has_active_mgef_with_keyword(RE::Actor& actor, const RE::BGSKeyword& keyword) -> bool;
 
-auto get_effects_magnitude_sum(std::vector<RE::ActiveEffect*>& effects) -> std::optional<float>;
+auto get_effects_magnitude_sum(const std::vector<RE::ActiveEffect*>& effects) -> std::optional<float>;
 
-auto get_effects_by_keyword(RE::Actor& actor, RE::BGSKeyword& keyword) -> std::vector<RE::ActiveEffect*>;
+auto get_effects_by_keyword(RE::Actor& actor, const RE::BGSKeyword& keyword) -> std::vector<RE::ActiveEffect*>;
 
-auto get_dual_value_mult(RE::ValueModifierEffect& value_effect) -> float;
+auto get_dual_value_mult(const RE::ValueModifierEffect& value_effect) -> float;
 
-auto get_second_av(RE::ValueModifierEffect& value_effect) -> RE::ActorValue;
+auto get_second_av(const RE::ValueModifierEffect& value_effect) -> RE::ActorValue;
 
 auto getting_damage_mult(RE::Actor& actor) -> float;
 

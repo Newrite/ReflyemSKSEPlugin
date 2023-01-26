@@ -1,13 +1,12 @@
-#include "ActionEventHandler.hpp"
-#include "Config.hpp"
 #include "Hooks.hpp"
 #include "InputEventHandler.hpp"
 
 auto init_logger() -> void {
+  // ReSharper disable once CppLocalVariableMayBeConst
   auto path = logger::log_directory();
   if (!path) return;
 
-  auto plugin = SKSE::PluginDeclaration::GetSingleton();
+  const auto plugin = SKSE::PluginDeclaration::GetSingleton();
   *path /= fmt::format(FMT_STRING("{}.log"), plugin->GetName());
 
   std::shared_ptr<spdlog::sinks::sink> sink;
@@ -21,11 +20,12 @@ auto init_logger() -> void {
   log->set_level(spdlog::level::info);
   log->flush_on(spdlog::level::info);
 
-  spdlog::set_default_logger(std::move(log));
+  set_default_logger(std::move(log));
   spdlog::set_pattern("%s(%#): [%^%l%$] %v"s);
 }
 
 auto initialize_messaging() -> void {
+  // ReSharper disable once CppParameterMayBeConstPtrOrRef
   if (!SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message* message) {
         switch (message->type) {
           // Skyrim lifecycle events.
@@ -39,7 +39,7 @@ auto initialize_messaging() -> void {
         {
 
           // It is now safe to access form data.
-          logger::info("Get data loaded message");
+          logger::info("Get data loaded message"sv);
           Hooks::install_hooks();
           Reflyem::InputEventHandler::Register();
           break;
@@ -55,19 +55,22 @@ auto initialize_messaging() -> void {
                                                       // Data will be the save name.
         case SKSE::MessagingInterface::kDeleteGame:   // The player deleted a saved game from within the load menu.
           break;
+        default: {
+          break;
+        }
         }
       })) {
-    stl::report_and_fail("Unable to register message listener.");
+    stl::report_and_fail("Unable to register message listener."sv);
   }
 }
 
 SKSEPluginLoad(const SKSE::LoadInterface* a_skse) {
   init_logger();
 
-  auto plugin = SKSE::PluginDeclaration::GetSingleton();
+  const auto plugin = SKSE::PluginDeclaration::GetSingleton();
   logger::info("{} v{}"sv, plugin->GetName(), plugin->GetVersion());
 
-  SKSE::Init(a_skse);
+  Init(a_skse);
   initialize_messaging();
   // auto source = SKSE::GetActionEventSource();
   // auto action_event_handler = reflyem::action_event_handler::get_singleton();

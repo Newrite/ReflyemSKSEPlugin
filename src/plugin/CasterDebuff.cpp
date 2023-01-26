@@ -2,19 +2,19 @@
 
 namespace Reflyem {
 namespace CasterDebuff {
-auto on_update_actor(RE::Character& actor, float, const Reflyem::Config& config) -> void {
+auto on_update_actor(RE::Character& character, float, const Config& config) -> void {
 
-  if (actor.IsDead()) {
+  if (character.IsDead()) {
     return;
   }
 
-  auto caster_left  = actor.GetMagicCaster(RE::MagicSystem::CastingSource::kLeftHand);
-  auto caster_right = actor.GetMagicCaster(RE::MagicSystem::CastingSource::kRightHand);
+  const auto caster_left  = character.GetMagicCaster(RE::MagicSystem::CastingSource::kLeftHand);
+  const auto caster_right = character.GetMagicCaster(RE::MagicSystem::CastingSource::kRightHand);
 
   if ((caster_left && caster_left->currentSpell) || (caster_right && caster_right->currentSpell)) {
-    actor.AddSpell(config.caster_debuff_spell);
+    character.AddSpell(config.caster_debuff_spell);
   } else {
-    actor.RemoveSpell(config.caster_debuff_spell);
+    character.RemoveSpell(config.caster_debuff_spell);
   }
 }
 } // namespace CasterDebuff

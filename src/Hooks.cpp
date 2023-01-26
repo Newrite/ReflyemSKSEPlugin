@@ -16,11 +16,11 @@ static ULONGLONG timer1000 = 0;
 static ULONGLONG timer500  = 0;
 static ULONGLONG timer100  = 0;
 
-auto update_actor(RE::Character& character, float delta, const Reflyem::Config& config) -> void {
+auto update_actor(RE::Character& character, const float delta, const Reflyem::Config& config) -> void {
 
   logger::debug("update actor"sv);
 
-  const auto ptr_key = 0; // reinterpret_cast<std::uintptr_t>(&character);
+  constexpr auto ptr_key = 0; // reinterpret_cast<std::uintptr_t>(&character);
 
   const auto tick = GetTickCount64();
 
@@ -79,201 +79,200 @@ auto update_actor(RE::Character& character, float delta, const Reflyem::Config& 
   return;
 }
 
-auto OnPlayerCharacterUpdate::update(RE::PlayerCharacter* a_this, float delta) -> void {
-  if (a_this) {
+auto OnPlayerCharacterUpdate::update(RE::PlayerCharacter* this_, float delta) -> void {
+  if (this_) {
 
     auto& config = Reflyem::Config::get_singleton();
 
-    update_actor(*a_this, delta, config);
+    update_actor(*this_, delta, config);
   }
-  return _update(a_this, delta);
+  return update_(this_, delta);
 }
 
-auto OnCharacterUpdate::update(RE::Character* a_this, float delta) -> void {
-  if (a_this) {
+auto OnCharacterUpdate::update(RE::Character* this_, float delta) -> void {
+  if (this_) {
 
     auto& config = Reflyem::Config::get_singleton();
 
-    update_actor(*a_this, delta, config);
+    update_actor(*this_, delta, config);
   }
-  return _update(a_this, delta);
+  return update_(this_, delta);
 }
 
 auto OnAttackData::process_attack(RE::ActorValueOwner* value_owner, RE::BGSAttackData* attack_data) -> void {
-  _process_attack(value_owner, attack_data);
+  process_attack_(value_owner, attack_data);
   return;
 }
 
-auto OnAttackAction::attack_action(RE::TESActionData* a_actionData) -> bool {
-  logger::info("Attack Action: {}", static_cast<std::uint32_t>(a_actionData->GetSourceActorState()->GetAttackState()));
+auto OnAttackAction::attack_action(const RE::TESActionData* action_data) -> bool {
+  logger::info("Attack Action: {}"sv, static_cast<std::uint32_t>(action_data->GetSourceActorState()->GetAttackState()));
   return false;
 }
 
-auto OnAnimationEventNpc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   a_this,
-                                        RE::BSAnimationGraphEvent*                     a_event,
-                                        RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_dispatcher) -> void {
-  if (a_event && a_event->holder) {
+auto OnAnimationEventNpc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   this_,
+                                        RE::BSAnimationGraphEvent*                     event,
+                                        RE::BSTEventSource<RE::BSAnimationGraphEvent>* dispatcher) -> void {
+  if (event && event->holder) {
     auto& config = Reflyem::Config::get_singleton();
-    Reflyem::AnimationEventHandler::animation_handler(a_event, config);
+    Reflyem::AnimationEventHandler::animation_handler(event, config);
   }
-  _process_event(a_this, a_event, a_dispatcher);
+  process_event_(this_, event, dispatcher);
   return;
 }
 
-auto OnAnimationEventPc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   a_this,
-                                       RE::BSAnimationGraphEvent*                     a_event,
-                                       RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_dispatcher) -> void {
-  if (a_event && a_event->holder) {
+auto OnAnimationEventPc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   this_,
+                                       RE::BSAnimationGraphEvent*                     event,
+                                       RE::BSTEventSource<RE::BSAnimationGraphEvent>* dispatcher) -> void {
+  if (event && event->holder) {
     auto& config = Reflyem::Config::get_singleton();
-    Reflyem::AnimationEventHandler::animation_handler(a_event, config);
+    Reflyem::AnimationEventHandler::animation_handler(event, config);
   }
-  _process_event(a_this, a_event, a_dispatcher);
+  process_event_(this_, event, dispatcher);
   return;
 }
 
-auto OnAdjustActiveEffect::adjust_active_effect(RE::ActiveEffect* a_this, float a_power, bool a_arg3) -> void {
-  if (a_this) {
-    auto caster = a_this->GetCasterActor();
-    auto target = a_this->GetTargetActor();
+auto OnAdjustActiveEffect::adjust_active_effect(RE::ActiveEffect* this_, float power, bool unk) -> void {
+  if (this_) {
+    const auto caster = this_->GetCasterActor();
+    const auto target = this_->GetTargetActor();
     if (caster && target) {
-      logger::info("Target HP: {} Caster HP: {} Target Level: {} Caster Level: {}",
+      logger::info("Target HP: {} Caster HP: {} Target Level: {} Caster Level: {}"sv,
                    target->GetActorValue(RE::ActorValue::kHealth), caster->GetActorValue(RE::ActorValue::kHealth),
                    target->GetLevel(), caster->GetLevel());
-      logger::info("Effect, mag: {}, dur: {}", a_this->magnitude, a_this->duration);
+      logger::info("Effect, mag: {}, dur: {}"sv, this_->magnitude, this_->duration);
     } else {
-      logger::info("Caster or target is null");
+      logger::info("Caster or target is null"sv);
     }
   }
-  _adjust_active_effect(a_this, a_power, a_arg3);
+  adjust_active_effect_(this_, power, unk);
   return;
 }
 
-auto OnModifyActorValue::modify_actor_value(RE::ValueModifierEffect* a_this, RE::Actor* a_actor, float a_value,
-                                            RE::ActorValue a_actorValue) -> void {
-  if (!a_actor || !a_this) {
-    _modify_actor_value(a_this, a_actor, a_value, a_actorValue);
+auto OnModifyActorValue::modify_actor_value(RE::ValueModifierEffect* this_, RE::Actor* actor, float value,
+                                            RE::ActorValue av) -> void {
+  if (!actor || !this_) {
+    modify_actor_value_(this_, actor, value, av);
     return;
   }
 
   auto& config = Reflyem::Config::get_singleton();
 
   if (config.magic_crit_enable) {
-    Reflyem::Crit::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+    Reflyem::Crit::modify_actor_value(this_, actor, value, av, config);
   }
 
   if (config.petrified_blood_enable && config.petrified_blood_magick) {
-    Reflyem::PetrifiedBlood::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+    Reflyem::PetrifiedBlood::modify_actor_value(this_, actor, value, av, config);
   }
 
   if (config.magic_shield_enable && config.magic_shield_magick) {
-    Reflyem::MagicShield::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+    Reflyem::MagicShield::modify_actor_value(this_, actor, value, av, config);
   }
 
-  Reflyem::Vampirism::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+  Reflyem::Vampirism::modify_actor_value(this_, actor, value, av, config);
 
-  _modify_actor_value(a_this, a_actor, a_value, a_actorValue);
+  modify_actor_value_(this_, actor, value, av);
   return;
 }
 
-auto OnPeakModifyActorValue::peak_modify_actor_value(RE::ValueModifierEffect* a_this, RE::Actor* a_actor, float a_value,
-                                                     RE::ActorValue a_actorValue) -> void {
+auto OnPeakModifyActorValue::peak_modify_actor_value(RE::ValueModifierEffect* this_, RE::Actor* actor, float value,
+                                                     RE::ActorValue av) -> void {
   logger::debug("peak mod actor value"sv);
 
-  if (!a_actor || !a_this) {
-    _peak_modify_actor_value(a_this, a_actor, a_value, a_actorValue);
+  if (!actor || !this_) {
+    peak_modify_actor_value_(this_, actor, value, av);
     return;
   }
 
   auto& config = Reflyem::Config::get_singleton();
 
   if (config.magic_crit_enable) {
-    Reflyem::Crit::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+    Reflyem::Crit::modify_actor_value(this_, actor, value, av, config);
   }
 
   if (config.petrified_blood_enable && config.petrified_blood_magick) {
-    Reflyem::PetrifiedBlood::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+    Reflyem::PetrifiedBlood::modify_actor_value(this_, actor, value, av, config);
   }
 
   if (config.magic_shield_enable && config.magic_shield_magick) {
-    Reflyem::MagicShield::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+    Reflyem::MagicShield::modify_actor_value(this_, actor, value, av, config);
   }
 
-  Reflyem::Vampirism::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+  Reflyem::Vampirism::modify_actor_value(this_, actor, value, av, config);
 
-  _peak_modify_actor_value(a_this, a_actor, a_value, a_actorValue);
+  peak_modify_actor_value_(this_, actor, value, av);
   return;
 }
 
-auto OnDualModifyActorValue::dual_modify_actor_value(RE::ValueModifierEffect* a_this, RE::Actor* a_actor, float a_value,
-                                                     RE::ActorValue a_actorValue) -> void {
-  if (!a_actor || !a_this) {
-    _dual_modify_actor_value(a_this, a_actor, a_value, a_actorValue);
+auto OnDualModifyActorValue::dual_modify_actor_value(RE::ValueModifierEffect* this_, RE::Actor* actor, float value,
+                                                     RE::ActorValue av) -> void {
+  if (!actor || !this_) {
+    dual_modify_actor_value_(this_, actor, value, av);
     return;
   }
 
   auto& config = Reflyem::Config::get_singleton();
 
   if (config.magic_crit_enable) {
-    Reflyem::Crit::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+    Reflyem::Crit::modify_actor_value(this_, actor, value, av, config);
   }
 
   if (config.petrified_blood_enable && config.petrified_blood_magick) {
-    Reflyem::PetrifiedBlood::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+    Reflyem::PetrifiedBlood::modify_actor_value(this_, actor, value, av, config);
   }
 
   if (config.magic_shield_enable && config.magic_shield_magick) {
-    Reflyem::MagicShield::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+    Reflyem::MagicShield::modify_actor_value(this_, actor, value, av, config);
   }
 
-  Reflyem::Vampirism::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+  Reflyem::Vampirism::modify_actor_value(this_, actor, value, av, config);
 
-  _dual_modify_actor_value(a_this, a_actor, a_value, a_actorValue);
+  dual_modify_actor_value_(this_, actor, value, av);
   return;
 }
 
-auto OnDualModifyActorValueSecondInnerCall::dual_modify_actor_value_second_inner_call(RE::ValueModifierEffect* a_this,
-                                                                                      RE::Actor* a_actor, float a_value,
-                                                                                      RE::ActorValue a_actorValue)
-    -> void {
-  if (!a_actor || !a_this) {
-    _dual_modify_actor_value_second_inner_call(a_this, a_actor, a_value, a_actorValue);
+auto OnDualModifyActorValueSecondInnerCall::dual_modify_actor_value_second_inner_call(RE::ValueModifierEffect* this_,
+                                                                                      RE::Actor* actor, float value,
+                                                                                      RE::ActorValue av) -> void {
+  if (!actor || !this_) {
+    dual_modify_actor_value_second_inner_call_(this_, actor, value, av);
     return;
   }
 
   auto& config = Reflyem::Config::get_singleton();
 
   if (config.magic_crit_enable) {
-    Reflyem::Crit::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+    Reflyem::Crit::modify_actor_value(this_, actor, value, av, config);
   }
 
   if (config.petrified_blood_enable && config.petrified_blood_magick) {
-    Reflyem::PetrifiedBlood::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+    Reflyem::PetrifiedBlood::modify_actor_value(this_, actor, value, av, config);
   }
 
   if (config.magic_shield_enable && config.magic_shield_magick) {
-    Reflyem::MagicShield::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+    Reflyem::MagicShield::modify_actor_value(this_, actor, value, av, config);
   }
 
-  Reflyem::Vampirism::modify_actor_value(a_this, a_actor, a_value, a_actorValue, config);
+  Reflyem::Vampirism::modify_actor_value(this_, actor, value, av, config);
 
-  _dual_modify_actor_value_second_inner_call(a_this, a_actor, a_value, a_actorValue);
+  dual_modify_actor_value_second_inner_call_(this_, actor, value, av);
   return;
 }
 
-auto OnMainUpdate::main_update(RE::Main* a_this, float a2) -> void {
+auto OnMainUpdate::main_update(RE::Main* this_, float unk) -> void {
 
   if (const auto ui = RE::UI::GetSingleton(); ui->GameIsPaused()) {
-    _main_update(a_this, a2);
+    main_update_(this_, unk);
     return;
   }
 
-  _main_update(a_this, a2);
+  main_update_(this_, unk);
   return;
 }
 
 auto OnWeaponHit::weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void {
   if (!target) {
-    _weapon_hit(target, hit_data);
+    weapon_hit_(target, hit_data);
     return;
   }
 
@@ -305,12 +304,12 @@ auto OnWeaponHit::weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void {
 
   Reflyem::Vampirism::on_weapon_hit(target, hit_data, config);
 
-  _weapon_hit(target, hit_data);
+  weapon_hit_(target, hit_data);
   return;
 }
 
 auto install_hooks() -> void {
-  logger::info("start install hooks");
+  logger::info("start install hooks"sv);
   auto& trampoline = SKSE::GetTrampoline();
   trampoline.create(1024);
   OnWeaponHit::install_hook(trampoline);
@@ -326,6 +325,6 @@ auto install_hooks() -> void {
   OnDualModifyActorValueSecondInnerCall::install_hook(trampoline);
   // OnAttackAction::install_hook(trampoline);
   // OnAttackData::install_hook(trampoline);
-  logger::info("finish install hooks");
+  logger::info("finish install hooks"sv);
 }
 } // namespace Hooks
