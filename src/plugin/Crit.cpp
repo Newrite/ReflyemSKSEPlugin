@@ -1,4 +1,4 @@
-#include "Crit.hpp"
+#include "plugin/Crit.hpp"
 #include "Core.hpp"
 
 namespace Reflyem {

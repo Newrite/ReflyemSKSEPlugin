@@ -1,4 +1,4 @@
-#include "CheatDeath.hpp"
+#include "plugin/CheatDeath.hpp"
 #include "Core.hpp"
 
 namespace Reflyem {

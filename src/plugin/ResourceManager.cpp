@@ -1,4 +1,4 @@
-#include "ResourceManager.hpp"
+#include "plugin/ResourceManager.hpp"
 #include "Core.hpp"
 
 namespace Reflyem {
@@ -42,7 +42,7 @@ auto weap_actor_mask_multiply(const FormMask& matrix1, const ActorMask& matrix2)
     constexpr auto column = 3;
 
     for (auto y = 0; y < column; y++) {
-      auto acc = 0;
+      auto acc = 0i16;
       for (auto z = 0; z < 3; z++) {
         acc = acc + matrix1.at(x).at(z) * matrix2.at(z).at(y);
       }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Config.hpp"
+#include <cache/cache.hpp>
 
 namespace Reflyem {
 namespace AnimationEventHandler {

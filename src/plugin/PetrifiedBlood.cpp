@@ -1,4 +1,4 @@
-#include "PetrifiedBlood.hpp"
+#include "plugin/PetrifiedBlood.hpp"
 #include "Core.hpp"
 
 namespace Reflyem {

@@ -15,7 +15,7 @@ public:
   float health;
   float magicka;
 
-  DrainValues(float a_stamina, float a_health, float a_magicka);
+  explicit DrainValues(float a_stamina, float a_health, float a_magicka);
 
   auto drain(RE::Actor& actor) -> void;
 };

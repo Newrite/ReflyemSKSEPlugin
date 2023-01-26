@@ -1,4 +1,4 @@
-#include "Vampirism.hpp"
+#include "plugin/Vampirism.hpp"
 #include "Core.hpp"
 
 namespace Reflyem {

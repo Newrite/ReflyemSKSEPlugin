@@ -1,4 +1,4 @@
-#include "SpeedCasting.hpp"
+#include "plugin/SpeedCasting.hpp"
 
 namespace Reflyem {
 namespace SpeedCasting {

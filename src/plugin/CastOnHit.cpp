@@ -1,4 +1,4 @@
-#include "CastOnHit.hpp"
+#include "plugin/CastOnHit.hpp"
 #include "Core.hpp"
 
 namespace Reflyem {

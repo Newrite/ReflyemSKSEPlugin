@@ -1,4 +1,4 @@
-#include "MagicShield.hpp"
+#include "plugin/MagicShield.hpp"
 #include "Core.hpp"
 
 namespace Reflyem {

@@ -32,6 +32,7 @@ add_requires("commonlibsse-ng", { configs = { skyrim_vr = false, skyrim_ae = fal
 
 -- includes
 includes("res/package.lua")
+add_includedirs("external")
 
 -- targets
 target("Reflyem")
@@ -46,11 +47,11 @@ target("Reflyem")
 
     set_targetdir("G:\\MO2Enderal\\mods\\Reflyem\\SKSE\\Plugins")
 
-    add_files("src/**.cpp", "src/plugin/**.cpp")
+    add_files("/src/**.cpp")
     -- add_files("src/**.ixx", "src/plugin/**.ixx")
-    add_headerfiles("include/**.hpp", "include/plugin/**.hpp")
+    add_headerfiles("/include/**.hpp")
     set_pcxxheader("include/pch.h")
-    add_includedirs("src", "src/plugin", "include", "include/plugin")
+    add_includedirs("include")
 
     add_rules("mod.package", {
         ["@{target}-@{target_ver}.zip"] = {

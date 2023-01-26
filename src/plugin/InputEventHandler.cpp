@@ -1,5 +1,5 @@
-#include "InputEventHandler.hpp"
-#include "TKDodge.hpp"
+#include "plugin/InputEventHandler.hpp"
+#include "plugin/TKDodge.hpp"
 
 namespace Reflyem {
 auto InputEventHandler::Register() -> void {

@@ -1,14 +1,14 @@
 #include "Hooks.hpp"
-#include "CastOnHit.hpp"
-#include "CasterDebuff.hpp"
-#include "CheatDeath.hpp"
+#include "plugin/CastOnHit.hpp"
+#include "plugin/CasterDebuff.hpp"
+#include "plugin/CheatDeath.hpp"
 #include "Core.hpp"
-#include "Crit.hpp"
-#include "MagicShield.hpp"
-#include "PetrifiedBlood.hpp"
-#include "ResourceManager.hpp"
-#include "SpeedCasting.hpp"
-#include "Vampirism.hpp"
+#include "plugin/Crit.hpp"
+#include "plugin/MagicShield.hpp"
+#include "plugin/PetrifiedBlood.hpp"
+#include "plugin/ResourceManager.hpp"
+#include "plugin/SpeedCasting.hpp"
+#include "plugin/Vampirism.hpp"
 
 namespace Hooks {
 

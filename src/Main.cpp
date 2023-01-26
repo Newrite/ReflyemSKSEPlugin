@@ -1,5 +1,5 @@
 #include "Hooks.hpp"
-#include "InputEventHandler.hpp"
+#include "plugin/InputEventHandler.hpp"
 
 auto init_logger() -> void {
   // ReSharper disable once CppLocalVariableMayBeConst

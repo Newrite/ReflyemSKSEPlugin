@@ -1,6 +1,6 @@
-#include "TKDodge.hpp"
+#include "plugin/TKDodge.hpp"
 #include "Core.hpp"
-#include "ResourceManager.hpp"
+#include "plugin/ResourceManager.hpp"
 
 namespace Reflyem {
 namespace TkDodge {

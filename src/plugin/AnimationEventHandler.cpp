@@ -1,7 +1,7 @@
-#include "AnimationEventHandler.hpp"
+#include "plugin/AnimationEventHandler.hpp"
 #include "Core.hpp"
-#include "ResourceManager.hpp"
-#include "TKDodge.hpp"
+#include "plugin/ResourceManager.hpp"
+#include "plugin/TKDodge.hpp"
 
 namespace Reflyem {
 namespace AnimationEventHandler {
