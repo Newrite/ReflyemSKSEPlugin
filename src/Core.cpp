@@ -12,6 +12,13 @@ private:
   RE::ActiveEffect*  active_effect_;
   RE::Effect*        effect_;
 
+  explicit SafetyEffectData(RE::ActiveEffect* active_effect) {
+    effect_         = active_effect->effect;
+    effect_setting_ = active_effect->effect->baseEffect;
+    active_effect_  = active_effect;
+  }
+
+public:
   [[nodiscard]] auto get_effect_setting() const -> RE::EffectSetting& { return *effect_setting_; }
   [[nodiscard]] auto get_effect() const -> RE::Effect& { return *effect_; }
   [[nodiscard]] auto get_active_effect() const -> RE::ActiveEffect& { return *active_effect_; }
@@ -24,13 +31,6 @@ private:
     return effect_setting_->data.flags.any(EffectSettingFlag::kDetrimental);
   }
 
-  explicit SafetyEffectData(RE::ActiveEffect* active_effect) {
-    effect_         = active_effect->effect;
-    effect_setting_ = active_effect->effect->baseEffect;
-    active_effect_  = active_effect;
-  }
-
-public:
   static auto create_safety_effect_data(RE::ActiveEffect* active_effect) -> std::optional<SafetyEffectData> {
 
     if (!active_effect) {
@@ -308,8 +308,47 @@ auto is_power_attacking(RE::Actor& actor) -> bool {
   return flags.any(RE::AttackData::AttackFlag::kPowerAttack);
 }
 
+auto worn_has_keyword(RE::Actor* actor, RE::BGSKeyword* keyword) -> bool {
+  if (!actor || keyword) {
+    return false;
+  }
+  auto inv = actor->GetInventoryChanges();
+  if (!inv) {
+    return false;
+  }
+  using FuncT = bool (*)(RE::InventoryChanges*, RE::BGSKeyword*);
+  const REL::Relocation<FuncT> func{RELOCATION_ID(15808, 0)};
+  return func(inv, keyword);
+}
+
+auto do_combat_spell_apply(RE::Actor* actor, RE::SpellItem* spell, RE::TESObjectREFR* target) -> void {
+  if (!actor || !spell || !target) {
+    return;
+  }
+
+  using FuncT = void(*)(int32_t, int32_t, RE::Actor*, RE::SpellItem*, RE::TESObjectREFR*);
+  const REL::Relocation<FuncT> func{RELOCATION_ID(54124, 0)};
+  return func(0, 0, actor, spell, target);
+}
+
 auto has_absolute_keyword(RE::Actor& actor, RE::BGSKeyword& keyword) -> bool {
-  return actor.HasKeyword(&keyword) || actor_has_active_mgef_with_keyword(actor, keyword);
+  return actor.HasKeyword(&keyword) || actor_has_active_mgef_with_keyword(actor, keyword) ||
+         worn_has_keyword(&actor, &keyword);
+}
+
+auto is_casting_actor(RE::Character& character) -> bool {
+
+  if (character.IsDead()) {
+    return false;
+  }
+
+  const auto caster_left  = character.GetMagicCaster(RE::MagicSystem::CastingSource::kLeftHand);
+  const auto caster_right = character.GetMagicCaster(RE::MagicSystem::CastingSource::kRightHand);
+
+  if ((caster_left && caster_left->currentSpell) || (caster_right && caster_right->currentSpell)) {
+    return true;
+  }
+  return false;
 }
 
 } // namespace Core

@@ -1,8 +1,8 @@
 #include "Hooks.hpp"
+#include "Core.hpp"
 #include "plugin/CastOnHit.hpp"
 #include "plugin/CasterDebuff.hpp"
 #include "plugin/CheatDeath.hpp"
-#include "Core.hpp"
 #include "plugin/Crit.hpp"
 #include "plugin/MagicShield.hpp"
 #include "plugin/PetrifiedBlood.hpp"
@@ -12,53 +12,65 @@
 
 namespace Hooks {
 
-static ULONGLONG timer1000 = 0;
-static ULONGLONG timer500  = 0;
-static ULONGLONG timer100  = 0;
+static uint64_t timer1000 = 0;
+static uint64_t timer500  = 0;
+static uint64_t timer100  = 0;
+static float    player_last_delta = 0.f;
 
 auto update_actor(RE::Character& character, const float delta, const Reflyem::Config& config) -> void {
 
   logger::debug("update actor"sv);
 
-  constexpr auto ptr_key = 0; // reinterpret_cast<std::uintptr_t>(&character);
-
   const auto tick = GetTickCount64();
 
-  ULONGLONG last_tick100  = 0;
-  ULONGLONG last_tick1000 = 0;
+  auto& actors_cache = Reflyem::Core::ActorsCache::get_singleton();
+  auto& actor_data   = actors_cache.get_or_add(character.formID).get();
 
-  if (Reflyem::Core::character_timer_map100.contains(ptr_key)) {
-    logger::debug("update actor map100"sv);
-    last_tick100 = Reflyem::Core::character_timer_map100.at(ptr_key);
+  const auto last_actor_tick50  = actor_data.last_update_tick(Reflyem::Core::ActorsCache::Data::TickValues::k50Ms);
+  const auto last_actor_tick100  = actor_data.last_update_tick(Reflyem::Core::ActorsCache::Data::TickValues::k100Ms);
+  const auto last_actor_tick1000 = actor_data.last_update_tick(Reflyem::Core::ActorsCache::Data::TickValues::k1000Ms);
+  actor_data.set_delta_update(player_last_delta);
+
+  if (config.resource_manager_enable && config.resource_manager_regeneration_enable) {
+    Reflyem::ResourceManager::on_update_actor_regeneration(character, actor_data);
   }
 
-  if (Reflyem::Core::character_timer_map1000.contains(ptr_key)) {
-    logger::debug("update actor map1000"sv);
-    last_tick1000 = Reflyem::Core::character_timer_map1000.at(ptr_key);
+  if (tick - last_actor_tick50 >= 50) {
+    logger::debug("update actor map50 tick"sv);
+    actor_data.update_tick(Reflyem::Core::ActorsCache::Data::TickValues::k50Ms);
   }
 
-  if (tick - last_tick100 > 100) {
+  if (tick - last_actor_tick100 >= 100) {
     logger::debug("update actor map100 tick"sv);
-    Reflyem::Core::character_timer_map100[ptr_key] = tick;
+    actor_data.update_tick(Reflyem::Core::ActorsCache::Data::TickValues::k100Ms);
     if (config.resource_manager_enable) {
       Reflyem::ResourceManager::update_actor(character, delta, config);
     }
     if (config.caster_debuff_enable) {
       Reflyem::CasterDebuff::on_update_actor(character, delta, config);
     }
+    if (config.resource_manager_enable && config.resource_manager_regeneration_enable) {
+      actor_data.mod_all_regens_delay(-0.1f);
+    }
   }
 
-  if (tick - last_tick1000 > 1000) {
+  if (tick - last_actor_tick1000 >= 1000) {
     logger::debug("update actor map1000 tick"sv);
-    Reflyem::Core::character_timer_map1000[ptr_key] = tick;
+    actor_data.update_tick(Reflyem::Core::ActorsCache::Data::TickValues::k1000Ms);
+    logger::info("ActorData: st {} mp {} hp {}", actor_data.regen_stamina_delay(), actor_data.regen_magicka_delay(),
+                 actor_data.regen_health_delay());
     if (config.petrified_blood_enable && config.petrified_blood_magick) {
       Reflyem::PetrifiedBlood::character_update(character, delta, config);
+    }
+    if (config.resource_manager_enable && config.resource_manager_regeneration_enable) {
+      Reflyem::Core::set_av_regen_delay(character.currentProcess, RE::ActorValue::kMagicka, 2.f);
+      Reflyem::Core::set_av_regen_delay(character.currentProcess, RE::ActorValue::kStamina, 2.f);
+      Reflyem::Core::set_av_regen_delay(character.currentProcess, RE::ActorValue::kHealth, 2.f);
     }
   }
 
   if (tick - timer100 >= 100) {
     timer100 = tick;
-    Reflyem::Core::character_timer_map_handler(tick, Reflyem::Core::character_timer_map100);
     if (config.resource_manager_enable) {
       Reflyem::ResourceManager::ranged_spend_handler();
     }
@@ -73,17 +85,14 @@ auto update_actor(RE::Character& character, const float delta, const Reflyem::Co
 
   if (tick - timer1000 >= 1000) {
     timer1000 = tick;
-    Reflyem::Core::character_timer_map_handler(tick, Reflyem::Core::character_timer_map1000);
   }
-
-  return;
 }
 
 auto OnPlayerCharacterUpdate::update(RE::PlayerCharacter* this_, float delta) -> void {
   if (this_) {
 
     auto& config = Reflyem::Config::get_singleton();
-
+    player_last_delta = delta;
     update_actor(*this_, delta, config);
   }
   return update_(this_, delta);

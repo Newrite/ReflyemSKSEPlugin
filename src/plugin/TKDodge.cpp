@@ -14,7 +14,7 @@ enum class MovementDirections {
 };
 
 using MovementPair = std::pair<MovementDirections, std::string_view>;
-using DrainValues  = ResourceManager::DrainValues;
+using DrainValues  = ResourceManager::ResourceDrain;
 using MgefMask     = ResourceManager::FormMask;
 
 enum : uint32_t { kInvalid = static_cast<uint32_t>(-1), kKeyboardOffset = 0, kMouseOffset = 256, kGamepadOffset = 266 };

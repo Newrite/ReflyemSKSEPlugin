@@ -92,6 +92,7 @@ public:
   bool resource_manager_weapon_spend_enable;
   bool resource_manager_bash_spend_enable;
   bool resource_manager_block_spend_enable;
+  bool resource_manager_regeneration_enable;
   bool resource_manager_infamy_enable;
 
   float resource_manager_weight_mult;

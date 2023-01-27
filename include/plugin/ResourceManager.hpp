@@ -2,6 +2,7 @@
 
 #include "AnimationEventHandler.hpp"
 #include "Config.hpp"
+#include "Core.hpp"
 
 namespace Reflyem {
 namespace ResourceManager {
@@ -9,20 +10,22 @@ namespace ResourceManager {
 using FormMask  = std::array<std::array<std::int16_t, 3>, 1>;
 using ActorMask = std::array<std::array<std::int16_t, 3>, 3>;
 
-struct DrainValues {
+struct ResourceDrain {
 public:
   float stamina;
   float health;
   float magicka;
 
-  explicit DrainValues(float a_stamina, float a_health, float a_magicka);
+  explicit ResourceDrain(float a_stamina, float a_health, float a_magicka);
 
   auto drain(RE::Actor& actor) -> void;
 };
 
+auto on_update_actor_regeneration(RE::Character& character, Core::ActorsCache::Data& actor_data) -> void;
+
 auto calc_mask_sum(const FormMask& f_mask) -> std::int32_t;
 
-auto handle_mask_sum_for_drain_values(std::int32_t mask_sum, float cost) -> std::shared_ptr<DrainValues>;
+auto handle_mask_sum_for_drain_values(std::int32_t mask_sum, float cost) -> std::shared_ptr<ResourceDrain>;
 
 auto ranged_spend_handler() -> void;
 

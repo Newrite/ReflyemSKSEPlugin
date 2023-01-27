@@ -37,6 +37,7 @@ constexpr inline std::string_view CastOnHit                  = "CastOnHit";
 
 constexpr inline std::string_view ResourceManager                = "ResourceManager";
 constexpr inline std::string_view EnableInfamy                   = "EnableInfamy";
+constexpr inline std::string_view EnableRegeneration             = "EnableRegeneration";
 constexpr inline std::string_view EnableWeaponSpend              = "EnableWeaponSpend";
 constexpr inline std::string_view EnableBashSpend                = "EnableBashSpend";
 constexpr inline std::string_view EnableBlock                    = "EnableBlock";
@@ -245,6 +246,7 @@ const Config& Config::get_singleton() noexcept {
     instance.resource_manager_enable = tbl[ResourceManager][Enable].value_or(false);
     if (instance.resource_manager_enable) {
       instance.resource_manager_infamy_enable       = tbl[ResourceManager][EnableInfamy].value_or(false);
+      instance.resource_manager_regeneration_enable = tbl[ResourceManager][EnableRegeneration].value_or(false);
       instance.resource_manager_weapon_spend_enable = tbl[ResourceManager][EnableWeaponSpend].value_or(false);
       instance.resource_manager_block_spend_enable  = tbl[ResourceManager][EnableBlock].value_or(false);
       instance.resource_manager_bash_spend_enable   = tbl[ResourceManager][EnableBashSpend].value_or(false);

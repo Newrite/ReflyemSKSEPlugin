@@ -1,5 +1,4 @@
 #include "plugin/ResourceManager.hpp"
-#include "Core.hpp"
 
 namespace Reflyem {
 namespace ResourceManager {
@@ -8,30 +7,122 @@ using WeaponOrArmor = Core::Either<RE::TESObjectWEAP*, RE::TESObjectARMO*>;
 
 constexpr auto REGEN_DELAY = 2.5f;
 
-DrainValues::DrainValues(float a_stamina, float a_health, float a_magicka) {
+// ReSharper disable once CppParameterMayBeConst
+auto spend_actor_value(RE::Actor& actor, const RE::ActorValue av, float value) -> void {
+  const auto& config = Config::get_singleton();
+  if (config.resource_manager_regeneration_enable) {
+
+    auto& actor_data = Core::ActorsCache::get_singleton().get_or_add(actor.formID).get();
+
+    switch (av) {
+    case RE::ActorValue::kStamina: {
+      const auto stamina = actor.GetActorValue(RE::ActorValue::kStamina);
+      auto       delay   = REGEN_DELAY;
+      if (stamina - value < 0.f) {
+        delay *= 1.5f;
+      }
+      actor_data.set_regen_stamina_delay(delay);
+    }
+    case RE::ActorValue::kHealth: {
+      const auto health = actor.GetActorValue(RE::ActorValue::kHealth);
+      auto       delay  = REGEN_DELAY;
+      if (health - value < 0.f) {
+        delay *= 1.5f;
+      }
+      actor_data.set_regen_health_delay(delay);
+    }
+    case RE::ActorValue::kMagicka: {
+      const auto magicka = actor.GetActorValue(RE::ActorValue::kMagicka);
+      auto       delay   = REGEN_DELAY;
+      if (magicka - value < 0.f) {
+        delay *= 1.5f;
+      }
+      actor_data.set_regen_magicka_delay(delay);
+    }
+    default:
+      break;
+    }
+  } else {
+    Core::set_av_regen_delay(actor.currentProcess, av, REGEN_DELAY);
+  }
+
+  Core::damage_actor_value(actor, av, value);
+}
+
+auto regeneration_actor_value(RE::Character& character, const RE::ActorValue av, const RE::ActorValue regen_av,
+                              const RE::ActorValue regen_av_mult, const float delta) -> void {
+  auto mult = (1.f + (character.GetActorValue(regen_av_mult) / 100.f));
+  if (mult < 0.f) {
+    mult = 1.f;
+  }
+  auto       flat_regen         = character.GetActorValue(regen_av) * mult;
+  const auto regeneration_value = flat_regen * delta;
+  logger::debug("MultRegen {} RegenValue {} FlatRegenBase {}", mult, regeneration_value, flat_regen);
+  character.RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, av, regeneration_value);
+}
+
+auto regeneration_stamina(RE::Character& character, const Core::ActorsCache::Data& actor_data) -> void {
+  if (actor_data.regen_stamina_delay() <= 0.f) {
+    auto constexpr av            = RE::ActorValue::kStamina;
+    auto constexpr regen_av      = RE::ActorValue::kStaminaRate;
+    auto constexpr regen_av_mult = RE::ActorValue::kStaminaRateMult;
+    regeneration_actor_value(character, av, regen_av, regen_av_mult, actor_data.delta_update());
+  }
+}
+
+auto regeneration_health(RE::Character& character, const Core::ActorsCache::Data& actor_data) -> void {
+  if (actor_data.regen_health_delay() <= 0.f) {
+    auto constexpr av            = RE::ActorValue::kHealth;
+    auto constexpr regen_av      = RE::ActorValue::kHealRate;
+    auto constexpr regen_av_mult = RE::ActorValue::kHealRateMult;
+    regeneration_actor_value(character, av, regen_av, regen_av_mult, actor_data.delta_update());
+  }
+}
+
+auto regeneration_magicka(RE::Character& character, const Core::ActorsCache::Data& actor_data) -> void {
+  if (actor_data.regen_magicka_delay() <= 0.f) {
+    auto constexpr av            = RE::ActorValue::kMagicka;
+    auto constexpr regen_av      = RE::ActorValue::kMagickaRate;
+    auto constexpr regen_av_mult = RE::ActorValue::kMagickaRateMult;
+    regeneration_actor_value(character, av, regen_av, regen_av_mult, actor_data.delta_update());
+  }
+}
+
+auto on_update_actor_regeneration(RE::Character& character, Core::ActorsCache::Data& actor_data) -> void {
+  regeneration_health(character, actor_data);
+  regeneration_stamina(character, actor_data);
+  regeneration_magicka(character, actor_data);
+
+  if (Core::is_casting_actor(character)) {
+    actor_data.set_regen_magicka_delay(REGEN_DELAY);
+  }
+
+  if (character.IsSprinting()) {
+    actor_data.set_regen_stamina_delay(REGEN_DELAY);
+  }
+}
+
+ResourceDrain::ResourceDrain(float a_stamina, float a_health, float a_magicka) {
   logger::debug("create drain values: S{} H{} M{}"sv, a_stamina, a_health, a_magicka);
   stamina = a_stamina * -1.f;
   health  = a_health * -1.f;
   magicka = a_magicka * -1.f;
 }
 
-auto DrainValues::drain(RE::Actor& actor) -> void {
+auto ResourceDrain::drain(RE::Actor& actor) -> void {
   logger::debug("drain values: S{} H{} M{}"sv, stamina, health, magicka);
   if (health != 0.f) {
-    Core::damage_actor_value(actor, RE::ActorValue::kHealth, health);
-    Core::set_av_regen_delay(actor.currentProcess, RE::ActorValue::kHealth, REGEN_DELAY);
+    spend_actor_value(actor, RE::ActorValue::kHealth, std::abs(health));
   }
   if (magicka != 0.f) {
-    Core::damage_actor_value(actor, RE::ActorValue::kMagicka, magicka);
-    Core::set_av_regen_delay(actor.currentProcess, RE::ActorValue::kMagicka, REGEN_DELAY);
+    spend_actor_value(actor, RE::ActorValue::kMagicka, std::abs(magicka));
   }
   if (stamina != 0.f) {
-    Core::damage_actor_value(actor, RE::ActorValue::kStamina, stamina);
-    Core::set_av_regen_delay(actor.currentProcess, RE::ActorValue::kStamina, REGEN_DELAY);
+    spend_actor_value(actor, RE::ActorValue::kStamina, std::abs(stamina));
   }
 }
 
-static std::map<RE::Actor*, std::shared_ptr<DrainValues>> rm_map;
+static std::map<RE::Actor*, std::shared_ptr<ResourceDrain>> rm_map;
 
 auto weap_actor_mask_multiply(const FormMask& matrix1, const ActorMask& matrix2) -> std::unique_ptr<FormMask> {
   constexpr auto row = 1;
@@ -52,29 +143,29 @@ auto weap_actor_mask_multiply(const FormMask& matrix1, const ActorMask& matrix2)
   return std::make_unique<FormMask>(result);
 }
 
-auto handle_mask_sum_for_drain_values(std::int32_t mask_sum, float cost) -> std::shared_ptr<DrainValues> {
+auto handle_mask_sum_for_drain_values(std::int32_t mask_sum, float cost) -> std::shared_ptr<ResourceDrain> {
   switch (mask_sum) {
   case 1:
-    return std::make_shared<DrainValues>(DrainValues(cost, 0, 0));
+    return std::make_shared<ResourceDrain>(ResourceDrain(cost, 0, 0));
   case 2:
-    return std::make_shared<DrainValues>(DrainValues(0, cost, 0));
+    return std::make_shared<ResourceDrain>(ResourceDrain(0, cost, 0));
   case 4:
-    return std::make_shared<DrainValues>(DrainValues(0, 0, cost));
+    return std::make_shared<ResourceDrain>(ResourceDrain(0, 0, cost));
   case 3:
     cost = cost * 0.5f;
-    return std::make_shared<DrainValues>(DrainValues(cost, cost, 0));
+    return std::make_shared<ResourceDrain>(ResourceDrain(cost, cost, 0));
   case 5:
     cost = cost * 0.5f;
-    return std::make_shared<DrainValues>(DrainValues(cost, 0, cost));
+    return std::make_shared<ResourceDrain>(ResourceDrain(cost, 0, cost));
   case 6:
     cost = cost * 0.5f;
-    return std::make_shared<DrainValues>(DrainValues(0, cost, cost));
+    return std::make_shared<ResourceDrain>(ResourceDrain(0, cost, cost));
   case 7:
     cost = cost * 0.35f;
-    return std::make_shared<DrainValues>(DrainValues(cost, cost, cost));
+    return std::make_shared<ResourceDrain>(ResourceDrain(cost, cost, cost));
   default:
     logger::debug("default switch on eval drain value: mask {}"sv, mask_sum);
-    return std::make_shared<DrainValues>(DrainValues(cost, 0, 0));
+    return std::make_shared<ResourceDrain>(ResourceDrain(cost, 0, 0));
   }
 }
 
@@ -112,7 +203,7 @@ auto calc_mask_sum(const FormMask& f_mask) -> std::int32_t {
 }
 
 auto get_drain_value(RE::Actor& actor, const RE::BGSKeywordForm& form, const Config& config, const float cost,
-                     const bool enable_conversions) -> std::shared_ptr<DrainValues> {
+                     const bool enable_conversions) -> std::shared_ptr<ResourceDrain> {
   const auto f_mask = get_form_mask(form, config);
 
   auto mask_sum = 0;
@@ -171,8 +262,8 @@ auto get_drain_value(RE::Actor& actor, const RE::BGSKeywordForm& form, const Con
 }
 
 auto get_bash_drain_value(RE::Actor& actor, const WeaponOrArmor& form, const Config& config, const float cost,
-                          const bool enable_conversions) -> std::shared_ptr<DrainValues> {
-  if (form.isL) {
+                          const bool enable_conversions) -> std::shared_ptr<ResourceDrain> {
+  if (form.is_l) {
     return get_drain_value(actor, *form.left, config, cost, enable_conversions);
   } else {
     return get_drain_value(actor, *form.right, config, cost, enable_conversions);
@@ -283,10 +374,10 @@ auto get_bash_drain_cost(RE::Actor& actor, const WeaponOrArmor& form, const bool
   auto       bash_cost_mult = get_sale_for_spend_from_av(av_value, 100, -100);
 
   auto weight = 0.f;
-  if (form.isL) {
+  if (form.is_l) {
     weight = get_weapon_weight(*form.left, config);
   }
-  if (!form.isL) {
+  if (!form.is_l) {
     weight = get_shield_weight(*form.right, config);
   }
 
@@ -349,8 +440,7 @@ auto ranged_spend_handler() -> void {
 }
 
 auto jump_spend(RE::Actor& actor, const Config& config) -> void {
-  Core::damage_actor_value(actor, RE::ActorValue::kStamina, -config.resource_manager_jump_cost);
-  Core::set_av_regen_delay(actor.currentProcess, RE::ActorValue::kStamina, REGEN_DELAY);
+  spend_actor_value(actor, RE::ActorValue::kStamina, -config.resource_manager_jump_cost);
 }
 
 auto get_weapon(const RE::Actor& actor, const bool is_left_hand, const Config& config) -> RE::TESObjectWEAP& {
@@ -388,7 +478,7 @@ auto get_weapon_or_shield(const RE::Actor& actor) -> std::optional<WeaponOrArmor
   return std::nullopt;
 }
 
-auto handle_resource_for_action(RE::Character& actor, const DrainValues& drain_values, RE::SpellItem& block_spell)
+auto handle_resource_for_action(RE::Character& actor, const ResourceDrain& drain_values, RE::SpellItem& block_spell)
     -> void {
 
   logger::debug("handle_resource_for_action get AVs"sv);
