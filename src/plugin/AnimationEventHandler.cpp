@@ -13,11 +13,12 @@ constexpr inline auto BOW_DRAW_START    = "bowDrawStart"sv;
 constexpr inline auto BASH_EXIT         = "bashExit"sv;
 // constexpr inline auto TKDR_DodgeStart = "TKDR_DodgeStart";
 
-static std::map<std::string_view, AnimationEvent> animation_map{{WEAPON_SWING, AnimationEvent::kWeaponSwing},
-                                                                {WEAPON_SWING_LEFT, AnimationEvent::kWeaponLeftSwing},
-                                                                {JUMP_UP, AnimationEvent::kJumpUp},
-                                                                {BOW_DRAW_START, AnimationEvent::kBowDrawStart},
-                                                                {BASH_EXIT, AnimationEvent::kBashExit}};
+static std::map<std::string_view, AnimationEvent> animation_map{
+    {WEAPON_SWING, AnimationEvent::kWeaponSwing},
+    {WEAPON_SWING_LEFT, AnimationEvent::kWeaponLeftSwing},
+    {JUMP_UP, AnimationEvent::kJumpUp},
+    {BOW_DRAW_START, AnimationEvent::kBowDrawStart},
+    {BASH_EXIT, AnimationEvent::kBashExit}};
 
 auto try_find_animation(const std::string& key) -> AnimationEvent {
   const auto it = animation_map.find(key);
@@ -82,9 +83,9 @@ auto PlayerAnimationHandler::register_sink(const RE::Actor* actor) -> bool {
   return true;
 }
 
-auto PlayerAnimationHandler::ProcessEvent(const RE::BSAnimationGraphEvent*               event,
-                                          RE::BSTEventSource<RE::BSAnimationGraphEvent>* event_source)
-    -> RE::BSEventNotifyControl {
+auto PlayerAnimationHandler::ProcessEvent(
+    const RE::BSAnimationGraphEvent*               event,
+    RE::BSTEventSource<RE::BSAnimationGraphEvent>* event_source) -> RE::BSEventNotifyControl {
   auto& config = Config::get_singleton();
   if (config.tk_dodge_enable) {
     return TkDodge::process_event_player_animation(event, event_source, config);

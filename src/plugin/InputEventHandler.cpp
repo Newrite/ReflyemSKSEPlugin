@@ -14,7 +14,8 @@ auto InputEventHandler::get_singleton() -> InputEventHandler* {
   return std::addressof(singleton);
 }
 
-auto InputEventHandler::ProcessEvent(RE::InputEvent* const* event, RE::BSTEventSource<RE::InputEvent*>* event_source)
+auto InputEventHandler::ProcessEvent(RE::InputEvent* const*               event,
+                                     RE::BSTEventSource<RE::InputEvent*>* event_source)
     -> RE::BSEventNotifyControl {
   auto& config = Config::get_singleton();
   if (config.tk_dodge_enable) {

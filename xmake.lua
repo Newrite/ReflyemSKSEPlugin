@@ -6,8 +6,9 @@ set_version("1.0.0")
 set_license("MIT")
 set_languages("cxxlatest")
 set_optimize("faster")
-set_warnings("all", "error")
+set_warnings("allextra", "error")
 set_toolchains("msvc")
+add_cxxflags("msvc::-Wimplicit-fallthrough=5")
 
 -- allowed
 set_allowedarchs("windows|x64")
@@ -50,8 +51,8 @@ target("Reflyem")
     add_files("/src/**.cpp")
     -- add_files("src/**.ixx", "src/plugin/**.ixx")
     add_headerfiles("/include/**.hpp")
-    set_pcxxheader("include/pch.h")
-    add_includedirs("include")
+    set_pcxxheader("/include/pch.h")
+    add_includedirs("/include")
 
     add_rules("mod.package", {
         ["@{target}-@{target_ver}.zip"] = {

@@ -15,6 +15,7 @@ auto spend_actor_value(RE::Actor& actor, const RE::ActorValue av, float value) -
     auto& actor_data = Core::ActorsCache::get_singleton().get_or_add(actor.formID).get();
 
     switch (av) {
+    // NOLINT(clang-diagnostic-switch-enum)
     case RE::ActorValue::kStamina: {
       const auto stamina = actor.GetActorValue(RE::ActorValue::kStamina);
       auto       delay   = REGEN_DELAY;
@@ -22,6 +23,7 @@ auto spend_actor_value(RE::Actor& actor, const RE::ActorValue av, float value) -
         delay *= 1.5f;
       }
       actor_data.set_regen_stamina_delay(delay);
+      break;
     }
     case RE::ActorValue::kHealth: {
       const auto health = actor.GetActorValue(RE::ActorValue::kHealth);
@@ -30,6 +32,7 @@ auto spend_actor_value(RE::Actor& actor, const RE::ActorValue av, float value) -
         delay *= 1.5f;
       }
       actor_data.set_regen_health_delay(delay);
+      break;
     }
     case RE::ActorValue::kMagicka: {
       const auto magicka = actor.GetActorValue(RE::ActorValue::kMagicka);
@@ -38,6 +41,7 @@ auto spend_actor_value(RE::Actor& actor, const RE::ActorValue av, float value) -
         delay *= 1.5f;
       }
       actor_data.set_regen_magicka_delay(delay);
+      break;
     }
     default:
       break;
@@ -49,19 +53,22 @@ auto spend_actor_value(RE::Actor& actor, const RE::ActorValue av, float value) -
   Core::damage_actor_value(actor, av, value);
 }
 
-auto regeneration_actor_value(RE::Character& character, const RE::ActorValue av, const RE::ActorValue regen_av,
-                              const RE::ActorValue regen_av_mult, const float delta) -> void {
+auto regeneration_actor_value(RE::Character&       character, const RE::ActorValue av,
+                              const RE::ActorValue regen_av, const RE::ActorValue  regen_av_mult,
+                              const float          delta) -> void {
   auto mult = (1.f + (character.GetActorValue(regen_av_mult) / 100.f));
   if (mult < 0.f) {
     mult = 1.f;
   }
   auto       flat_regen         = character.GetActorValue(regen_av) * mult;
   const auto regeneration_value = flat_regen * delta;
-  logger::debug("MultRegen {} RegenValue {} FlatRegenBase {}", mult, regeneration_value, flat_regen);
+  logger::debug("MultRegen {} RegenValue {} FlatRegenBase {}", mult, regeneration_value,
+                flat_regen);
   character.RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, av, regeneration_value);
 }
 
-auto regeneration_stamina(RE::Character& character, const Core::ActorsCache::Data& actor_data) -> void {
+auto regeneration_stamina(RE::Character& character, const Core::ActorsCache::Data& actor_data)
+  -> void {
   if (actor_data.regen_stamina_delay() <= 0.f) {
     auto constexpr av            = RE::ActorValue::kStamina;
     auto constexpr regen_av      = RE::ActorValue::kStaminaRate;
@@ -70,7 +77,8 @@ auto regeneration_stamina(RE::Character& character, const Core::ActorsCache::Dat
   }
 }
 
-auto regeneration_health(RE::Character& character, const Core::ActorsCache::Data& actor_data) -> void {
+auto regeneration_health(RE::Character& character, const Core::ActorsCache::Data& actor_data)
+  -> void {
   if (actor_data.regen_health_delay() <= 0.f) {
     auto constexpr av            = RE::ActorValue::kHealth;
     auto constexpr regen_av      = RE::ActorValue::kHealRate;
@@ -79,7 +87,8 @@ auto regeneration_health(RE::Character& character, const Core::ActorsCache::Data
   }
 }
 
-auto regeneration_magicka(RE::Character& character, const Core::ActorsCache::Data& actor_data) -> void {
+auto regeneration_magicka(RE::Character& character, const Core::ActorsCache::Data& actor_data)
+  -> void {
   if (actor_data.regen_magicka_delay() <= 0.f) {
     auto constexpr av            = RE::ActorValue::kMagicka;
     auto constexpr regen_av      = RE::ActorValue::kMagickaRate;
@@ -88,7 +97,8 @@ auto regeneration_magicka(RE::Character& character, const Core::ActorsCache::Dat
   }
 }
 
-auto on_update_actor_regeneration(RE::Character& character, Core::ActorsCache::Data& actor_data) -> void {
+auto on_update_actor_regeneration(RE::Character& character, Core::ActorsCache::Data& actor_data)
+  -> void {
   regeneration_health(character, actor_data);
   regeneration_stamina(character, actor_data);
   regeneration_magicka(character, actor_data);
@@ -124,7 +134,8 @@ auto ResourceDrain::drain(RE::Actor& actor) -> void {
 
 static std::map<RE::Actor*, std::shared_ptr<ResourceDrain>> rm_map;
 
-auto weap_actor_mask_multiply(const FormMask& matrix1, const ActorMask& matrix2) -> std::unique_ptr<FormMask> {
+auto weap_actor_mask_multiply(const FormMask& matrix1, const ActorMask& matrix2)
+  -> std::unique_ptr<FormMask> {
   constexpr auto row = 1;
 
   FormMask result{{{0, 0, 0}}};
@@ -135,7 +146,7 @@ auto weap_actor_mask_multiply(const FormMask& matrix1, const ActorMask& matrix2)
     for (auto y = 0; y < column; y++) {
       auto acc = 0i16;
       for (auto z = 0; z < 3; z++) {
-        acc = acc + matrix1.at(x).at(z) * matrix2.at(z).at(y);
+        acc = acc + (matrix1.at(x).at(z) * matrix2.at(z).at(y));
       }
       result.at(x).at(y) = acc;
     }
@@ -143,7 +154,8 @@ auto weap_actor_mask_multiply(const FormMask& matrix1, const ActorMask& matrix2)
   return std::make_unique<FormMask>(result);
 }
 
-auto handle_mask_sum_for_drain_values(std::int32_t mask_sum, float cost) -> std::shared_ptr<ResourceDrain> {
+auto handle_mask_sum_for_drain_values(std::int32_t mask_sum, float cost)
+  -> std::shared_ptr<ResourceDrain> {
   switch (mask_sum) {
   case 1:
     return std::make_shared<ResourceDrain>(ResourceDrain(cost, 0, 0));
@@ -169,7 +181,8 @@ auto handle_mask_sum_for_drain_values(std::int32_t mask_sum, float cost) -> std:
   }
 }
 
-auto get_form_mask(const RE::BGSKeywordForm& form, const Config& config) -> std::unique_ptr<FormMask> {
+auto get_form_mask(const RE::BGSKeywordForm& form, const Config& config)
+  -> std::unique_ptr<FormMask> {
   FormMask f_mask{{{0, 0, 0}}};
   logger::debug("start get weapon keyword"sv);
   f_mask.at(0).at(0) = 1;
@@ -202,8 +215,9 @@ auto calc_mask_sum(const FormMask& f_mask) -> std::int32_t {
   return mask_sum;
 }
 
-auto get_drain_value(RE::Actor& actor, const RE::BGSKeywordForm& form, const Config& config, const float cost,
-                     const bool enable_conversions) -> std::shared_ptr<ResourceDrain> {
+auto get_drain_value(RE::Actor&  actor, const RE::BGSKeywordForm& form, const Config& config,
+                     const float cost, const bool                 enable_conversions)
+  -> std::shared_ptr<ResourceDrain> {
   const auto f_mask = get_form_mask(form, config);
 
   auto mask_sum = 0;
@@ -214,19 +228,23 @@ auto get_drain_value(RE::Actor& actor, const RE::BGSKeywordForm& form, const Con
     return handle_mask_sum_for_drain_values(mask_sum, cost);
   }
 
-  const auto stamina_to_health = Core::has_absolute_keyword(actor, *config.resource_manager_convert_stamina_health_kw);
+  const auto stamina_to_health =
+      Core::has_absolute_keyword(actor, *config.resource_manager_convert_stamina_health_kw);
   logger::debug("key conversion1"sv);
   const auto stamina_to_magicka =
       Core::has_absolute_keyword(actor, *config.resource_manager_convert_stamina_magicka_kw);
   logger::debug("key conversion2"sv);
-  const auto health_to_stamina = Core::has_absolute_keyword(actor, *config.resource_manager_convert_health_stamina_kw);
+  const auto health_to_stamina =
+      Core::has_absolute_keyword(actor, *config.resource_manager_convert_health_stamina_kw);
   logger::debug("key conversion3"sv);
-  const auto health_to_magicka = Core::has_absolute_keyword(actor, *config.resource_manager_convert_health_magicka_kw);
+  const auto health_to_magicka =
+      Core::has_absolute_keyword(actor, *config.resource_manager_convert_health_magicka_kw);
   logger::debug("key conversion4"sv);
   const auto magicka_to_stamina =
       Core::has_absolute_keyword(actor, *config.resource_manager_convert_magicka_stamina_kw);
   logger::debug("key conversion5"sv);
-  const auto magicka_to_health = Core::has_absolute_keyword(actor, *config.resource_manager_convert_magicka_health_kw);
+  const auto magicka_to_health =
+      Core::has_absolute_keyword(actor, *config.resource_manager_convert_magicka_health_kw);
   logger::debug("end get conversions"sv);
 
   ActorMask a_mask{{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}};
@@ -261,8 +279,9 @@ auto get_drain_value(RE::Actor& actor, const RE::BGSKeywordForm& form, const Con
   return handle_mask_sum_for_drain_values(mask_sum, cost);
 }
 
-auto get_bash_drain_value(RE::Actor& actor, const WeaponOrArmor& form, const Config& config, const float cost,
-                          const bool enable_conversions) -> std::shared_ptr<ResourceDrain> {
+auto get_bash_drain_value(RE::Actor&  actor, const WeaponOrArmor& form, const Config& config,
+                          const float cost, const bool            enable_conversions)
+  -> std::shared_ptr<ResourceDrain> {
   if (form.is_l) {
     return get_drain_value(actor, *form.left, config, cost, enable_conversions);
   } else {
@@ -285,7 +304,8 @@ auto get_weapon_weight(const RE::TESObjectWEAP& weapon, const Config& config) ->
   }
 
   logger::debug("get critical damage of weapon"sv);
-  const auto critical_damage = static_cast<float>(weapon.criticalData.damage) * config.resource_manager_damage_mult;
+  const auto critical_damage =
+      static_cast<float>(weapon.criticalData.damage) * config.resource_manager_damage_mult;
   if (critical_damage > 0.f) {
     return critical_damage * config.resource_manager_weight_mult;
   }
@@ -310,7 +330,8 @@ auto get_shield_weight(const RE::TESObjectARMO& shield, const Config& config) ->
   return 5.f;
 }
 
-auto get_sale_for_spend_from_av(std::int32_t av_value, std::int32_t high_value, const std::int32_t low_value) -> float {
+auto get_sale_for_spend_from_av(std::int32_t       av_value, std::int32_t high_value,
+                                const std::int32_t low_value) -> float {
   if (high_value > 100) {
     high_value = 100;
   }
@@ -324,10 +345,11 @@ auto get_sale_for_spend_from_av(std::int32_t av_value, std::int32_t high_value, 
   return 1.f - (static_cast<float>(av_value) / 100.f);
 }
 
-auto get_attack_drain_cost(RE::Actor& actor, const RE::TESObjectWEAP& weapon, const bool is_power_attack,
-                           const Config& config) -> float {
+auto get_attack_drain_cost(RE::Actor& actor, const RE::TESObjectWEAP& weapon,
+                           const bool is_power_attack, const Config&  config) -> float {
 
-  logger::debug("Get actor infamy for actor: {} with level: {}"sv, actor.GetName(), actor.GetLevel());
+  logger::debug("Get actor infamy for actor: {} with level: {}"sv, actor.GetName(),
+                actor.GetLevel());
   auto infamy = actor.GetActorValue(RE::ActorValue::kInfamy);
   if (infamy < 1.f || !config.resource_manager_infamy_enable) {
     infamy = 1.f;
@@ -336,29 +358,34 @@ auto get_attack_drain_cost(RE::Actor& actor, const RE::TESObjectWEAP& weapon, co
   logger::debug("Get actor power attack sale mult"sv);
   float power_attack_cost_mult = 0.f;
   if (is_power_attack) {
-    const auto av_value = static_cast<std::int32_t>(actor.GetActorValue(config.resource_manager_power_attack_cost_av));
-    power_attack_cost_mult = get_sale_for_spend_from_av(av_value, config.resource_manager_power_attack_cost_high,
-                                                        config.resource_manager_power_attack_cost_low);
+    const auto av_value = static_cast<std::int32_t>(
+      actor.GetActorValue(config.resource_manager_power_attack_cost_av));
+    power_attack_cost_mult =
+        get_sale_for_spend_from_av(av_value, config.resource_manager_power_attack_cost_high,
+                                   config.resource_manager_power_attack_cost_low);
   }
 
   logger::debug("Get actor normal attack av cost sale"sv);
-  const auto av_value         = static_cast<std::int32_t>(actor.GetActorValue(config.resource_manager_attack_cost_av));
-  auto       attack_cost_mult = get_sale_for_spend_from_av(av_value, config.resource_manager_attack_cost_high,
-                                                           config.resource_manager_attack_cost_low);
+  const auto av_value =
+      static_cast<std::int32_t>(actor.GetActorValue(config.resource_manager_attack_cost_av));
+  auto attack_cost_mult = get_sale_for_spend_from_av(
+      av_value, config.resource_manager_attack_cost_high, config.resource_manager_attack_cost_low);
 
   logger::debug("Get actor weapon weight"sv);
   const auto weapon_weight = get_weapon_weight(weapon, config);
 
-  logger::debug("attack cost mult: {}, power attack cost mult: {}"sv, attack_cost_mult, power_attack_cost_mult);
+  logger::debug("attack cost mult: {}, power attack cost mult: {}"sv, attack_cost_mult,
+                power_attack_cost_mult);
 
-  const auto cost = (weapon_weight * attack_cost_mult * infamy) +
-                    (weapon_weight * infamy * power_attack_cost_mult * config.resource_manager_power_attack_mult);
+  const auto cost =
+      (weapon_weight * attack_cost_mult * infamy) +
+      (weapon_weight * infamy * power_attack_cost_mult * config.resource_manager_power_attack_mult);
 
   return cost * config.resource_manager_global_mult;
 }
 
-auto get_bash_drain_cost(RE::Actor& actor, const WeaponOrArmor& form, const bool is_power_attack, const Config& config)
-    -> float {
+auto get_bash_drain_cost(RE::Actor&    actor, const WeaponOrArmor& form, const bool is_power_attack,
+                         const Config& config) -> float {
   auto infamy = actor.GetActorValue(RE::ActorValue::kInfamy);
   if (infamy < 1.f || !config.resource_manager_infamy_enable) {
     infamy = 1.f;
@@ -366,12 +393,14 @@ auto get_bash_drain_cost(RE::Actor& actor, const WeaponOrArmor& form, const bool
 
   float power_bash_cost_mult = 0.f;
   if (is_power_attack) {
-    const auto av_value  = static_cast<std::int32_t>(actor.GetActorValue(RE::ActorValue::kBlock) * 0.25f);
+    const auto av_value =
+        static_cast<std::int32_t>(actor.GetActorValue(RE::ActorValue::kBlock) * 0.25f);
     power_bash_cost_mult = get_sale_for_spend_from_av(av_value, 100, -100);
   }
 
-  const auto av_value       = static_cast<std::int32_t>(actor.GetActorValue(RE::ActorValue::kBlock) * 0.5f);
-  auto       bash_cost_mult = get_sale_for_spend_from_av(av_value, 100, -100);
+  const auto av_value =
+      static_cast<std::int32_t>(actor.GetActorValue(RE::ActorValue::kBlock) * 0.5f);
+  auto bash_cost_mult = get_sale_for_spend_from_av(av_value, 100, -100);
 
   auto weight = 0.f;
   if (form.is_l) {
@@ -381,16 +410,18 @@ auto get_bash_drain_cost(RE::Actor& actor, const WeaponOrArmor& form, const bool
     weight = get_shield_weight(*form.right, config);
   }
 
-  logger::debug("bash cost mult: {}, power bash cost mult: {}"sv, bash_cost_mult, power_bash_cost_mult);
+  logger::debug("bash cost mult: {}, power bash cost mult: {}"sv, bash_cost_mult,
+                power_bash_cost_mult);
 
-  const auto cost = (weight * bash_cost_mult * infamy) +
-                    (weight * infamy * power_bash_cost_mult * config.resource_manager_power_attack_mult);
+  const auto cost =
+      (weight * bash_cost_mult * infamy) +
+      (weight * infamy * power_bash_cost_mult * config.resource_manager_power_attack_mult);
 
   return cost * config.resource_manager_global_mult;
 }
 
-auto melee_weapon_spend(RE::Actor& actor, const RE::TESObjectWEAP& weapon, const bool is_power_attack,
-                        const Config& config) -> void {
+auto melee_weapon_spend(RE::Actor& actor, const RE::TESObjectWEAP& weapon,
+                        const bool is_power_attack, const Config&  config) -> void {
   logger::debug("melee_weapon_spend"sv);
   auto cost = get_attack_drain_cost(actor, weapon, is_power_attack, config);
   logger::debug("end drain cost: cost {}"sv, cost);
@@ -401,7 +432,8 @@ auto melee_weapon_spend(RE::Actor& actor, const RE::TESObjectWEAP& weapon, const
   return;
 }
 
-auto bash_spend(RE::Actor& actor, const WeaponOrArmor& form, const bool is_power_attack, const Config& config) -> void {
+auto bash_spend(RE::Actor&    actor, const WeaponOrArmor& form, const bool is_power_attack,
+                const Config& config) -> void {
   logger::debug("bash_spend"sv);
   auto cost = get_bash_drain_cost(actor, form, is_power_attack, config);
   logger::debug("end drain cost: cost {}"sv, cost);
@@ -412,7 +444,8 @@ auto bash_spend(RE::Actor& actor, const WeaponOrArmor& form, const bool is_power
   return;
 }
 
-auto ranged_weapon_spend(RE::Actor& actor, const RE::TESObjectWEAP& weapon, const Config& config) -> void {
+auto ranged_weapon_spend(RE::Actor& actor, const RE::TESObjectWEAP& weapon, const Config& config)
+  -> void {
   const auto cost        = get_attack_drain_cost(actor, weapon, false, config) * 0.1f;
   const auto drain_value = get_drain_value(actor, weapon, config, cost, true);
   drain_value->drain(actor);
@@ -424,10 +457,12 @@ auto ranged_spend_handler() -> void {
   for (auto& [actor, drain_value] : rm_map) {
     if (actor && drain_value) {
       const auto state   = actor->actorState1.meleeAttackState;
-      auto       is_draw = state == RE::ATTACK_STATE_ENUM::kBowDraw || state == RE::ATTACK_STATE_ENUM::kBowDrawn ||
-                     state == RE::ATTACK_STATE_ENUM::kBowAttached;
+      auto       is_draw = state == RE::ATTACK_STATE_ENUM::kBowDraw ||
+                           state == RE::ATTACK_STATE_ENUM::kBowDrawn ||
+                           state == RE::ATTACK_STATE_ENUM::kBowAttached;
       logger::debug("actor with level: {} is drawn: {}"sv, actor->GetLevel(), is_draw);
-      logger::debug("actor state: {}"sv, static_cast<std::uint32_t>(actor->actorState1.meleeAttackState));
+      logger::debug("actor state: {}"sv,
+                    static_cast<std::uint32_t>(actor->actorState1.meleeAttackState));
       if (is_draw) {
         drain_value->drain(*actor);
       } else {
@@ -443,7 +478,8 @@ auto jump_spend(RE::Actor& actor, const Config& config) -> void {
   spend_actor_value(actor, RE::ActorValue::kStamina, -config.resource_manager_jump_cost);
 }
 
-auto get_weapon(const RE::Actor& actor, const bool is_left_hand, const Config& config) -> RE::TESObjectWEAP& {
+auto get_weapon(const RE::Actor& actor, const bool is_left_hand, const Config& config)
+  -> RE::TESObjectWEAP& {
   logger::debug("get weapon start"sv);
   const auto weapon = actor.GetEquippedObject(is_left_hand);
   if (!weapon) {
@@ -478,8 +514,8 @@ auto get_weapon_or_shield(const RE::Actor& actor) -> std::optional<WeaponOrArmor
   return std::nullopt;
 }
 
-auto handle_resource_for_action(RE::Character& actor, const ResourceDrain& drain_values, RE::SpellItem& block_spell)
-    -> void {
+auto handle_resource_for_action(RE::Character& actor, const ResourceDrain& drain_values,
+                                RE::SpellItem& block_spell) -> void {
 
   logger::debug("handle_resource_for_action get AVs"sv);
   auto magicka = actor.GetActorValue(RE::ActorValue::kMagicka);
@@ -491,8 +527,9 @@ auto handle_resource_for_action(RE::Character& actor, const ResourceDrain& drain
   auto d_health  = std::abs(drain_values.health);
   auto d_stamina = std::abs(drain_values.stamina);
 
-  logger::debug("handle_resource_for_action, magicka: {} health: {} stamina: {} dv m h s: {} {} {}"sv, magicka, health,
-                stamina, d_magicka, d_health, d_stamina);
+  logger::debug(
+      "handle_resource_for_action, magicka: {} health: {} stamina: {} dv m h s: {} {} {}"sv,
+      magicka, health, stamina, d_magicka, d_health, d_stamina);
 
   if (d_magicka > 0.f && d_magicka > magicka) {
     logger::debug("not enough magicka"sv);
@@ -528,12 +565,16 @@ auto update_actor(RE::Character& character, float, const Config& config) -> void
     const auto power_attack_cost  = get_attack_drain_cost(character, attack_weapon, true, config);
 
     logger::debug("Update actor in resource get weapon drains"sv);
-    const auto normal_attack_drain_value = get_drain_value(character, attack_weapon, config, normal_attack_cost, true);
-    const auto power_attack_drain_value  = get_drain_value(character, attack_weapon, config, power_attack_cost, true);
+    const auto normal_attack_drain_value =
+        get_drain_value(character, attack_weapon, config, normal_attack_cost, true);
+    const auto power_attack_drain_value =
+        get_drain_value(character, attack_weapon, config, power_attack_cost, true);
 
     logger::debug("Update actor in resource before handle resource"sv);
-    handle_resource_for_action(character, *normal_attack_drain_value, *config.resource_manage_spell_block_attack);
-    handle_resource_for_action(character, *power_attack_drain_value, *config.resource_manage_spell_block_power_attack);
+    handle_resource_for_action(character, *normal_attack_drain_value,
+                               *config.resource_manage_spell_block_attack);
+    handle_resource_for_action(character, *power_attack_drain_value,
+                               *config.resource_manage_spell_block_power_attack);
   }
 
   if (config.resource_manager_bash_spend_enable) {
@@ -549,10 +590,12 @@ auto update_actor(RE::Character& character, float, const Config& config) -> void
     const auto bash_cost = get_bash_drain_cost(character, bash_form.value(), false, config);
 
     logger::debug("Update actor in resource get bash drains"sv);
-    const auto bash_drain_value = get_bash_drain_value(character, bash_form.value(), config, bash_cost, false);
+    const auto bash_drain_value =
+        get_bash_drain_value(character, bash_form.value(), config, bash_cost, false);
 
     logger::debug("Update actor in resource bash before handler resource"sv);
-    handle_resource_for_action(character, *bash_drain_value, *config.resource_manage_spell_block_bash);
+    handle_resource_for_action(character, *bash_drain_value,
+                               *config.resource_manage_spell_block_bash);
   }
 }
 
@@ -615,13 +658,13 @@ auto animation_handler(const AnimationEventHandler::AnimationEvent animation, RE
   }
 }
 
-auto handle_block_hit(RE::Actor& target, float total_damage, const float av_value, const float damage_mult,
-                      const RE::ActorValue av) -> float {
+auto handle_block_hit(RE::Actor&  target, float total_damage, const float av_value,
+                      const float damage_mult, const RE::ActorValue av) -> float {
   if (total_damage >= av_value) {
     total_damage = av_value;
-    target.RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, av, -av_value);
+    spend_actor_value(target, av, av_value);
   } else {
-    target.RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, av, -total_damage);
+    spend_actor_value(target, av, total_damage);
   }
   return total_damage / damage_mult;
 }
@@ -659,7 +702,8 @@ auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& confi
 
   const auto f_mask = get_form_mask(*keyword_form, config);
 
-  logger::debug("mask values: {} {} {}"sv, f_mask->at(0).at(0), f_mask->at(0).at(1), f_mask->at(0).at(2));
+  logger::debug("mask values: {} {} {}"sv, f_mask->at(0).at(0), f_mask->at(0).at(1),
+                f_mask->at(0).at(2));
 
   const auto stamina = target->GetActorValue(RE::ActorValue::kStamina);
   const auto health  = target->GetActorValue(RE::ActorValue::kHealth);
@@ -670,7 +714,8 @@ auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& confi
 
   auto mask_sum = calc_mask_sum(*f_mask);
 
-  logger::debug("mask_sum {} damage_mult {} total_damage {}"sv, mask_sum, damage_mult, total_damage);
+  logger::debug("mask_sum {} damage_mult {} total_damage {}"sv, mask_sum, damage_mult,
+                total_damage);
 
   switch (mask_sum) {
   case 1: // stamina
@@ -696,54 +741,53 @@ auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& confi
   }
   case 3: // health stamina
   {
-    const auto health_part_damage =
-        handle_block_hit(*target, total_damage * 0.5f, health, damage_mult, RE::ActorValue::kHealth);
+    const auto health_part_damage = handle_block_hit(*target, total_damage * 0.5f, health,
+                                                     damage_mult, RE::ActorValue::kHealth);
     handle_hit_data(hit_data, health_part_damage);
 
-    const auto stamina_part_damage =
-        handle_block_hit(*target, total_damage * 0.5f, stamina, damage_mult, RE::ActorValue::kStamina);
+    const auto stamina_part_damage = handle_block_hit(*target, total_damage * 0.5f, stamina,
+                                                      damage_mult, RE::ActorValue::kStamina);
     handle_hit_data(hit_data, stamina_part_damage);
     return;
   }
   case 5: // magicka stamina
   {
-    const auto magicka_part_damage =
-        handle_block_hit(*target, total_damage * 0.5f, magicka, damage_mult, RE::ActorValue::kMagicka);
+    const auto magicka_part_damage = handle_block_hit(*target, total_damage * 0.5f, magicka,
+                                                      damage_mult, RE::ActorValue::kMagicka);
     handle_hit_data(hit_data, magicka_part_damage);
 
-    const auto stamina_part_damage =
-        handle_block_hit(*target, total_damage * 0.5f, stamina, damage_mult, RE::ActorValue::kStamina);
+    const auto stamina_part_damage = handle_block_hit(*target, total_damage * 0.5f, stamina,
+                                                      damage_mult, RE::ActorValue::kStamina);
     handle_hit_data(hit_data, stamina_part_damage);
     return;
   }
   case 6: // health magicka
   {
-    const auto health_part_damage =
-        handle_block_hit(*target, total_damage * 0.5f, health, damage_mult, RE::ActorValue::kHealth);
+    const auto health_part_damage = handle_block_hit(*target, total_damage * 0.5f, health,
+                                                     damage_mult, RE::ActorValue::kHealth);
     handle_hit_data(hit_data, health_part_damage);
 
-    const auto magicka_part_damage =
-        handle_block_hit(*target, total_damage * 0.5f, magicka, damage_mult, RE::ActorValue::kMagicka);
+    const auto magicka_part_damage = handle_block_hit(*target, total_damage * 0.5f, magicka,
+                                                      damage_mult, RE::ActorValue::kMagicka);
     handle_hit_data(hit_data, magicka_part_damage);
     return;
   }
   case 7: // health magicka stamina
   {
-    const auto health_part_damage =
-        handle_block_hit(*target, total_damage * 0.35f, health, damage_mult, RE::ActorValue::kHealth);
+    const auto health_part_damage = handle_block_hit(*target, total_damage * 0.35f, health,
+                                                     damage_mult, RE::ActorValue::kHealth);
     handle_hit_data(hit_data, health_part_damage);
 
-    const auto magicka_part_damage =
-        handle_block_hit(*target, total_damage * 0.35f, magicka, damage_mult, RE::ActorValue::kMagicka);
+    const auto magicka_part_damage = handle_block_hit(*target, total_damage * 0.35f, magicka,
+                                                      damage_mult, RE::ActorValue::kMagicka);
     handle_hit_data(hit_data, magicka_part_damage);
 
-    const auto stamina_part_damage =
-        handle_block_hit(*target, total_damage * 0.35f, stamina, damage_mult, RE::ActorValue::kStamina);
+    const auto stamina_part_damage = handle_block_hit(*target, total_damage * 0.35f, stamina,
+                                                      damage_mult, RE::ActorValue::kStamina);
     handle_hit_data(hit_data, stamina_part_damage);
     return;
   }
-  default: {
-  }
+  default: { }
   }
 }
 

@@ -10,8 +10,8 @@ static inline REL::Relocation<uintptr_t> on_attack_data{RELOCATION_ID(38047, 0)}
 static inline REL::Relocation<uintptr_t> on_modify_actor_value{RELOCATION_ID(258043, 0)};
 static inline REL::Relocation<uintptr_t> on_peak_modify_actor_value{RELOCATION_ID(257874, 0)};
 static inline REL::Relocation<uintptr_t> on_dual_modify_actor_value{RELOCATION_ID(257681, 0)};
-static inline REL::Relocation<uintptr_t> on_dual_modify_actor_value_second_inner_call{
-    RELOCATION_ID(33545, 0)}; // thx Fenix31415 for this address, call inner ModifyActorValue method of DualMod
+static inline REL::Relocation<uintptr_t> on_dual_modify_actor_value_second_inner_call{RELOCATION_ID(
+    33545, 0)}; // thx Fenix31415 for this address, call inner ModifyActorValue method of DualMod
 static inline REL::Relocation<uintptr_t> on_attack_action{RELOCATION_ID(48139, 0)};
 static inline REL::Relocation<uintptr_t> on_actor_update_pc{RELOCATION_ID(261916, 0)};
 static inline REL::Relocation<uintptr_t> on_actor_update_npc{RELOCATION_ID(261397, 0)};
@@ -67,13 +67,14 @@ struct OnAttackData {
 public:
   static auto install_hook(SKSE::Trampoline& trampoline) -> void {
     logger::info("start hook on_attack_data"sv);
-    process_attack_ =
-        trampoline.write_call<5>(Adresses::on_attack_data.address() + Offsets::on_attack_data, process_attack);
+    process_attack_ = trampoline.write_call<5>(
+        Adresses::on_attack_data.address() + Offsets::on_attack_data, process_attack);
     logger::info("finish hook on_attack_data"sv);
   }
 
 private:
-  static auto process_attack(RE::ActorValueOwner* value_owner, RE::BGSAttackData* attack_data) -> void;
+  static auto process_attack(RE::ActorValueOwner* value_owner, RE::BGSAttackData* attack_data)
+      -> void;
   static inline REL::Relocation<decltype(process_attack)> process_attack_;
 };
 
@@ -81,13 +82,13 @@ struct OnAttackAction {
 public:
   static auto install_hook(SKSE::Trampoline& trampoline) -> void {
     logger::info("start hook OnAttackAction"sv);
-    attack_action_ =
-        trampoline.write_call<5>(Adresses::on_attack_action.address() + Offsets::on_attack_action, attack_action);
+    attack_action_ = trampoline.write_call<5>(
+        Adresses::on_attack_action.address() + Offsets::on_attack_action, attack_action);
     logger::info("finish hook OnAttackAction"sv);
   }
 
 private:
-  static auto                                            attack_action(const RE::TESActionData* action_data) -> bool;
+  static auto attack_action(const RE::TESActionData* action_data) -> bool;
   static inline REL::Relocation<decltype(attack_action)> attack_action_;
 };
 
@@ -95,14 +96,14 @@ struct OnModifyActorValue {
 public:
   static auto install_hook() -> void {
     logger::info("start hook OnModifyActorValue"sv);
-    modify_actor_value_ =
-        Adresses::on_modify_actor_value.write_vfunc(Offsets::on_modify_actor_value, modify_actor_value);
+    modify_actor_value_ = Adresses::on_modify_actor_value.write_vfunc(
+        Offsets::on_modify_actor_value, modify_actor_value);
     logger::info("finish hook OnModifyActorValue"sv);
   }
 
 private:
-  static auto modify_actor_value(RE::ValueModifierEffect* this_, RE::Actor* actor, float value, RE::ActorValue av)
-      -> void;
+  static auto modify_actor_value(RE::ValueModifierEffect* this_, RE::Actor* actor, float value,
+                                 RE::ActorValue av) -> void;
 
   static inline REL::Relocation<decltype(modify_actor_value)> modify_actor_value_;
 };
@@ -111,14 +112,14 @@ struct OnPeakModifyActorValue {
 public:
   static auto install_hook() -> void {
     logger::info("start hook OnPeakModifyActorValue"sv);
-    peak_modify_actor_value_ =
-        Adresses::on_peak_modify_actor_value.write_vfunc(Offsets::on_peak_modify_actor_value, peak_modify_actor_value);
+    peak_modify_actor_value_ = Adresses::on_peak_modify_actor_value.write_vfunc(
+        Offsets::on_peak_modify_actor_value, peak_modify_actor_value);
     logger::info("finish hook OnPeakModifyActorValue"sv);
   }
 
 private:
-  static auto peak_modify_actor_value(RE::ValueModifierEffect* this_, RE::Actor* actor, float value, RE::ActorValue av)
-      -> void;
+  static auto peak_modify_actor_value(RE::ValueModifierEffect* this_, RE::Actor* actor, float value,
+                                      RE::ActorValue av) -> void;
 
   static inline REL::Relocation<decltype(peak_modify_actor_value)> peak_modify_actor_value_;
 };
@@ -127,14 +128,14 @@ struct OnDualModifyActorValue {
 public:
   static auto install_hook() -> void {
     logger::info("start hook OnDualModifyActorValue"sv);
-    dual_modify_actor_value_ =
-        Adresses::on_dual_modify_actor_value.write_vfunc(Offsets::on_dual_modify_actor_value, dual_modify_actor_value);
+    dual_modify_actor_value_ = Adresses::on_dual_modify_actor_value.write_vfunc(
+        Offsets::on_dual_modify_actor_value, dual_modify_actor_value);
     logger::info("finish hook OnDualModifyActorValue"sv);
   }
 
 private:
-  static auto dual_modify_actor_value(RE::ValueModifierEffect* this_, RE::Actor* actor, float value, RE::ActorValue av)
-      -> void;
+  static auto dual_modify_actor_value(RE::ValueModifierEffect* this_, RE::Actor* actor, float value,
+                                      RE::ActorValue av) -> void;
 
   static inline REL::Relocation<decltype(dual_modify_actor_value)> dual_modify_actor_value_;
 };
@@ -151,7 +152,8 @@ public:
   }
 
 private:
-  static auto dual_modify_actor_value_second_inner_call(RE::ValueModifierEffect* this_, RE::Actor* actor, float value,
+  static auto dual_modify_actor_value_second_inner_call(RE::ValueModifierEffect* this_,
+                                                        RE::Actor* actor, float value,
                                                         RE::ActorValue av) -> void;
 
   static inline REL::Relocation<decltype(dual_modify_actor_value_second_inner_call)>
@@ -168,7 +170,8 @@ public:
   }
 
 private:
-  static auto process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>* this_, RE::BSAnimationGraphEvent* event,
+  static auto process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   this_,
+                            RE::BSAnimationGraphEvent*                     event,
                             RE::BSTEventSource<RE::BSAnimationGraphEvent>* dispatcher) -> void;
 
   static inline REL::Relocation<decltype(process_event)> process_event_;
@@ -178,12 +181,14 @@ struct OnAnimationEventNpc {
 public:
   static auto install_hook() -> void {
     logger::info("start hook on_animation_event_npc"sv);
-    process_event_ = Adresses::on_animation_event_npc.write_vfunc(Offsets::on_animation_event_pc, process_event);
+    process_event_ =
+        Adresses::on_animation_event_npc.write_vfunc(Offsets::on_animation_event_pc, process_event);
     logger::info("finish hook on_animation_event_npc"sv);
   }
 
 private:
-  static auto process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>* this_, RE::BSAnimationGraphEvent* event,
+  static auto process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   this_,
+                            RE::BSAnimationGraphEvent*                     event,
                             RE::BSTEventSource<RE::BSAnimationGraphEvent>* dispatcher) -> void;
 
   static inline REL::Relocation<decltype(process_event)> process_event_;
@@ -193,8 +198,9 @@ struct OnAdjustActiveEffect {
 public:
   static auto install_hook(SKSE::Trampoline& trampoline) -> void {
     logger::info("start hook on_adjust_active_effect"sv);
-    adjust_active_effect_ = trampoline.write_call<5>(
-        Adresses::on_adjust_active_effect.address() + Offsets::on_adjust_active_effect, adjust_active_effect);
+    adjust_active_effect_ = trampoline.write_call<5>(Adresses::on_adjust_active_effect.address() +
+                                                         Offsets::on_adjust_active_effect,
+                                                     adjust_active_effect);
     logger::info("on_adjust_active_effect hook install"sv);
   }
 
@@ -207,12 +213,13 @@ struct OnMainUpdate {
 public:
   static auto install_hook(SKSE::Trampoline& trampoline) -> void {
     logger::info("start hoon on_main_update"sv);
-    main_update_ = trampoline.write_call<5>(Adresses::on_main_update.address() + Offsets::on_main_update, main_update);
+    main_update_ = trampoline.write_call<5>(
+        Adresses::on_main_update.address() + Offsets::on_main_update, main_update);
     logger::info("on_main_update hook install"sv);
   }
 
 private:
-  static auto                                          main_update(RE::Main* this_, float unk) -> void;
+  static auto main_update(RE::Main* this_, float unk) -> void;
   static inline REL::Relocation<decltype(main_update)> main_update_;
 };
 
@@ -220,12 +227,13 @@ struct OnWeaponHit {
 public:
   static auto install_hook(SKSE::Trampoline& trampoline) -> void {
     logger::info("start hook on_weapon_hit"sv);
-    weapon_hit_ = trampoline.write_call<5>(Adresses::on_weapon_hit.address() + Offsets::on_weapon_hit, weapon_hit);
+    weapon_hit_ = trampoline.write_call<5>(
+        Adresses::on_weapon_hit.address() + Offsets::on_weapon_hit, weapon_hit);
     logger::info("on_weapon_hit hook install"sv);
   }
 
 private:
-  static auto                                         weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void;
+  static auto weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void;
   static inline REL::Relocation<decltype(weapon_hit)> weapon_hit_;
 };
 

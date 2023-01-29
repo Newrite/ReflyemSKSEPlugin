@@ -4,7 +4,8 @@
 namespace Reflyem {
 namespace PetrifiedBlood {
 
-auto petrified_blood_cast(RE::Actor& target, const float blood_damage_tick, const Config& config) -> void {
+auto petrified_blood_cast(RE::Actor& target, const float blood_damage_tick, const Config& config)
+  -> void {
   config.petrified_blood_spell->effects[0]->effectItem.magnitude = blood_damage_tick;
 
   Core::cast(*config.petrified_blood_spell, target, target);
@@ -22,19 +23,19 @@ auto petrified_blood(RE::Actor& target, float& damage_value, const Config& confi
 
   const auto blood_duration = config.petrified_blood_spell->effects[0]->effectItem.duration;
 
-  const auto damage_mult       = Core::getting_damage_mult(target);
-  const auto blood_damage      = (damage_value * damage_mult) * (petrified_blood_percent / 100.f);
-  const auto blood_damage_tick = (blood_damage / blood_duration) / damage_mult;
+  const auto blood_damage      = damage_value * (petrified_blood_percent / 100.f);
+  const auto blood_damage_tick = blood_damage / static_cast<float>(blood_duration);
 
-  damage_value -= (blood_damage / damage_mult);
+  damage_value -= blood_damage;
 
   return blood_damage_tick;
 }
 
 auto character_update(RE::Character& character, float, const Config& config) -> void {
-  const auto effects_damage = Core ::get_effects_by_keyword(character, *config.petrified_blood_acc_mgef_kw);
+  const auto effects_damage =
+      Core::get_effects_by_keyword(character, *config.petrified_blood_acc_mgef_kw);
 
-  if (effects_damage.size() <= 0) {
+  if (effects_damage.empty()) {
     return;
   }
 
@@ -43,10 +44,24 @@ auto character_update(RE::Character& character, float, const Config& config) -> 
   petrified_blood_cast(character, blood_damage_tick, config);
 }
 
-auto modify_actor_value(const RE::ValueModifierEffect* this_, RE::Actor* actor, float& value, const RE::ActorValue av,
-                        const Config& config) -> void {
-  if (Core::can_modify_actor_value(this_, actor, value, av)) {
-    const auto effects_damage = Core ::get_effects_by_keyword(*actor, *config.petrified_blood_acc_mgef_kw);
+auto allow_petrified_blood_effect(const RE::ActiveEffect& active_effect,
+                                  const Config&           config) -> bool {
+  if (!active_effect.effect || !active_effect.effect->baseEffect) {
+    return false;
+  }
+  const auto base_effect = active_effect.effect->baseEffect;
+  if (config.petrified_blood_must_be_or_not_be) {
+    return base_effect->HasKeyword(config.petrified_blood_mgef_keyword_id);
+  }
+  return !base_effect->HasKeyword(config.petrified_blood_mgef_keyword_id);
+}
+
+auto modify_actor_value(const RE::ValueModifierEffect* this_, RE::Actor* actor, float& value,
+                        const RE::ActorValue           av, const Config& config) -> void {
+  if (Core::can_modify_actor_value(this_, actor, value, av) && allow_petrified_blood_effect(
+          *this_, config)) {
+    const auto effects_damage =
+        Core::get_effects_by_keyword(*actor, *config.petrified_blood_acc_mgef_kw);
 
     value                        = std::abs(value);
     const auto blood_damage_tick = petrified_blood(*actor, value, config);

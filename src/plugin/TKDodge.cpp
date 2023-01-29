@@ -17,11 +17,17 @@ using MovementPair = std::pair<MovementDirections, std::string_view>;
 using DrainValues  = ResourceManager::ResourceDrain;
 using MgefMask     = ResourceManager::FormMask;
 
-enum : uint32_t { kInvalid = static_cast<uint32_t>(-1), kKeyboardOffset = 0, kMouseOffset = 256, kGamepadOffset = 266 };
+enum : uint32_t {
+  kInvalid        = static_cast<uint32_t>(-1),
+  kKeyboardOffset = 0,
+  kMouseOffset    = 256,
+  kGamepadOffset  = 266
+};
 
-const std::vector DIRECTIONS{
-    MovementPair(MovementDirections::kForward, "Forward"), MovementPair(MovementDirections::kBackward, "Back"),
-    MovementPair(MovementDirections::kLeft, "Strafe Left"), MovementPair(MovementDirections::kRight, "Strafe Right")};
+const std::vector DIRECTIONS{MovementPair(MovementDirections::kForward, "Forward"),
+                             MovementPair(MovementDirections::kBackward, "Back"),
+                             MovementPair(MovementDirections::kLeft, "Strafe Left"),
+                             MovementPair(MovementDirections::kRight, "Strafe Right")};
 
 auto get_actor_effects_mask(RE::Actor& actor, const Config& config) -> std::unique_ptr<MgefMask> {
   MgefMask f_mask{{{0, 0, 0}}};
@@ -42,9 +48,12 @@ auto get_actor_effects_mask(RE::Actor& actor, const Config& config) -> std::uniq
   return std::make_unique<MgefMask>(f_mask);
 }
 
-auto calc_dodge_cost(const RE::Actor& actor, const Config& config) -> float {
+auto calc_dodge_cost(RE::Actor& actor, const Config& config) -> float {
   auto cost = actor.equippedWeight * config.tk_dodge_equipped_weight_mult;
   cost += config.tk_dodge_flat_cost;
+  cost += Core::get_effects_magnitude_sum(
+              Core::get_effects_by_keyword(actor, *config.tk_dodge_cost_from_mgef_kw))
+              .value_or(0.f);
 
   if (cost > config.tk_dodge_max_cost) {
     cost = config.tk_dodge_max_cost;
@@ -66,19 +75,44 @@ auto get_drain_value(RE::Actor& actor, const Config& config) -> std::shared_ptr<
   return drain_values;
 }
 
-auto is_allow_pc_control_for_dodge(RE::PlayerCharacter& player, const bool check_attack, const bool check_power_attack)
-    -> bool {
-  auto is_attacking       = false;
-  auto is_power_attacking = false;
-  if (check_attack) {
+auto is_allow_pc_control_for_dodge(RE::PlayerCharacter& player) -> bool {
+
+  const auto& config = Config::get_singleton();
+
+  auto is_attacking = config.tk_dodge_block_dodge_when_attack;
+  if (config.tk_dodge_block_dodge_when_attack_perk &&
+      player.HasPerk(config.tk_dodge_block_dodge_when_attack_perk)) {
+    is_attacking = !is_attacking;
+  }
+
+  auto is_power_attacking = config.tk_dodge_block_dodge_when_power_attack;
+  if (config.tk_dodge_block_dodge_when_power_attack_perk &&
+      player.HasPerk(config.tk_dodge_block_dodge_when_power_attack_perk)) {
+    is_power_attacking = !is_power_attacking;
+  }
+
+  auto is_casting = config.tk_dodge_block_dodge_when_casting;
+  if (config.tk_dodge_block_dodge_when_casting_perk &&
+      player.HasPerk(config.tk_dodge_block_dodge_when_casting_perk)) {
+    is_casting = !is_casting;
+  }
+
+  if (is_attacking) {
     is_attacking = player.IsAttacking();
   }
-  if (check_power_attack) {
+
+  if (is_power_attacking) {
     is_power_attacking = Core::is_power_attacking(player);
   }
+
+  if (is_casting) {
+    is_casting = Core::is_casting_actor(player);
+  }
+
   return player.GetSitSleepState() == RE::SIT_SLEEP_STATE::kNormal &&
-         player.GetKnockState() == RE::KNOCK_STATE_ENUM::kNormal && player.GetFlyState() == RE::FLY_STATE::kNone &&
-         !player.IsSneaking() && !is_attacking && !is_power_attacking && !player.IsSwimming() && !player.IsInKillMove();
+         player.GetKnockState() == RE::KNOCK_STATE_ENUM::kNormal &&
+         player.GetFlyState() == RE::FLY_STATE::kNone && !player.IsSneaking() && !is_attacking &&
+         !is_casting && !is_power_attacking && !player.IsSwimming() && !player.IsInKillMove();
 }
 
 auto is_enough_resource_for_dodge(RE::Actor& actor, const DrainValues& drain_values) -> bool {
@@ -90,8 +124,8 @@ auto is_enough_resource_for_dodge(RE::Actor& actor, const DrainValues& drain_val
   auto d_health  = std::abs(drain_values.health);
   auto d_stamina = std::abs(drain_values.stamina);
 
-  logger::debug("Check allow dodge, magicka: {} health: {} stamina: {} dv m h s: {} {} {}", magicka, health, stamina,
-                d_magicka, d_health, d_stamina);
+  logger::debug("Check allow dodge, magicka: {} health: {} stamina: {} dv m h s: {} {} {}", magicka,
+                health, stamina, d_magicka, d_health, d_stamina);
 
   if (d_magicka > 0.f && d_magicka > magicka) {
     return false;
@@ -108,9 +142,8 @@ auto is_enough_resource_for_dodge(RE::Actor& actor, const DrainValues& drain_val
   return true;
 }
 
-auto is_allow_dodge(RE::PlayerCharacter& player, const DrainValues& drain_values, const bool check_attack,
-                    const bool check_power_attack) -> bool {
-  return is_allow_pc_control_for_dodge(player, check_attack, check_power_attack) &&
+auto is_allow_dodge(RE::PlayerCharacter& player, const DrainValues& drain_values) -> bool {
+  return is_allow_pc_control_for_dodge(player) &&
          is_enough_resource_for_dodge(player, drain_values);
 }
 
@@ -129,6 +162,8 @@ auto get_key_hold_duration(const std::uint32_t a_index, float& result) -> bool {
 auto get_keyboard_direction_value() -> MovementDirections {
   const auto ctrl_map = RE::ControlMap::GetSingleton();
 
+  logger::debug("Get keyboard direction value"sv);
+
   std::optional<MovementDirections> packed_dir;
   float                             record_dur = 0.f;
 
@@ -136,10 +171,11 @@ auto get_keyboard_direction_value() -> MovementDirections {
     auto key = ctrl_map->GetMappedKey(dir.second, RE::INPUT_DEVICE::kKeyboard);
 
     float hold_dur;
-    if (get_key_hold_duration(key, hold_dur) && (!packed_dir.has_value() || hold_dur <= record_dur)) {
+    if (get_key_hold_duration(key, hold_dur) &&
+        (!packed_dir.has_value() || hold_dur <= record_dur)) {
       packed_dir.emplace(dir.first);
       record_dur = hold_dur;
-      logger::debug(FMT_STRING("Get a Held Direction Key Index {:x}, Duration {}"), key, record_dur);
+      logger::debug("Get a Held Direction Key Index {:x}, Duration {}"sv, key, record_dur);
     }
   }
 
@@ -159,9 +195,12 @@ auto normal_absolute_angle(float angle) -> float {
 auto get_game_pad_direction_value() -> MovementDirections {
   const auto input_mgr = RE::BSInputDeviceManager::GetSingleton();
 
+  logger::debug("Get gamepad direction value"sv);
+
   if (input_mgr && input_mgr->GetGamepad()) {
 
-    if (const auto game_pad = dynamic_cast<RE::BSWin32GamepadDevice*>(input_mgr->GetGamepad())) {
+    // ReSharper disable once CppCStyleCast
+    if (const auto game_pad = (RE::BSWin32GamepadDevice*)(input_mgr->GetGamepad())) {
       logger::debug("Current LX is {}, Current LY is {}"sv, game_pad->curLX, game_pad->curLY);
 
       const float            dir_xy[2]   = {game_pad->curLX, game_pad->curLY};
@@ -228,11 +267,13 @@ auto get_dodge_event() -> std::string {
     logger::debug("TDM Free Movement, Force to Forward Dodge!"sv);
     return "TKDodgeForward";
   }
-  if (tdm_free_mov && tdm_free_mov->value == 0.f && RE::PlayerCharacter::GetSingleton()->IsSprinting() &&
-      !config.tk_dodge_sprint_tapping_dodge) {
+  if (tdm_free_mov && tdm_free_mov->value == 0.f &&
+      RE::PlayerCharacter::GetSingleton()->IsSprinting() && !config.tk_dodge_sprint_tapping_dodge) {
     logger::debug("Player is Sprinting in TDM target-lock, Disable Dodge!"sv);
     return "";
   }
+
+  logger::debug("GetDodgeEvent: Direction {}"sv, static_cast<int>(direction));
 
   switch (direction) {
   case MovementDirections::kForward:
@@ -314,7 +355,7 @@ auto get_sprint_key(const RE::INPUT_DEVICE a_device) -> std::uint32_t {
   using DeviceType = RE::INPUT_DEVICE;
 
   const auto control_map = RE::ControlMap::GetSingleton();
-  auto       key         = control_map->GetMappedKey(RE::UserEvents::GetSingleton()->sprint, a_device);
+  auto       key = control_map->GetMappedKey(RE::UserEvents::GetSingleton()->sprint, a_device);
 
   switch (a_device) {
   case DeviceType::kMouse: {
@@ -340,8 +381,8 @@ auto get_sprint_key(const RE::INPUT_DEVICE a_device) -> std::uint32_t {
 }
 
 auto process_event_player_animation(const RE::BSAnimationGraphEvent* event,
-                                    RE::BSTEventSource<RE::BSAnimationGraphEvent>*, const Config& config)
-    -> RE::BSEventNotifyControl {
+                                    RE::BSTEventSource<RE::BSAnimationGraphEvent>*,
+                                    const Config& config) -> RE::BSEventNotifyControl {
   if (!event) {
     return RE::BSEventNotifyControl::kContinue;
   }
@@ -366,18 +407,21 @@ auto process_event_player_animation(const RE::BSAnimationGraphEvent* event,
   return RE::BSEventNotifyControl::kContinue;
 }
 
-auto is_dodge_button_active(const RE::ButtonEvent& button, const std::uint32_t key, std::uint32_t const sprint_key,
-                            const Config& config) -> bool {
+auto is_dodge_button_active(const RE::ButtonEvent& button, const std::uint32_t key,
+                            std::uint32_t const sprint_key, const Config& config) -> bool {
   return config.tk_dodge_sprint_tapping_dodge
-             ? button.IsUp() && button.HeldDuration() <= config.tk_dodge_key_up_delay && key == sprint_key
+             ? button.IsUp() && button.HeldDuration() <= config.tk_dodge_key_up_delay &&
+                   key == sprint_key
              : button.IsPressed() && key == config.tk_dodge_key;
 };
 
 auto is_not_allow_control_for_dodge(RE::UI& ui, const RE::ControlMap& control_map,
                                     const RE::PlayerControls& player_controls) -> bool {
-  return ui.GameIsPaused() || !control_map.IsMovementControlsEnabled() || !control_map.IsFightingControlsEnabled() ||
-         !player_controls.attackBlockHandler || !player_controls.attackBlockHandler->inputEventHandlingEnabled ||
-         !player_controls.movementHandler || !player_controls.movementHandler->inputEventHandlingEnabled;
+  return ui.GameIsPaused() || !control_map.IsMovementControlsEnabled() ||
+         !control_map.IsFightingControlsEnabled() || !player_controls.attackBlockHandler ||
+         !player_controls.attackBlockHandler->inputEventHandlingEnabled ||
+         !player_controls.movementHandler ||
+         !player_controls.movementHandler->inputEventHandlingEnabled;
 }
 
 auto process_event_input_handler(RE::InputEvent* const* event, RE::BSTEventSource<RE::InputEvent*>*,
@@ -430,31 +474,39 @@ auto process_event_input_handler(RE::InputEvent* const* event, RE::BSTEventSourc
     if (is_dodge_button_active(*button, key, sprint_key, config)) {
       logger::debug("Dodge Key Press!"sv);
       const std::string dodge_event = get_dodge_event();
+      logger::debug("Dodge event is: {}"sv, dodge_event);
 
       auto drain_values = get_drain_value(*player_character, config);
       if (!drain_values) {
         return RE::BSEventNotifyControl::kContinue;
       }
 
-      if (!dodge_event.empty() &&
-          is_allow_dodge(*player_character, *drain_values, config.tk_dodge_block_dodge_when_attack,
-                         config.tk_dodge_block_dodge_when_power_attack)) {
-        logger::debug(FMT_STRING("{} Trigger!"), dodge_event);
+      if (!dodge_event.empty() && is_allow_dodge(*player_character, *drain_values)) {
+        logger::debug("{} Trigger!"sv, dodge_event);
         bool is_dodging = false;
         if (player_character->GetGraphVariableBool("bIsDodging", is_dodging) && is_dodging) {
           logger::debug("Player is already dodging!"sv);
           return RE::BSEventNotifyControl::kContinue;
         }
 
-        player_character->SetGraphVariableInt("iStep", config.tk_dodge_step); // Set Step Dodge
-        player_character->SetGraphVariableFloat("TKDR_IframeDuration",
-                                                config.tk_dodge_iframe_duration); // Set invulnerable frame duration
-        PlayerAnimationHandler::register_sink(player_character);                  // Register event sink
-        player_character->NotifyAnimationGraph(dodge_event);                      // Send TK Dodge Event
-        return RE::BSEventNotifyControl::kContinue;
+        auto i_frame_duration = config.tk_dodge_iframe_duration;
+        i_frame_duration += Core::get_effects_magnitude_sum(
+                                Core::get_effects_by_keyword(
+                                    *player_character, *config.tk_dodge_iframe_duration_mgef_kw))
+                                .value_or(0.f);
+        if (i_frame_duration < 0.f) {
+          i_frame_duration = 0.f;
+        }
 
-      } else
-        logger::debug("No Dodge Event Get!"sv);
+        player_character->SetGraphVariableInt("iStep", config.tk_dodge_step); // Set Step Dodge
+        player_character->SetGraphVariableFloat(
+            "TKDR_IframeDuration",
+            i_frame_duration);                                   // Set invulnerable frame duration
+        PlayerAnimationHandler::register_sink(player_character); // Register event sink
+        player_character->NotifyAnimationGraph(dodge_event);     // Send TK Dodge Event
+        return RE::BSEventNotifyControl::kContinue;
+      }
+      logger::debug("No Dodge Event Get!"sv);
     }
   }
 

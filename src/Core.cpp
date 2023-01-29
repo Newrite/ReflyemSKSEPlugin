@@ -31,7 +31,8 @@ public:
     return effect_setting_->data.flags.any(EffectSettingFlag::kDetrimental);
   }
 
-  static auto create_safety_effect_data(RE::ActiveEffect* active_effect) -> std::optional<SafetyEffectData> {
+  static auto create_safety_effect_data(RE::ActiveEffect* active_effect)
+      -> std::optional<SafetyEffectData> {
 
     if (!active_effect) {
       return std::nullopt;
@@ -50,15 +51,22 @@ public:
 };
 
 auto get_random_int() -> int {
-  // StackOverflow: https://stackoverflow.com/questions/5008804/generating-a-random-integer-from-a-range
-  static std::random_device                 rd;          // Only used once to initialise (seed) engine
-  static std::mt19937                       rng(rd());   // Random-number engine used (Mersenne-Twister in this case)
+  // StackOverflow:
+  // https://stackoverflow.com/questions/5008804/generating-a-random-integer-from-a-range
+  static std::random_device rd;        // Only used once to initialise (seed) engine
+  static std::mt19937       rng(rd()); // Random-number engine used (Mersenne-Twister in this case)
   static std::uniform_int_distribution<int> uni(0, 100); // Guaranteed unbiased
   return uni(rng);
 }
 
-auto character_timer_map_handler(const ULONGLONG now_time, std::map<std::uintptr_t, ULONGLONG>& character_timer_map)
-    -> void {
+auto flash_hud_meter(const RE::ActorValue av) -> void {
+  using Func_T = decltype(&flash_hud_meter);
+  REL::Relocation<Func_T> func{ REL::ID(51907) };
+  return func(av);
+}
+
+auto character_timer_map_handler(const ULONGLONG                      now_time,
+                                 std::map<std::uintptr_t, ULONGLONG>& character_timer_map) -> void {
   logger::debug("handle timer map");
   for (auto& [character_ptr, old_time] : character_timer_map) {
 
@@ -79,8 +87,8 @@ auto damage_actor_value(RE::Actor& actor, const RE::ActorValue av, float value) 
   actor.RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, av, value);
 }
 
-auto can_modify_actor_value(const RE::ValueModifierEffect* a_this, const RE::Actor* a_actor, const float a_value,
-                            const RE::ActorValue av) -> bool {
+auto can_modify_actor_value(const RE::ValueModifierEffect* a_this, const RE::Actor* a_actor,
+                            const float a_value, const RE::ActorValue av) -> bool {
 
   if (av != RE::ActorValue::kNone && av != RE::ActorValue::kHealth) {
     return false;
@@ -119,27 +127,29 @@ auto can_modify_actor_value(const RE::ValueModifierEffect* a_this, const RE::Act
   return true;
 }
 
-auto get_first_active_effect_by_keyword(RE::BSSimpleList<RE::ActiveEffect*>* active_effects, RE::BGSKeyword& keyword)
-    -> std::optional<RE::ActiveEffect*> {
+// auto get_first_active_effect_by_keyword(RE::BSSimpleList<RE::ActiveEffect*>* active_effects,
+//                                         RE::BGSKeyword&                      keyword)
+//     -> std::optional<RE::ActiveEffect*> {
+// 
+//   if (!active_effects) {
+//     return std::optional<RE::ActiveEffect*>{std::nullopt};
+//   }
+// 
+//   for (const auto active_effect : *active_effects) {
+//     return std::optional<RE::ActiveEffect*>{std::nullopt};
+//   }
+// 
+//   return std::optional<RE::ActiveEffect*>{std::nullopt};
+// }
 
-  if (!active_effects) {
-    return std::optional<RE::ActiveEffect*>{std::nullopt};
-  }
-
-  for (const auto active_effect : *active_effects) {
-    return std::optional<RE::ActiveEffect*>{std::nullopt};
-  }
-
-  return std::optional<RE::ActiveEffect*>{std::nullopt};
-}
-
-auto get_effects_magnitude_sum(const std::vector<RE::ActiveEffect*>& effects) -> std::optional<float> {
+auto get_effects_magnitude_sum(const std::vector<RE::ActiveEffect*>& effects)
+    -> std::optional<float> {
   auto pos_value = 0.f;
   auto neg_value = 0.f;
 
   for (const auto active_effect : effects) {
-    if (!active_effect || active_effect->flags.any(RE::ActiveEffect::Flag::kInactive) || !active_effect->effect ||
-        !active_effect->effect->baseEffect) {
+    if (!active_effect || active_effect->flags.any(RE::ActiveEffect::Flag::kInactive) ||
+        !active_effect->effect || !active_effect->effect->baseEffect) {
       continue;
     }
 
@@ -155,17 +165,17 @@ auto get_effects_magnitude_sum(const std::vector<RE::ActiveEffect*>& effects) ->
 
   if (pos_value > 0.f || neg_value > 0.f) {
     return std::optional{pos_value - neg_value};
-  } else {
-    return std::nullopt;
   }
+  return std::nullopt;
 }
 
-auto get_effects_by_keyword(RE::Actor& actor, const RE::BGSKeyword& keyword) -> std::vector<RE::ActiveEffect*> {
+auto get_effects_by_keyword(RE::Actor& actor, const RE::BGSKeyword& keyword)
+    -> std::vector<RE::ActiveEffect*> {
   auto                           active_effects = actor.GetActiveEffectList();
   std::vector<RE::ActiveEffect*> effects        = {};
   for (auto active_effect : *active_effects) {
-    if (!active_effect || active_effect->flags.any(RE::ActiveEffect::Flag::kInactive) || !active_effect->effect ||
-        !active_effect->effect->baseEffect) {
+    if (!active_effect || active_effect->flags.any(RE::ActiveEffect::Flag::kInactive) ||
+        !active_effect->effect || !active_effect->effect->baseEffect) {
       continue;
     }
 
@@ -193,7 +203,8 @@ auto get_second_av(const RE::ValueModifierEffect& value_effect) -> RE::ActorValu
     return RE::ActorValue::kNone;
   }
 
-  if (!value_effect.effect->baseEffect->HasArchetype(RE::EffectSetting::Archetype::kDualValueModifier)) {
+  if (!value_effect.effect->baseEffect->HasArchetype(
+          RE::EffectSetting::Archetype::kDualValueModifier)) {
     return RE::ActorValue::kNone;
   }
 
@@ -236,8 +247,8 @@ auto getting_damage_mult(RE::Actor& actor) -> float {
 auto actor_has_active_mgef_with_keyword(RE::Actor& actor, const RE::BGSKeyword& keyword) -> bool {
   auto active_effects = actor.GetActiveEffectList();
   for (const auto active_effect : *active_effects) {
-    if (!active_effect || active_effect->flags.any(RE::ActiveEffect::Flag::kInactive) || !active_effect->effect ||
-        !active_effect->effect->baseEffect) {
+    if (!active_effect || active_effect->flags.any(RE::ActiveEffect::Flag::kInactive) ||
+        !active_effect->effect || !active_effect->effect->baseEffect) {
       continue;
     }
     const auto base_effect = active_effect->effect->baseEffect;
@@ -259,7 +270,8 @@ auto cast(RE::SpellItem& spell, RE::Actor& target, RE::Actor& caster) -> void {
   }
 }
 
-auto cast_on_handle(RE::TESForm* keyword, RE::TESForm* spell, RE::Actor& target, RE::Actor& caster) -> void {
+auto cast_on_handle(RE::TESForm* keyword, RE::TESForm* spell, RE::Actor& target, RE::Actor& caster)
+    -> void {
   if (!spell) {
     return;
   }
@@ -321,12 +333,13 @@ auto worn_has_keyword(RE::Actor* actor, RE::BGSKeyword* keyword) -> bool {
   return func(inv, keyword);
 }
 
-auto do_combat_spell_apply(RE::Actor* actor, RE::SpellItem* spell, RE::TESObjectREFR* target) -> void {
+auto do_combat_spell_apply(RE::Actor* actor, RE::SpellItem* spell, RE::TESObjectREFR* target)
+    -> void {
   if (!actor || !spell || !target) {
     return;
   }
 
-  using FuncT = void(*)(int32_t, int32_t, RE::Actor*, RE::SpellItem*, RE::TESObjectREFR*);
+  using FuncT = void (*)(int32_t, int32_t, RE::Actor*, RE::SpellItem*, RE::TESObjectREFR*);
   const REL::Relocation<FuncT> func{RELOCATION_ID(54124, 0)};
   return func(0, 0, actor, spell, target);
 }

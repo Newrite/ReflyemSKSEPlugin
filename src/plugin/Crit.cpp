@@ -4,9 +4,10 @@
 namespace Reflyem {
 namespace Crit {
 
-auto crit(RE::Actor& aggressor, RE::Actor& target, float& damage, const RE::ActorValue crit_chance_av,
-          const RE::ActorValue crit_damage_av, const std::int32_t crit_damage_high, const bool physical_crit,
-          const Config& config) -> void {
+auto crit(RE::Actor& aggressor, RE::Actor& target, float& damage,
+          const RE::ActorValue crit_chance_av, const RE::ActorValue crit_damage_av,
+          const std::int32_t crit_damage_high, const bool physical_crit, const Config& config)
+    -> void {
   auto crit_chance = static_cast<int>(aggressor.GetActorValue(crit_chance_av));
   auto crit_damage = static_cast<int>(aggressor.GetActorValue(crit_damage_av));
 
@@ -45,17 +46,17 @@ auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& confi
     return;
   }
 
-  crit(*aggressor, *target, hit_data.totalDamage, config.weapon_crit_chance_av, config.weapon_crit_damage_av,
-       config.weapon_crit_high, true, config);
+  crit(*aggressor, *target, hit_data.totalDamage, config.weapon_crit_chance_av,
+       config.weapon_crit_damage_av, config.weapon_crit_high, true, config);
 }
 
-auto modify_actor_value(const RE::ValueModifierEffect* this_, RE::Actor* actor, float& value, const RE::ActorValue av,
-                        const Config& config) -> void {
+auto modify_actor_value(const RE::ValueModifierEffect* this_, RE::Actor* actor, float& value,
+                        const RE::ActorValue av, const Config& config) -> void {
   if (Core::can_modify_actor_value(this_, actor, value, av)) {
     const auto caster = this_->GetCasterActor().get();
     value             = std::abs(value);
-    crit(*caster, *actor, value, config.magic_crit_chance_av, config.magic_crit_damage_av, config.magic_crit_high,
-         false, config);
+    crit(*caster, *actor, value, config.magic_crit_chance_av, config.magic_crit_damage_av,
+         config.magic_crit_high, false, config);
     value = -value;
   }
 }

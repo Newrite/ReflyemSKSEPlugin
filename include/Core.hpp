@@ -42,9 +42,9 @@ struct ActorsCache {
 
   public:
     explicit Data()
-        : regen_health_delay_(0.f), regen_stamina_delay_(0.f), regen_magicka_delay_(0.f), delta_update_(0.f),
-          last_update_tick50_(GetTickCount64()), last_update_tick100_(GetTickCount64()),
-          last_update_tick1000_(GetTickCount64()) {}
+        : regen_health_delay_(0.f), regen_stamina_delay_(0.f), regen_magicka_delay_(0.f),
+          delta_update_(0.f), last_update_tick50_(GetTickCount64()),
+          last_update_tick100_(GetTickCount64()), last_update_tick1000_(GetTickCount64()) {}
 
     [[nodiscard]] auto delta_update() const -> float { return delta_update_; }
 
@@ -143,6 +143,7 @@ struct ActorsCache {
 private:
   FormsMap                  cache_map_;
   static constexpr uint64_t garbage_time = 5000;
+  std::mutex                mutex_;
 
   [[nodiscard]] static auto is_garbage(const Data& data) -> bool {
     return data.delta_tick(Data::TickValues::k1000Ms) >= garbage_time;
@@ -178,8 +179,10 @@ public:
     if (this->exist(key)) {
       return at(key);
     }
+    mutex_.lock();
     garbage_collector();
     cache_map_[key] = Data();
+    mutex_.unlock();
     return at(key);
   }
 
@@ -190,7 +193,8 @@ public:
   }
 };
 
-auto character_timer_map_handler(ULONGLONG now_time, std::map<std::uintptr_t, ULONGLONG>& character_timer_map) -> void;
+auto character_timer_map_handler(ULONGLONG                            now_time,
+                                 std::map<std::uintptr_t, ULONGLONG>& character_timer_map) -> void;
 
 auto get_random_int() -> int;
 
@@ -198,14 +202,18 @@ auto damage_actor_value(RE::Actor& actor, RE::ActorValue av, float value) -> voi
 
 auto set_av_regen_delay(RE::AIProcess* process, RE::ActorValue av, float time) -> void;
 
-auto can_modify_actor_value(const RE::ValueModifierEffect* a_this, const RE::Actor* a_actor, float a_value,
-                            RE::ActorValue av) -> bool;
+auto can_modify_actor_value(const RE::ValueModifierEffect* a_this, const RE::Actor* a_actor,
+                            float a_value, RE::ActorValue av) -> bool;
+
+auto flash_hud_meter(const RE::ActorValue av) -> void;
 
 auto actor_has_active_mgef_with_keyword(RE::Actor& actor, const RE::BGSKeyword& keyword) -> bool;
 
-auto get_effects_magnitude_sum(const std::vector<RE::ActiveEffect*>& effects) -> std::optional<float>;
+auto get_effects_magnitude_sum(const std::vector<RE::ActiveEffect*>& effects)
+    -> std::optional<float>;
 
-auto get_effects_by_keyword(RE::Actor& actor, const RE::BGSKeyword& keyword) -> std::vector<RE::ActiveEffect*>;
+auto get_effects_by_keyword(RE::Actor& actor, const RE::BGSKeyword& keyword)
+    -> std::vector<RE::ActiveEffect*>;
 
 auto get_dual_value_mult(const RE::ValueModifierEffect& value_effect) -> float;
 
@@ -215,7 +223,8 @@ auto getting_damage_mult(RE::Actor& actor) -> float;
 
 auto cast(RE::SpellItem& spell, RE::Actor& target, RE::Actor& caster) -> void;
 
-auto cast_on_handle(RE::TESForm* keyword, RE::TESForm* spell, RE::Actor& target, RE::Actor& caster) -> void;
+auto cast_on_handle(RE::TESForm* keyword, RE::TESForm* spell, RE::Actor& target, RE::Actor& caster)
+    -> void;
 
 auto is_power_attacking(RE::Actor& actor) -> bool;
 
@@ -223,7 +232,8 @@ auto has_absolute_keyword(RE::Actor& actor, RE::BGSKeyword& keyword) -> bool;
 
 auto is_casting_actor(RE::Character& character) -> bool;
 
-auto do_combat_spell_apply(RE::Actor* actor, RE::SpellItem* spell, RE::TESObjectREFR* target) -> void;
+auto do_combat_spell_apply(RE::Actor* actor, RE::SpellItem* spell, RE::TESObjectREFR* target)
+    -> void;
 
 } // namespace Core
 } // namespace Reflyem

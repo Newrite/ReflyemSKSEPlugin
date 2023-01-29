@@ -1,6 +1,5 @@
 // ReSharper disable CppInconsistentNaming
 #include "Config.hpp"
-
 #include <latch>
 #include <toml++/toml.h>
 
@@ -67,25 +66,38 @@ constexpr inline std::string_view ConvertionHealthToMagickaId    = "ConvertionHe
 constexpr inline std::string_view Physical = "Physical";
 constexpr inline std::string_view Magick   = "Magick";
 
-constexpr inline std::string_view TKDodge                   = "TKDodge";
-constexpr inline std::string_view DodgeKey                  = "DodgeKey";
-constexpr inline std::string_view EnableTappingDodge        = "EnableTappingDodge";
-constexpr inline std::string_view StepDodge                 = "StepDodge";
-constexpr inline std::string_view iFrameDuration            = "iFrameDuration";
-constexpr inline std::string_view KeyUpDelay                = "KeyUpDelay";
-constexpr inline std::string_view MaxCost                   = "MaxCost";
-constexpr inline std::string_view MinCost                   = "MinCost";
-constexpr inline std::string_view AccumulateEffectKeywordId = "AccumulateEffectKeywordId";
-constexpr inline std::string_view Timer100KeywordId         = "Timer100KeywordId";
-constexpr inline std::string_view FlatCost                  = "FlatCost";
-constexpr inline std::string_view BlockDodgeWhenAttack      = "BlockDodgeWhenAttack";
-constexpr inline std::string_view BlockDodgeWhenPowerAttack = "BlockDodgeWhenPowerAttack";
-constexpr inline std::string_view BlockDodgeWhenCasting     = "BlockDodgeWhenCasting";
-constexpr inline std::string_view SpellBlockAttackId        = "SpellBlockAttackId";
-constexpr inline std::string_view SpellBlockPowerAttackId   = "SpellBlockPowerAttackId";
-constexpr inline std::string_view SpellBlockBashId          = "SpellBlockBashId";
-constexpr inline std::string_view SpellMoveDebuffId         = "SpellMoveDebuffId";
-constexpr inline std::string_view CasterDebuff              = "CasterDebuff";
+constexpr inline std::string_view TKDodge                         = "TKDodge";
+constexpr inline std::string_view DodgeKey                        = "DodgeKey";
+constexpr inline std::string_view EnableTappingDodge              = "EnableTappingDodge";
+constexpr inline std::string_view StepDodge                       = "StepDodge";
+constexpr inline std::string_view iFrameDuration                  = "iFrameDuration";
+constexpr inline std::string_view iFrameDurationMGEFKeywordId     = "iFrameDurationMGEFKeywordId";
+constexpr inline std::string_view KeyUpDelay                      = "KeyUpDelay";
+constexpr inline std::string_view MaxCost                         = "MaxCost";
+constexpr inline std::string_view MinCost                         = "MinCost";
+constexpr inline std::string_view AccumulateEffectKeywordId       = "AccumulateEffectKeywordId";
+constexpr inline std::string_view Timer100KeywordId               = "Timer100KeywordId";
+constexpr inline std::string_view FlatCost                        = "FlatCost";
+constexpr inline std::string_view FlatCostMGEFKeywordId           = "FlatCostMGEFKeywordId";
+constexpr inline std::string_view BlockDodgeWhenAttack            = "BlockDodgeWhenAttack";
+constexpr inline std::string_view BlockDodgeWhenAttackPerkId      = "BlockDodgeWhenAttackPerkId";
+constexpr inline std::string_view BlockDodgeWhenPowerAttack       = "BlockDodgeWhenPowerAttack";
+constexpr inline std::string_view BlockDodgeWhenPowerAttackPerkId =
+    "BlockDodgeWhenPowerAttackPerkId";
+constexpr inline std::string_view BlockDodgeWhenCasting       = "BlockDodgeWhenCasting";
+constexpr inline std::string_view BlockDodgeWhenCastingPerkId = "BlockDodgeWhenCastingPerkId";
+constexpr inline std::string_view SpellBlockAttackId          = "SpellBlockAttackId";
+constexpr inline std::string_view SpellBlockPowerAttackId     = "SpellBlockPowerAttackId";
+constexpr inline std::string_view SpellBlockBashId            = "SpellBlockBashId";
+constexpr inline std::string_view SpellMoveDebuffId           = "SpellMoveDebuffId";
+constexpr inline std::string_view CasterDebuff                = "CasterDebuff";
+constexpr inline std::string_view FormListGlobalsId           = "FormListGlobalsId";
+constexpr inline std::string_view MagicWeapon                 = "MagicWeapon";
+constexpr inline std::string_view KeywordId                   = "KeywordId";
+constexpr inline std::string_view MustBeOrNotBe               = "MustBeOrNotBe";
+
+// ReSharper disable once CppPossiblyUninitializedMember
+Config::Config() {}
 
 const Config& Config::get_singleton() noexcept {
   static Config instance;
@@ -106,16 +118,27 @@ const Config& Config::get_singleton() noexcept {
       instance.magic_shield_cost_keyword =
           data_handler->LookupForm<RE::BGSKeyword>(ms_form_id.value(), instance.mod_name);
 
-      instance.magic_shield_av = static_cast<RE::ActorValue>(tbl[MagicShield][ActorValueIndex].value_or(120));
+      instance.magic_shield_av =
+          static_cast<RE::ActorValue>(tbl[MagicShield][ActorValueIndex].value_or(120));
 
       instance.magic_shield_magick   = tbl[MagicShield][Magick].value_or(false);
       instance.magic_shield_physical = tbl[MagicShield][Physical].value_or(false);
+
+      auto ms_kw_form_id = tbl[MagicShield][KeywordId].value<RE::FormID>();
+
+      instance.magic_shield_mgef_keyword_id =
+          data_handler->LookupForm<RE::BGSKeyword>(ms_kw_form_id.value(), instance.mod_name);
+
+      instance.magic_shield_must_be_or_not_be =
+          tbl[MagicShield][MustBeOrNotBe].value_or(false);
+      
     }
 
     logger::info("config init: vampirism..."sv);
     instance.vampirism_enable = tbl[Vampirism][Enable].value_or(false);
     if (instance.vampirism_enable) {
-      instance.vampirism_av = static_cast<RE::ActorValue>(tbl[Vampirism][ActorValueIndex].value_or(120));
+      instance.vampirism_av =
+          static_cast<RE::ActorValue>(tbl[Vampirism][ActorValueIndex].value_or(120));
     }
 
     logger::info("config init: vampirism mgef health..."sv);
@@ -145,11 +168,20 @@ const Config& Config::get_singleton() noexcept {
     logger::info("config init: magic vampirism..."sv);
     instance.magic_vampirism_enable = tbl[MagicVampirism][Enable].value_or(false);
     if (instance.magic_vampirism_enable) {
-      instance.magic_vampirism_av = static_cast<RE::ActorValue>(tbl[MagicVampirism][ActorValueIndex].value_or(120));
+
+      auto v_form_id                           = tbl[MagicVampirism][KeywordId].value<RE::FormID>();
+      instance.magic_vampirism_mgef_keyword_id =
+          data_handler->LookupForm<RE::BGSKeyword>(v_form_id.value(), instance.mod_name);
+
+      instance.magic_vampirism_must_be_or_not_be =
+          tbl[MagicVampirism][MustBeOrNotBe].value_or(false);
+      instance.magic_vampirism_av =
+          static_cast<RE::ActorValue>(tbl[MagicVampirism][ActorValueIndex].value_or(120));
     }
 
     logger::info("config init: magic vampirism mgef health..."sv);
-    instance.magic_vampirism_mgef_health_enable = tbl[MagicVampirism][EnableMGEFHealth].value_or(false);
+    instance.magic_vampirism_mgef_health_enable =
+        tbl[MagicVampirism][EnableMGEFHealth].value_or(false);
     if (instance.magic_vampirism_mgef_health_enable) {
       auto v_form_id = tbl[MagicVampirism][MGEFHealthKeywordId].value<RE::FormID>();
       instance.magic_vampirism_mgef_health_keyword =
@@ -157,7 +189,8 @@ const Config& Config::get_singleton() noexcept {
     }
 
     logger::info("config init: magic vampirism mgef stamina..."sv);
-    instance.magic_vampirism_mgef_stamina_enable = tbl[MagicVampirism][EnableMGEFStamina].value_or(false);
+    instance.magic_vampirism_mgef_stamina_enable =
+        tbl[MagicVampirism][EnableMGEFStamina].value_or(false);
     if (instance.magic_vampirism_mgef_stamina_enable) {
       auto v_form_id = tbl[MagicVampirism][MGEFStaminaKeywordId].value<RE::FormID>();
       instance.magic_vampirism_mgef_stamina_keyword =
@@ -165,7 +198,8 @@ const Config& Config::get_singleton() noexcept {
     }
 
     logger::info("config init: magic vampirism mgef magicka..."sv);
-    instance.magic_vampirism_mgef_magicka_enable = tbl[MagicVampirism][EnableMGEFMagicka].value_or(false);
+    instance.magic_vampirism_mgef_magicka_enable =
+        tbl[MagicVampirism][EnableMGEFMagicka].value_or(false);
     if (instance.magic_vampirism_mgef_magicka_enable) {
       auto v_form_id = tbl[MagicVampirism][MGEFMagickaKeywordId].value<RE::FormID>();
       instance.magic_vampirism_mgef_magicka_keyword =
@@ -175,10 +209,12 @@ const Config& Config::get_singleton() noexcept {
     logger::info("config init: petrified blood..."sv);
     instance.petrified_blood_enable = tbl[PetrifiedBlood][Enable].value_or(false);
     if (instance.petrified_blood_enable) {
-      instance.petrified_blood_av = static_cast<RE::ActorValue>(tbl[PetrifiedBlood][Enable].value_or(120));
+      instance.petrified_blood_av =
+          static_cast<RE::ActorValue>(tbl[PetrifiedBlood][Enable].value_or(120));
 
       auto pb_form_id                = tbl[PetrifiedBlood][SpellId].value<RE::FormID>();
-      instance.petrified_blood_spell = data_handler->LookupForm<RE::SpellItem>(pb_form_id.value(), instance.mod_name);
+      instance.petrified_blood_spell =
+          data_handler->LookupForm<RE::SpellItem>(pb_form_id.value(), instance.mod_name);
 
       auto pb_kw_form_id = tbl[PetrifiedBlood][AccumulateEffectKeywordId].value<RE::FormID>();
       instance.petrified_blood_acc_mgef_kw =
@@ -186,6 +222,15 @@ const Config& Config::get_singleton() noexcept {
 
       instance.petrified_blood_magick   = tbl[PetrifiedBlood][Magick].value_or(false);
       instance.petrified_blood_physical = tbl[PetrifiedBlood][Physical].value_or(false);
+
+      auto pbkw_form_id = tbl[PetrifiedBlood][KeywordId].value<RE::FormID>();
+
+      instance.petrified_blood_mgef_keyword_id =
+          data_handler->LookupForm<RE::BGSKeyword>(pbkw_form_id.value(), instance.mod_name);
+
+      instance.petrified_blood_must_be_or_not_be =
+          tbl[PetrifiedBlood][MustBeOrNotBe].value_or(false);
+      
     }
 
     logger::info("config init: cheat death"sv);
@@ -203,9 +248,11 @@ const Config& Config::get_singleton() noexcept {
     instance.speed_casting_enable = tbl[SpeedCasting][Enable].value_or(false);
     if (instance.speed_casting_enable) {
       auto sc_form_id               = tbl[SpeedCasting][GlobalId].value<RE::FormID>();
-      instance.speed_casting_global = data_handler->LookupForm<RE::TESGlobal>(sc_form_id.value(), instance.mod_name);
+      instance.speed_casting_global =
+          data_handler->LookupForm<RE::TESGlobal>(sc_form_id.value(), instance.mod_name);
 
-      instance.speed_casting_av   = static_cast<RE::ActorValue>(tbl[SpeedCasting][ActorValueIndex].value_or(120));
+      instance.speed_casting_av =
+          static_cast<RE::ActorValue>(tbl[SpeedCasting][ActorValueIndex].value_or(120));
       instance.speed_casting_low  = tbl[SpeedCasting][Low].value_or(0.20f);
       instance.speed_casting_high = tbl[SpeedCasting][High].value_or(2.0f);
     }
@@ -234,8 +281,8 @@ const Config& Config::get_singleton() noexcept {
     logger::info("config init: cast on hit"sv);
     instance.cast_on_hit_enable = tbl[CastOnHit][Enable].value_or(false);
     if (instance.cast_on_hit_enable) {
-      auto cnh_form_idkw = tbl[CastOnHit][FormListKeywordId].value<RE::FormID>();
-      auto cnh_form_idsp = tbl[CastOnHit][FormListSpellsId].value<RE::FormID>();
+      auto cnh_form_idkw                   = tbl[CastOnHit][FormListKeywordId].value<RE::FormID>();
+      auto cnh_form_idsp                   = tbl[CastOnHit][FormListSpellsId].value<RE::FormID>();
       instance.cast_on_hit_formlist_needkw =
           data_handler->LookupForm<RE::BGSListForm>(cnh_form_idkw.value(), instance.mod_name);
       instance.cast_on_hit_formlist_spells =
@@ -245,15 +292,20 @@ const Config& Config::get_singleton() noexcept {
     logger::info("config init: resource manager"sv);
     instance.resource_manager_enable = tbl[ResourceManager][Enable].value_or(false);
     if (instance.resource_manager_enable) {
-      instance.resource_manager_infamy_enable       = tbl[ResourceManager][EnableInfamy].value_or(false);
-      instance.resource_manager_regeneration_enable = tbl[ResourceManager][EnableRegeneration].value_or(false);
-      instance.resource_manager_weapon_spend_enable = tbl[ResourceManager][EnableWeaponSpend].value_or(false);
-      instance.resource_manager_block_spend_enable  = tbl[ResourceManager][EnableBlock].value_or(false);
-      instance.resource_manager_bash_spend_enable   = tbl[ResourceManager][EnableBashSpend].value_or(false);
+      instance.resource_manager_infamy_enable = tbl[ResourceManager][EnableInfamy].value_or(false);
+      instance.resource_manager_regeneration_enable =
+          tbl[ResourceManager][EnableRegeneration].value_or(false);
+      instance.resource_manager_weapon_spend_enable =
+          tbl[ResourceManager][EnableWeaponSpend].value_or(false);
+      instance.resource_manager_block_spend_enable =
+          tbl[ResourceManager][EnableBlock].value_or(false);
+      instance.resource_manager_bash_spend_enable =
+          tbl[ResourceManager][EnableBashSpend].value_or(false);
 
       auto rm_block_attack       = tbl[ResourceManager][SpellBlockAttackId].value<RE::FormID>();
-      auto rm_block_power_attack = tbl[ResourceManager][SpellBlockPowerAttackId].value<RE::FormID>();
-      auto rm_block_bash         = tbl[ResourceManager][SpellBlockBashId].value<RE::FormID>();
+      auto rm_block_power_attack =
+          tbl[ResourceManager][SpellBlockPowerAttackId].value<RE::FormID>();
+      auto rm_block_bash = tbl[ResourceManager][SpellBlockBashId].value<RE::FormID>();
 
       instance.resource_manage_spell_block_attack =
           data_handler->LookupForm<RE::SpellItem>(rm_block_attack.value(), instance.mod_name);
@@ -262,20 +314,25 @@ const Config& Config::get_singleton() noexcept {
       instance.resource_manage_spell_block_bash =
           data_handler->LookupForm<RE::SpellItem>(rm_block_bash.value(), instance.mod_name);
 
-      instance.resource_manager_attack_cost_av =
-          static_cast<RE::ActorValue>(tbl[ResourceManager][ActorValueAttackCostIndex].value_or(120));
-      instance.resource_manager_power_attack_cost_av =
-          static_cast<RE::ActorValue>(tbl[ResourceManager][ActorValuePowerAttackCostIndex].value_or(120));
-      instance.resource_manager_attack_cost_high       = tbl[ResourceManager][AttackCostHigh].value_or(100);
-      instance.resource_manager_attack_cost_low        = tbl[ResourceManager][AttackCostLow].value_or(-100);
-      instance.resource_manager_power_attack_cost_high = tbl[ResourceManager][PowerAttackCostHigh].value_or(100);
-      instance.resource_manager_power_attack_cost_low  = tbl[ResourceManager][PowerAttackCostLow].value_or(-100);
-      instance.resource_manager_weight_mult            = tbl[ResourceManager][WeightMult].value_or(1.0f);
-      instance.resource_manager_global_mult            = tbl[ResourceManager][GlobalMult].value_or(1.0f);
-      instance.resource_manager_jump_cost              = tbl[ResourceManager][JumpCost].value_or(15.f);
-      instance.resource_manager_damage_mult            = tbl[ResourceManager][DamageMult].value_or(1.f);
-      instance.resource_manager_armor_mult             = tbl[ResourceManager][ArmorMult].value_or(1.f);
-      instance.resource_manager_power_attack_mult      = tbl[ResourceManager][PowerAttackMult].value_or(2.f);
+      instance.resource_manager_attack_cost_av = static_cast<RE::ActorValue>(
+        tbl[ResourceManager][ActorValueAttackCostIndex].value_or(120));
+      instance.resource_manager_power_attack_cost_av = static_cast<RE::ActorValue>(
+        tbl[ResourceManager][ActorValuePowerAttackCostIndex].value_or(120));
+      instance.resource_manager_attack_cost_high =
+          tbl[ResourceManager][AttackCostHigh].value_or(100);
+      instance.resource_manager_attack_cost_low =
+          tbl[ResourceManager][AttackCostLow].value_or(-100);
+      instance.resource_manager_power_attack_cost_high =
+          tbl[ResourceManager][PowerAttackCostHigh].value_or(100);
+      instance.resource_manager_power_attack_cost_low =
+          tbl[ResourceManager][PowerAttackCostLow].value_or(-100);
+      instance.resource_manager_weight_mult       = tbl[ResourceManager][WeightMult].value_or(1.0f);
+      instance.resource_manager_global_mult       = tbl[ResourceManager][GlobalMult].value_or(1.0f);
+      instance.resource_manager_jump_cost         = tbl[ResourceManager][JumpCost].value_or(15.f);
+      instance.resource_manager_damage_mult       = tbl[ResourceManager][DamageMult].value_or(1.f);
+      instance.resource_manager_armor_mult        = tbl[ResourceManager][ArmorMult].value_or(1.f);
+      instance.resource_manager_power_attack_mult =
+          tbl[ResourceManager][PowerAttackMult].value_or(2.f);
 
       auto rm_unarmed_weapon = tbl[ResourceManager][UnarmedWeaponId].value<RE::FormID>();
 
@@ -283,12 +340,18 @@ const Config& Config::get_singleton() noexcept {
       auto rm_stamina = tbl[ResourceManager][KeywordStaminaId].value<RE::FormID>();
       auto rm_magicka = tbl[ResourceManager][KeywordMagickaId].value<RE::FormID>();
 
-      auto rm_stamina_health  = tbl[ResourceManager][ConvertionStaminaToHealthId].value<RE::FormID>();
-      auto rm_stamina_magicka = tbl[ResourceManager][ConvertionStaminaToMagickaId].value<RE::FormID>();
-      auto rm_health_stamina  = tbl[ResourceManager][ConvertionHealthToStaminaId].value<RE::FormID>();
-      auto rm_health_magicka  = tbl[ResourceManager][ConvertionHealthToMagickaId].value<RE::FormID>();
-      auto rm_magicka_stamina = tbl[ResourceManager][ConvertionMagickaToStaminaId].value<RE::FormID>();
-      auto rm_magicka_health  = tbl[ResourceManager][ConvertionMagickaToHealthId].value<RE::FormID>();
+      auto rm_stamina_health =
+          tbl[ResourceManager][ConvertionStaminaToHealthId].value<RE::FormID>();
+      auto rm_stamina_magicka =
+          tbl[ResourceManager][ConvertionStaminaToMagickaId].value<RE::FormID>();
+      auto rm_health_stamina =
+          tbl[ResourceManager][ConvertionHealthToStaminaId].value<RE::FormID>();
+      auto rm_health_magicka =
+          tbl[ResourceManager][ConvertionHealthToMagickaId].value<RE::FormID>();
+      auto rm_magicka_stamina =
+          tbl[ResourceManager][ConvertionMagickaToStaminaId].value<RE::FormID>();
+      auto rm_magicka_health =
+          tbl[ResourceManager][ConvertionMagickaToHealthId].value<RE::FormID>();
 
       instance.resource_manager_unarmed_weapon =
           data_handler->LookupForm<RE::TESObjectWEAP>(rm_unarmed_weapon.value(), instance.mod_name);
@@ -317,27 +380,50 @@ const Config& Config::get_singleton() noexcept {
     logger::info("config init: tk dodge"sv);
     instance.tk_dodge_enable = tbl[TKDodge][Enable].value_or(false);
     if (instance.tk_dodge_enable) {
-      instance.tk_dodge_gamepad_treshold              = 0.15f;
-      instance.tk_dodge_iframe_duration               = tbl[TKDodge][iFrameDuration].value_or(0.5f);
-      instance.tk_dodge_step                          = tbl[TKDodge][StepDodge].value_or(false);
-      instance.tk_dodge_key                           = tbl[TKDodge][DodgeKey].value_or(277);
-      instance.tk_dodge_sprint_tapping_dodge          = tbl[TKDodge][EnableTappingDodge].value_or(false);
-      instance.tk_dodge_block_dodge_when_attack       = tbl[TKDodge][BlockDodgeWhenAttack].value_or(false);
-      instance.tk_dodge_block_dodge_when_power_attack = tbl[TKDodge][BlockDodgeWhenPowerAttack].value_or(false);
-      instance.tk_dodge_block_dodge_when_casting      = tbl[TKDodge][BlockDodgeWhenCasting].value_or(false);
-      instance.tk_dodge_key_up_delay                  = tbl[TKDodge][KeyUpDelay].value_or(0.2f);
-      instance.tk_dodge_equipped_weight_mult          = tbl[TKDodge][WeightMult].value_or(1.0f);
-      instance.tk_dodge_flat_cost                     = tbl[TKDodge][FlatCost].value_or(0.f);
-      instance.tk_dodge_max_cost                      = tbl[TKDodge][MaxCost].value_or(40.f);
-      instance.tk_dodge_min_cost                      = tbl[TKDodge][MinCost].value_or(10.f);
+      instance.tk_dodge_gamepad_treshold        = 0.15f;
+      instance.tk_dodge_iframe_duration         = tbl[TKDodge][iFrameDuration].value_or(0.5f);
+      instance.tk_dodge_step                    = tbl[TKDodge][StepDodge].value_or(false);
+      instance.tk_dodge_key                     = tbl[TKDodge][DodgeKey].value_or(277);
+      instance.tk_dodge_sprint_tapping_dodge    = tbl[TKDodge][EnableTappingDodge].value_or(false);
+      instance.tk_dodge_block_dodge_when_attack =
+          tbl[TKDodge][BlockDodgeWhenAttack].value_or(false);
+      instance.tk_dodge_block_dodge_when_power_attack =
+          tbl[TKDodge][BlockDodgeWhenPowerAttack].value_or(false);
+      instance.tk_dodge_block_dodge_when_casting =
+          tbl[TKDodge][BlockDodgeWhenCasting].value_or(false);
+      instance.tk_dodge_key_up_delay         = tbl[TKDodge][KeyUpDelay].value_or(0.2f);
+      instance.tk_dodge_equipped_weight_mult = tbl[TKDodge][WeightMult].value_or(1.0f);
+      instance.tk_dodge_flat_cost            = tbl[TKDodge][FlatCost].value_or(0.f);
+      instance.tk_dodge_max_cost             = tbl[TKDodge][MaxCost].value_or(40.f);
+      instance.tk_dodge_min_cost             = tbl[TKDodge][MinCost].value_or(10.f);
 
       auto tk_health  = tbl[TKDodge][KeywordHealthId].value<RE::FormID>();
       auto tk_stamina = tbl[TKDodge][KeywordStaminaId].value<RE::FormID>();
       auto tk_magicka = tbl[TKDodge][KeywordMagickaId].value<RE::FormID>();
 
-      instance.tk_dodge_health_kw  = data_handler->LookupForm<RE::BGSKeyword>(tk_health.value(), instance.mod_name);
-      instance.tk_dodge_stamina_kw = data_handler->LookupForm<RE::BGSKeyword>(tk_stamina.value(), instance.mod_name);
-      instance.tk_dodge_magicka_kw = data_handler->LookupForm<RE::BGSKeyword>(tk_magicka.value(), instance.mod_name);
+      auto tk_attack_perk       = tbl[TKDodge][BlockDodgeWhenAttackPerkId].value<RE::FormID>();
+      auto tk_power_attack_perk = tbl[TKDodge][BlockDodgeWhenPowerAttackPerkId].value<RE::FormID>();
+      auto tk_casting_perk      = tbl[TKDodge][BlockDodgeWhenCastingPerkId].value<RE::FormID>();
+      auto tk_iframe_kwd        = tbl[TKDodge][iFrameDurationMGEFKeywordId].value<RE::FormID>();
+      auto tk_flat_cost_kwd     = tbl[TKDodge][FlatCostMGEFKeywordId].value<RE::FormID>();
+
+      instance.tk_dodge_health_kw =
+          data_handler->LookupForm<RE::BGSKeyword>(tk_health.value(), instance.mod_name);
+      instance.tk_dodge_stamina_kw =
+          data_handler->LookupForm<RE::BGSKeyword>(tk_stamina.value(), instance.mod_name);
+      instance.tk_dodge_magicka_kw =
+          data_handler->LookupForm<RE::BGSKeyword>(tk_magicka.value(), instance.mod_name);
+
+      instance.tk_dodge_block_dodge_when_attack_perk =
+          data_handler->LookupForm<RE::BGSPerk>(tk_attack_perk.value(), instance.mod_name);
+      instance.tk_dodge_block_dodge_when_power_attack_perk =
+          data_handler->LookupForm<RE::BGSPerk>(tk_power_attack_perk.value(), instance.mod_name);
+      instance.tk_dodge_block_dodge_when_casting_perk =
+          data_handler->LookupForm<RE::BGSPerk>(tk_casting_perk.value(), instance.mod_name);
+      instance.tk_dodge_iframe_duration_mgef_kw =
+          data_handler->LookupForm<RE::BGSKeyword>(tk_iframe_kwd.value(), instance.mod_name);
+      instance.tk_dodge_cost_from_mgef_kw =
+          data_handler->LookupForm<RE::BGSKeyword>(tk_flat_cost_kwd.value(), instance.mod_name);
     }
 
     logger::info("config init: caster debuff"sv);
@@ -346,8 +432,22 @@ const Config& Config::get_singleton() noexcept {
 
       auto caster_spell_debuff_id = tbl[CasterDebuff][SpellMoveDebuffId].value<RE::FormID>();
 
-      instance.caster_debuff_spell =
-          data_handler->LookupForm<RE::SpellItem>(caster_spell_debuff_id.value(), instance.mod_name);
+      instance.caster_debuff_spell = data_handler->LookupForm<RE::SpellItem>(
+          caster_spell_debuff_id.value(), instance.mod_name);
+    }
+
+    logger::info("config init: magic weapon"sv);
+    instance.magic_weapon_enable = tbl[MagicWeapon][Enable].value_or(false);
+    if (instance.magic_weapon_enable) {
+      auto mw_form_idkw              = tbl[MagicWeapon][FormListKeywordId].value<RE::FormID>();
+      auto mw_form_idsp              = tbl[MagicWeapon][FormListSpellsId].value<RE::FormID>();
+      auto mw_form_idgb              = tbl[MagicWeapon][FormListGlobalsId].value<RE::FormID>();
+      instance.magic_weapon_keywords =
+          data_handler->LookupForm<RE::BGSListForm>(mw_form_idkw.value(), instance.mod_name);
+      instance.magic_weapon_spells =
+          data_handler->LookupForm<RE::BGSListForm>(mw_form_idsp.value(), instance.mod_name);
+      instance.magic_weapon_globals =
+          data_handler->LookupForm<RE::BGSListForm>(mw_form_idgb.value(), instance.mod_name);
     }
 
     logger::info("finish init config"sv);

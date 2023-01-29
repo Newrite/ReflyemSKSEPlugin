@@ -5,7 +5,7 @@ namespace Reflyem {
 namespace CheatDeath {
 
 auto cheat_death(RE::Actor& target, float& damage_value, const Config& config) -> void {
-  const auto effects             = Core::get_effects_by_keyword(target, *config.cheat_death_percent_keyword);
+  const auto effects = Core::get_effects_by_keyword(target, *config.cheat_death_percent_keyword);
   auto       cheat_death_percent = Core ::get_effects_magnitude_sum(effects).value_or(100.0f);
 
   if (cheat_death_percent >= 100.f) {
@@ -17,15 +17,16 @@ auto cheat_death(RE::Actor& target, float& damage_value, const Config& config) -
 
   const auto damage_mult = Core::getting_damage_mult(target);
 
-  const auto health_threshold = target.GetActorValue(RE::ActorValue::kHealth) * (cheat_death_percent / 100.f);
+  const auto health_threshold =
+      target.GetActorValue(RE::ActorValue::kHealth) * (cheat_death_percent / 100.f);
 
   if ((damage_value * damage_mult) >= health_threshold) {
     damage_value = health_threshold / damage_mult;
   }
 }
 
-auto modify_actor_value(RE::ValueModifierEffect* this_, RE::Actor* actor, float& value, const RE::ActorValue av,
-                        const Config& config) -> void {
+auto modify_actor_value(RE::ValueModifierEffect* this_, RE::Actor* actor, float& value,
+                        const RE::ActorValue av, const Config& config) -> void {
   if (Core::can_modify_actor_value(this_, actor, value, av)) {
     value = std::abs(value);
     cheat_death(*actor, value, config);
