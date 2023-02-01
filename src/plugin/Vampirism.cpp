@@ -1,8 +1,7 @@
 #include "plugin/Vampirism.hpp"
 #include "Core.hpp"
 
-namespace Reflyem {
-namespace Vampirism {
+namespace Reflyem::Vampirism {
 
 auto vampirism(RE::Actor& target, RE::Actor& aggressor, const float& damage_value,
                const RE::ActorValue av, float vampirism_percent) -> void {
@@ -31,7 +30,7 @@ auto vampirism(RE::Actor& target, RE::Actor& aggressor, const float& damage_valu
 
 auto av_vampirism(RE::Actor& target, RE::Actor& aggressor, const float& damage_value,
                   const Config& config) -> void {
-  const auto vampirism_percent = aggressor.GetActorValue(config.vampirism_av);
+  const auto vampirism_percent = aggressor.GetActorValue(config.vampirism().av());
   vampirism(target, aggressor, damage_value, RE::ActorValue::kHealth, vampirism_percent);
 }
 
@@ -48,10 +47,10 @@ auto allow_vampirism_effect(const RE::ActiveEffect& active_effect, const Config&
     return false;
   }
   const auto base_effect = active_effect.effect->baseEffect;
-  if (config.magic_vampirism_must_be_or_not_be) {
-    return base_effect->HasKeyword(config.magic_vampirism_mgef_keyword_id);
+  if (config.magic_vampirism().must_be_or_not_be()) {
+    return base_effect->HasKeyword(config.magic_vampirism().mgef_keyword());
   }
-  return !base_effect->HasKeyword(config.magic_vampirism_mgef_keyword_id);
+  return !base_effect->HasKeyword(config.magic_vampirism().mgef_keyword());
 }
 
 auto modify_actor_value(const RE::ValueModifierEffect* this_, RE::Actor* actor, const float& value,
@@ -63,22 +62,22 @@ auto modify_actor_value(const RE::ValueModifierEffect* this_, RE::Actor* actor, 
       return;
     }
 
-    if (config.magic_vampirism_enable && allow_vampirism_effect(*this_, config)) {
+    if (config.magic_vampirism().enable() && allow_vampirism_effect(*this_, config)) {
       av_vampirism(*actor, *aggressor, value, config);
     }
 
-    if (config.magic_vampirism_mgef_health_enable && allow_vampirism_effect(*this_, config)) {
-      mgef_vampirism(*actor, *aggressor, value, *config.magic_vampirism_mgef_health_keyword,
+    if (config.magic_vampirism().mgef_health_enable() && allow_vampirism_effect(*this_, config)) {
+      mgef_vampirism(*actor, *aggressor, value, *config.magic_vampirism().mgef_health_keyword(),
                      RE::ActorValue::kHealth);
     }
 
-    if (config.magic_vampirism_mgef_stamina_enable && allow_vampirism_effect(*this_, config)) {
-      mgef_vampirism(*actor, *aggressor, value, *config.magic_vampirism_mgef_stamina_keyword,
+    if (config.magic_vampirism().mgef_stamina_enable() && allow_vampirism_effect(*this_, config)) {
+      mgef_vampirism(*actor, *aggressor, value, *config.magic_vampirism().mgef_stamina_keyword(),
                      RE::ActorValue::kStamina);
     }
 
-    if (config.magic_vampirism_mgef_magicka_enable && allow_vampirism_effect(*this_, config)) {
-      mgef_vampirism(*actor, *aggressor, value, *config.magic_vampirism_mgef_magicka_keyword,
+    if (config.magic_vampirism().mgef_magicka_enable() && allow_vampirism_effect(*this_, config)) {
+      mgef_vampirism(*actor, *aggressor, value, *config.magic_vampirism().mgef_magicka_keyword(),
                      RE::ActorValue::kMagicka);
     }
   }
@@ -91,25 +90,24 @@ auto on_weapon_hit(RE::Actor* target, const RE::HitData& hit_data, const Config&
     return;
   }
 
-  if (config.vampirism_enable) {
+  if (config.vampirism().enable()) {
     av_vampirism(*target, *aggressor, hit_data.totalDamage, config);
   }
 
-  if (config.vampirism_mgef_health_enable) {
-    mgef_vampirism(*target, *aggressor, hit_data.totalDamage, *config.vampirism_mgef_health_keyword,
-                   RE::ActorValue::kHealth);
+  if (config.vampirism().mgef_health_enable()) {
+    mgef_vampirism(*target, *aggressor, hit_data.totalDamage,
+                   *config.vampirism().mgef_health_keyword(), RE::ActorValue::kHealth);
   }
 
-  if (config.vampirism_mgef_stamina_enable) {
+  if (config.vampirism().mgef_stamina_enable()) {
     mgef_vampirism(*target, *aggressor, hit_data.totalDamage,
-                   *config.vampirism_mgef_stamina_keyword, RE::ActorValue::kStamina);
+                   *config.vampirism().mgef_stamina_keyword(), RE::ActorValue::kStamina);
   }
 
-  if (config.vampirism_mgef_magicka_enable) {
+  if (config.vampirism().mgef_magicka_enable()) {
     mgef_vampirism(*target, *aggressor, hit_data.totalDamage,
-                   *config.vampirism_mgef_magicka_keyword, RE::ActorValue::kMagicka);
+                   *config.vampirism().mgef_magicka_keyword(), RE::ActorValue::kMagicka);
   }
 }
-} // namespace Vampirism
 
-} // namespace Reflyem
+} // namespace Reflyem::Vampirism

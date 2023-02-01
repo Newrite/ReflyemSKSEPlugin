@@ -1,10 +1,10 @@
 #pragma once
 
-namespace Reflyem {
-namespace Core {
+namespace Reflyem::Core {
 
 template <typename L, typename R> struct Either {
   bool is_l;
+
   union {
     L left;
     R right;
@@ -235,5 +235,4 @@ auto is_casting_actor(RE::Character& character) -> bool;
 auto do_combat_spell_apply(RE::Actor* actor, RE::SpellItem* spell, RE::TESObjectREFR* target)
     -> void;
 
-} // namespace Core
-} // namespace Reflyem
+} // namespace Reflyem::Core

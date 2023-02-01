@@ -5,7 +5,7 @@ namespace Reflyem {
 namespace MagicShield {
 
 auto magic_shield(RE::Actor& target, float& damage_value, const Config& config) -> void {
-  auto magic_shield_percent = target.GetActorValue(config.magic_shield_av);
+  auto magic_shield_percent = target.GetActorValue(config.magic_shield().av());
 
   if (magic_shield_percent <= 0.f) {
     return;
@@ -19,8 +19,9 @@ auto magic_shield(RE::Actor& target, float& damage_value, const Config& config) 
   auto absorb_damage = (damage_value * damage_mult) * (magic_shield_percent / 100.f);
   auto magicka       = target.GetActorValue(RE::ActorValue::kMagicka);
 
-  const auto effects = Core::get_effects_by_keyword(target, *config.magic_shield_cost_keyword);
-  auto       cost_per_damage = Core::get_effects_magnitude_sum(effects).value_or(1.f);
+  const auto effects =
+      Core::get_effects_by_keyword(target, *config.magic_shield().mgef_cost_keyword());
+  auto cost_per_damage = Core::get_effects_magnitude_sum(effects).value_or(1.f);
 
   auto absorb_cost = magicka - (absorb_damage * cost_per_damage);
   logger::debug(
@@ -38,22 +39,22 @@ auto magic_shield(RE::Actor& target, float& damage_value, const Config& config) 
   }
 }
 
-auto allow_magic_shield_effect(const RE::ActiveEffect& active_effect,
-                               const Config&           config) -> bool {
+auto allow_magic_shield_effect(const RE::ActiveEffect& active_effect, const Config& config)
+    -> bool {
   if (!active_effect.effect || !active_effect.effect->baseEffect) {
     return false;
   }
   const auto base_effect = active_effect.effect->baseEffect;
-  if (config.magic_shield_must_be_or_not_be) {
-    return base_effect->HasKeyword(config.magic_shield_mgef_keyword_id);
+  if (config.magic_shield().must_be_or_not_be()) {
+    return base_effect->HasKeyword(config.magic_shield().mgef_keyword());
   }
-  return !base_effect->HasKeyword(config.magic_shield_mgef_keyword_id);
+  return !base_effect->HasKeyword(config.magic_shield().mgef_keyword());
 }
 
 auto modify_actor_value(const RE::ValueModifierEffect* this_, RE::Actor* actor, float& value,
-                        const RE::ActorValue           av, const Config& config) -> void {
-  if (Core::can_modify_actor_value(this_, actor, value, av) && allow_magic_shield_effect(
-          *this_, config)) {
+                        const RE::ActorValue av, const Config& config) -> void {
+  if (Core::can_modify_actor_value(this_, actor, value, av) &&
+      allow_magic_shield_effect(*this_, config)) {
     logger::debug("magic shield value before: {}"sv, value);
     value = std::abs(value);
     magic_shield(*actor, value, config);

@@ -61,7 +61,7 @@ auto get_random_int() -> int {
 
 auto flash_hud_meter(const RE::ActorValue av) -> void {
   using Func_T = decltype(&flash_hud_meter);
-  REL::Relocation<Func_T> func{ REL::ID(51907) };
+  REL::Relocation<Func_T> func{REL::ID(51907)};
   return func(av);
 }
 
@@ -130,15 +130,15 @@ auto can_modify_actor_value(const RE::ValueModifierEffect* a_this, const RE::Act
 // auto get_first_active_effect_by_keyword(RE::BSSimpleList<RE::ActiveEffect*>* active_effects,
 //                                         RE::BGSKeyword&                      keyword)
 //     -> std::optional<RE::ActiveEffect*> {
-// 
+//
 //   if (!active_effects) {
 //     return std::optional<RE::ActiveEffect*>{std::nullopt};
 //   }
-// 
+//
 //   for (const auto active_effect : *active_effects) {
 //     return std::optional<RE::ActiveEffect*>{std::nullopt};
 //   }
-// 
+//
 //   return std::optional<RE::ActiveEffect*>{std::nullopt};
 // }
 

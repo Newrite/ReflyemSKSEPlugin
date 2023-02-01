@@ -29,7 +29,7 @@ auto try_find_animation(const std::string& key) -> AnimationEvent {
 }
 
 auto animation_handler(const RE::BSAnimationGraphEvent* event, const Config& config) -> void {
-  if (!config.resource_manager_enable) {
+  if (!config.resource_manager().enable()) {
     return;
   }
 
@@ -86,8 +86,7 @@ auto PlayerAnimationHandler::register_sink(const RE::Actor* actor) -> bool {
 auto PlayerAnimationHandler::ProcessEvent(
     const RE::BSAnimationGraphEvent*               event,
     RE::BSTEventSource<RE::BSAnimationGraphEvent>* event_source) -> RE::BSEventNotifyControl {
-  auto& config = Config::get_singleton();
-  if (config.tk_dodge_enable) {
+  if (const auto& config = Config::get_singleton(); config.tk_dodge().enable()) {
     return TkDodge::process_event_player_animation(event, event_source, config);
   }
   return RE::BSEventNotifyControl::kContinue;

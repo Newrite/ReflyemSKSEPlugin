@@ -5,8 +5,9 @@ namespace Reflyem {
 namespace CheatDeath {
 
 auto cheat_death(RE::Actor& target, float& damage_value, const Config& config) -> void {
-  const auto effects = Core::get_effects_by_keyword(target, *config.cheat_death_percent_keyword);
-  auto       cheat_death_percent = Core ::get_effects_magnitude_sum(effects).value_or(100.0f);
+  const auto effects =
+      Core::get_effects_by_keyword(target, *config.cheat_death().mgef_percent_keyword());
+  auto cheat_death_percent = Core::get_effects_magnitude_sum(effects).value_or(100.0f);
 
   if (cheat_death_percent >= 100.f) {
     return;
@@ -17,10 +18,9 @@ auto cheat_death(RE::Actor& target, float& damage_value, const Config& config) -
 
   const auto damage_mult = Core::getting_damage_mult(target);
 
-  const auto health_threshold =
-      target.GetActorValue(RE::ActorValue::kHealth) * (cheat_death_percent / 100.f);
-
-  if ((damage_value * damage_mult) >= health_threshold) {
+  if (const auto health_threshold =
+          target.GetActorValue(RE::ActorValue::kHealth) * (cheat_death_percent / 100.f);
+      (damage_value * damage_mult) >= health_threshold) {
     damage_value = health_threshold / damage_mult;
   }
 }

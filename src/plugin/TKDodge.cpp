@@ -2,8 +2,7 @@
 #include "Core.hpp"
 #include "plugin/ResourceManager.hpp"
 
-namespace Reflyem {
-namespace TkDodge {
+namespace Reflyem::TkDodge {
 
 enum class MovementDirections {
   kNone = 0,
@@ -33,15 +32,15 @@ auto get_actor_effects_mask(RE::Actor& actor, const Config& config) -> std::uniq
   MgefMask f_mask{{{0, 0, 0}}};
   logger::debug("start get actor mgef keyword"sv);
   f_mask.at(0).at(0) = 1;
-  if (Core::actor_has_active_mgef_with_keyword(actor, *config.tk_dodge_health_kw)) {
+  if (Core::actor_has_active_mgef_with_keyword(actor, *config.tk_dodge().health_kw())) {
     f_mask.at(0).at(0) = 0;
     f_mask.at(0).at(1) = 1;
   }
-  if (Core::actor_has_active_mgef_with_keyword(actor, *config.tk_dodge_magicka_kw)) {
+  if (Core::actor_has_active_mgef_with_keyword(actor, *config.tk_dodge().magicka_kw())) {
     f_mask.at(0).at(0) = 0;
     f_mask.at(0).at(2) = 1;
   }
-  if (Core::actor_has_active_mgef_with_keyword(actor, *config.tk_dodge_stamina_kw)) {
+  if (Core::actor_has_active_mgef_with_keyword(actor, *config.tk_dodge().stamina_kw())) {
     f_mask.at(0).at(0) = 1;
   }
   logger::debug("end get actor mgef keyword"sv);
@@ -49,18 +48,18 @@ auto get_actor_effects_mask(RE::Actor& actor, const Config& config) -> std::uniq
 }
 
 auto calc_dodge_cost(RE::Actor& actor, const Config& config) -> float {
-  auto cost = actor.equippedWeight * config.tk_dodge_equipped_weight_mult;
-  cost += config.tk_dodge_flat_cost;
+  auto cost = actor.equippedWeight * config.tk_dodge().equipped_weight_mult();
+  cost += config.tk_dodge().flat_cost();
   cost += Core::get_effects_magnitude_sum(
-              Core::get_effects_by_keyword(actor, *config.tk_dodge_cost_from_mgef_kw))
+              Core::get_effects_by_keyword(actor, *config.tk_dodge().cost_from_mgef_kw()))
               .value_or(0.f);
 
-  if (cost > config.tk_dodge_max_cost) {
-    cost = config.tk_dodge_max_cost;
+  if (cost > config.tk_dodge().max_cost()) {
+    cost = config.tk_dodge().max_cost();
   }
 
-  if (cost < config.tk_dodge_min_cost) {
-    cost = config.tk_dodge_min_cost;
+  if (cost < config.tk_dodge().min_cost()) {
+    cost = config.tk_dodge().min_cost();
   }
 
   return cost;
@@ -79,21 +78,21 @@ auto is_allow_pc_control_for_dodge(RE::PlayerCharacter& player) -> bool {
 
   const auto& config = Config::get_singleton();
 
-  auto is_attacking = config.tk_dodge_block_dodge_when_attack;
-  if (config.tk_dodge_block_dodge_when_attack_perk &&
-      player.HasPerk(config.tk_dodge_block_dodge_when_attack_perk)) {
+  auto is_attacking = config.tk_dodge().block_dodge_when_attack();
+  if (config.tk_dodge().block_dodge_when_attack_perk() &&
+      player.HasPerk(config.tk_dodge().block_dodge_when_attack_perk())) {
     is_attacking = !is_attacking;
   }
 
-  auto is_power_attacking = config.tk_dodge_block_dodge_when_power_attack;
-  if (config.tk_dodge_block_dodge_when_power_attack_perk &&
-      player.HasPerk(config.tk_dodge_block_dodge_when_power_attack_perk)) {
+  auto is_power_attacking = config.tk_dodge().block_dodge_when_power_attack();
+  if (config.tk_dodge().block_dodge_when_power_attack_perk() &&
+      player.HasPerk(config.tk_dodge().block_dodge_when_power_attack_perk())) {
     is_power_attacking = !is_power_attacking;
   }
 
-  auto is_casting = config.tk_dodge_block_dodge_when_casting;
-  if (config.tk_dodge_block_dodge_when_casting_perk &&
-      player.HasPerk(config.tk_dodge_block_dodge_when_casting_perk)) {
+  auto is_casting = config.tk_dodge().block_dodge_when_casting();
+  if (config.tk_dodge().block_dodge_when_casting_perk() &&
+      player.HasPerk(config.tk_dodge().block_dodge_when_casting_perk())) {
     is_casting = !is_casting;
   }
 
@@ -227,7 +226,7 @@ auto get_game_pad_direction_value() -> MovementDirections {
 
       auto& config = Config::get_singleton();
 
-      if (power > config.tk_dodge_gamepad_treshold) {
+      if (power > config.tk_dodge().gamepad_treshold()) {
         switch (static_cast<std::int32_t>(dir)) {
         case 1:
           return MovementDirections::kForward;
@@ -268,7 +267,8 @@ auto get_dodge_event() -> std::string {
     return "TKDodgeForward";
   }
   if (tdm_free_mov && tdm_free_mov->value == 0.f &&
-      RE::PlayerCharacter::GetSingleton()->IsSprinting() && !config.tk_dodge_sprint_tapping_dodge) {
+      RE::PlayerCharacter::GetSingleton()->IsSprinting() &&
+      !config.tk_dodge().sprint_tapping_dodge()) {
     logger::debug("Player is Sprinting in TDM target-lock, Disable Dodge!"sv);
     return "";
   }
@@ -409,10 +409,10 @@ auto process_event_player_animation(const RE::BSAnimationGraphEvent* event,
 
 auto is_dodge_button_active(const RE::ButtonEvent& button, const std::uint32_t key,
                             std::uint32_t const sprint_key, const Config& config) -> bool {
-  return config.tk_dodge_sprint_tapping_dodge
-             ? button.IsUp() && button.HeldDuration() <= config.tk_dodge_key_up_delay &&
+  return config.tk_dodge().sprint_tapping_dodge()
+             ? button.IsUp() && button.HeldDuration() <= config.tk_dodge().key_up_delay() &&
                    key == sprint_key
-             : button.IsPressed() && key == config.tk_dodge_key;
+             : button.IsPressed() && key == config.tk_dodge().key();
 };
 
 auto is_not_allow_control_for_dodge(RE::UI& ui, const RE::ControlMap& control_map,
@@ -489,16 +489,17 @@ auto process_event_input_handler(RE::InputEvent* const* event, RE::BSTEventSourc
           return RE::BSEventNotifyControl::kContinue;
         }
 
-        auto i_frame_duration = config.tk_dodge_iframe_duration;
-        i_frame_duration += Core::get_effects_magnitude_sum(
-                                Core::get_effects_by_keyword(
-                                    *player_character, *config.tk_dodge_iframe_duration_mgef_kw))
-                                .value_or(0.f);
+        auto i_frame_duration = config.tk_dodge().iframe_duration();
+        i_frame_duration +=
+            Core::get_effects_magnitude_sum(
+                Core::get_effects_by_keyword(*player_character,
+                                             *config.tk_dodge().iframe_duration_mgef_kw()))
+                .value_or(0.f);
         if (i_frame_duration < 0.f) {
           i_frame_duration = 0.f;
         }
 
-        player_character->SetGraphVariableInt("iStep", config.tk_dodge_step); // Set Step Dodge
+        player_character->SetGraphVariableInt("iStep", config.tk_dodge().step()); // Set Step Dodge
         player_character->SetGraphVariableFloat(
             "TKDR_IframeDuration",
             i_frame_duration);                                   // Set invulnerable frame duration
@@ -513,5 +514,4 @@ auto process_event_input_handler(RE::InputEvent* const* event, RE::BSTEventSourc
   return RE::BSEventNotifyControl::kContinue;
 }
 
-} // namespace TkDodge
-} // namespace Reflyem
+} // namespace Reflyem::TkDodge

@@ -42,9 +42,9 @@ auto handle_cast_magic_weapon_spell(RE::Actor& caster, RE::Actor& target, float 
 
   const auto& config = Config::get_singleton();
 
-  const auto spells   = config.magic_weapon_spells;
-  const auto keywords = config.magic_weapon_keywords;
-  const auto globals  = config.magic_weapon_globals;
+  const auto spells   = config.magic_weapon().spells();
+  const auto keywords = config.magic_weapon().keywords();
+  const auto globals  = config.magic_weapon().globals();
 
   const auto spells_size = spells->forms.size();
 

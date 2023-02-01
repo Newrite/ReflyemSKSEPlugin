@@ -17,8 +17,9 @@ auto InputEventHandler::get_singleton() -> InputEventHandler* {
 auto InputEventHandler::ProcessEvent(RE::InputEvent* const*               event,
                                      RE::BSTEventSource<RE::InputEvent*>* event_source)
     -> RE::BSEventNotifyControl {
-  auto& config = Config::get_singleton();
-  if (config.tk_dodge_enable) {
+  // ReSharper disable once CppTooWideScopeInitStatement
+  const auto& config = Config::get_singleton();
+  if (config.tk_dodge().enable()) {
     return TkDodge::process_event_input_handler(event, event_source, config);
   }
   return RE::BSEventNotifyControl::kContinue;

@@ -1,8 +1,7 @@
 #include "plugin/Crit.hpp"
 #include "Core.hpp"
 
-namespace Reflyem {
-namespace Crit {
+namespace Reflyem::Crit {
 
 auto crit(RE::Actor& aggressor, RE::Actor& target, float& damage,
           const RE::ActorValue crit_chance_av, const RE::ActorValue crit_damage_av,
@@ -21,19 +20,18 @@ auto crit(RE::Actor& aggressor, RE::Actor& target, float& damage,
     crit_damage = crit_damage_high;
   }
 
-  const auto random = Core::get_random_int();
-
-  if (crit_chance > random) {
-    const auto damage_mult = 1 + (crit_damage / 100.f);
+  if (const auto random = Core::get_random_int(); crit_chance > random) {
+    const auto damage_mult = 1 + static_cast<float>(crit_damage) / 100.f;
     damage *= damage_mult;
 
-    if (physical_crit && config.cast_on_crit_enable && config.cast_on_crit_formlist_needkw &&
-        config.cast_on_crit_formlist_spells) {
-      const auto length_kw = config.cast_on_crit_formlist_needkw->forms.size();
-      const auto length_sp = config.cast_on_crit_formlist_spells->forms.size();
+    if (physical_crit && config.cast_on_crit().enable() &&
+        config.cast_on_crit().formlist_needkw() && config.cast_on_crit().formlist_spells()) {
+      const auto length_kw = config.cast_on_crit().formlist_needkw()->forms.size();
+      const auto length_sp = config.cast_on_crit().formlist_spells()->forms.size();
       for (std::uint32_t index = 0u; index < length_kw && index < length_sp; index++) {
-        Core::cast_on_handle(config.cast_on_crit_formlist_needkw->forms[index],
-                             config.cast_on_crit_formlist_spells->forms[index], target, aggressor);
+        Core::cast_on_handle(config.cast_on_crit().formlist_needkw()->forms[index],
+                             config.cast_on_crit().formlist_spells()->forms[index], target,
+                             aggressor);
       }
     }
   }
@@ -46,8 +44,8 @@ auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& confi
     return;
   }
 
-  crit(*aggressor, *target, hit_data.totalDamage, config.weapon_crit_chance_av,
-       config.weapon_crit_damage_av, config.weapon_crit_high, true, config);
+  crit(*aggressor, *target, hit_data.totalDamage, config.weapon_crit().chance_av(),
+       config.weapon_crit().damage_av(), config.weapon_crit().high(), true, config);
 }
 
 auto modify_actor_value(const RE::ValueModifierEffect* this_, RE::Actor* actor, float& value,
@@ -55,11 +53,10 @@ auto modify_actor_value(const RE::ValueModifierEffect* this_, RE::Actor* actor, 
   if (Core::can_modify_actor_value(this_, actor, value, av)) {
     const auto caster = this_->GetCasterActor().get();
     value             = std::abs(value);
-    crit(*caster, *actor, value, config.magic_crit_chance_av, config.magic_crit_damage_av,
-         config.magic_crit_high, false, config);
+    crit(*caster, *actor, value, config.magick_crit().chance_av(), config.magick_crit().damage_av(),
+         config.magick_crit().high(), false, config);
     value = -value;
   }
 }
 
-} // namespace Crit
-} // namespace Reflyem
+} // namespace Reflyem::Crit

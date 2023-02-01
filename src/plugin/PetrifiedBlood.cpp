@@ -1,18 +1,17 @@
 #include "plugin/PetrifiedBlood.hpp"
 #include "Core.hpp"
 
-namespace Reflyem {
-namespace PetrifiedBlood {
+namespace Reflyem::PetrifiedBlood {
 
 auto petrified_blood_cast(RE::Actor& target, const float blood_damage_tick, const Config& config)
-  -> void {
-  config.petrified_blood_spell->effects[0]->effectItem.magnitude = blood_damage_tick;
+    -> void {
+  config.petrified_blood().blood_spell()->effects[0]->effectItem.magnitude = blood_damage_tick;
 
-  Core::cast(*config.petrified_blood_spell, target, target);
+  Core::cast(*config.petrified_blood().blood_spell(), target, target);
 }
 
 auto petrified_blood(RE::Actor& target, float& damage_value, const Config& config) -> float {
-  auto petrified_blood_percent = target.GetActorValue(config.petrified_blood_av);
+  auto petrified_blood_percent = target.GetActorValue(config.petrified_blood().av());
   if (petrified_blood_percent <= 0.f) {
     return 0.f;
   }
@@ -21,7 +20,8 @@ auto petrified_blood(RE::Actor& target, float& damage_value, const Config& confi
     petrified_blood_percent = 100.f;
   }
 
-  const auto blood_duration = config.petrified_blood_spell->effects[0]->effectItem.duration;
+  const auto blood_duration =
+      config.petrified_blood().blood_spell()->effects[0]->effectItem.duration;
 
   const auto blood_damage      = damage_value * (petrified_blood_percent / 100.f);
   const auto blood_damage_tick = blood_damage / static_cast<float>(blood_duration);
@@ -32,8 +32,8 @@ auto petrified_blood(RE::Actor& target, float& damage_value, const Config& confi
 }
 
 auto character_update(RE::Character& character, float, const Config& config) -> void {
-  const auto effects_damage =
-      Core::get_effects_by_keyword(character, *config.petrified_blood_acc_mgef_kw);
+  const auto effects_damage = Core::get_effects_by_keyword(
+      character, *config.petrified_blood().mgef_accumulate_keyword_damage());
 
   if (effects_damage.empty()) {
     return;
@@ -44,29 +44,29 @@ auto character_update(RE::Character& character, float, const Config& config) -> 
   petrified_blood_cast(character, blood_damage_tick, config);
 }
 
-auto allow_petrified_blood_effect(const RE::ActiveEffect& active_effect,
-                                  const Config&           config) -> bool {
+auto allow_petrified_blood_effect(const RE::ActiveEffect& active_effect, const Config& config)
+    -> bool {
   if (!active_effect.effect || !active_effect.effect->baseEffect) {
     return false;
   }
   const auto base_effect = active_effect.effect->baseEffect;
-  if (config.petrified_blood_must_be_or_not_be) {
-    return base_effect->HasKeyword(config.petrified_blood_mgef_keyword_id);
+  if (config.petrified_blood().must_be_or_not_be()) {
+    return base_effect->HasKeyword(config.petrified_blood().mgef_keyword());
   }
-  return !base_effect->HasKeyword(config.petrified_blood_mgef_keyword_id);
+  return !base_effect->HasKeyword(config.petrified_blood().mgef_keyword());
 }
 
 auto modify_actor_value(const RE::ValueModifierEffect* this_, RE::Actor* actor, float& value,
-                        const RE::ActorValue           av, const Config& config) -> void {
-  if (Core::can_modify_actor_value(this_, actor, value, av) && allow_petrified_blood_effect(
-          *this_, config)) {
-    const auto effects_damage =
-        Core::get_effects_by_keyword(*actor, *config.petrified_blood_acc_mgef_kw);
+                        const RE::ActorValue av, const Config& config) -> void {
+  if (Core::can_modify_actor_value(this_, actor, value, av) &&
+      allow_petrified_blood_effect(*this_, config)) {
+    const auto effects_damage = Core::get_effects_by_keyword(
+        *actor, *config.petrified_blood().mgef_accumulate_keyword_damage());
 
-    value                        = std::abs(value);
-    const auto blood_damage_tick = petrified_blood(*actor, value, config);
+    value = std::abs(value);
 
-    if (blood_damage_tick > 0.f) {
+    if (const auto blood_damage_tick = petrified_blood(*actor, value, config);
+        blood_damage_tick > 0.f) {
       effects_damage[0]->magnitude += blood_damage_tick;
     }
 
@@ -75,11 +75,10 @@ auto modify_actor_value(const RE::ValueModifierEffect* this_, RE::Actor* actor, 
 }
 
 auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& config) -> void {
-  const auto blood_damage_tick = petrified_blood(*target, hit_data.totalDamage, config);
 
-  if (blood_damage_tick > 0.f) {
+  if (const auto blood_damage_tick = petrified_blood(*target, hit_data.totalDamage, config);
+      blood_damage_tick > 0.f) {
     petrified_blood_cast(*target, blood_damage_tick, config);
   }
 }
-} // namespace PetrifiedBlood
-} // namespace Reflyem
+} // namespace Reflyem::PetrifiedBlood
