@@ -1,5 +1,4 @@
-// TODO: 1. Реген ресурс манагера когда блидаут не в бою, включить его для хп
-// TODO: 2. Запилить новые резисты
+// TODO: 1. Запилить новые резисты
 
 #include "Hooks.hpp"
 #include "Core.hpp"
@@ -8,6 +7,7 @@
 #include "plugin/CastOnBlock.hpp"
 #include "plugin/CheatDeath.hpp"
 #include "plugin/Crit.hpp"
+#include "plugin/MagicResistRescaled.hpp"
 #include "plugin/MagicShield.hpp"
 #include "plugin/MagicWepon.hpp"
 #include "plugin/PetrifiedBlood.hpp"
@@ -355,15 +355,54 @@ auto OnWeaponHit::weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void {
 
   Reflyem::Vampirism::on_weapon_hit(target, hit_data, config);
 
-  weapon_hit_(target, hit_data);
-  return;
+  return weapon_hit_(target, hit_data);
 }
+
+auto OnCheckResistance::check_resistance(RE::MagicTarget*    this_, RE::MagicItem* magic_item,
+                                         RE::Effect*         effect,
+                                         RE::TESBoundObject* bound_object) -> float {
+  logger::info("Yeay it's check resistance"sv);
+  if (!this_ || !magic_item || !effect) {
+    logger::info("Null object resist"sv);
+    return check_resistance_(this_, magic_item, effect, bound_object);
+  }
+  logger::info("Not null resist check"sv);
+  return check_resistance_(this_, magic_item, effect, bound_object);
+}
+
+auto OnCheckResistanceNpc::check_resistance(RE::MagicTarget*    this_, RE::MagicItem* magic_item,
+                                            RE::Effect*         effect,
+                                            RE::TESBoundObject* bound_object) -> float {
+  if (!this_ || !magic_item || !effect) {
+    logger::debug("Original resistance call");
+    return check_resistance_(this_, magic_item, effect, bound_object);
+  }
+  const auto& config = Reflyem::Config::get_singleton();
+  return Reflyem::MagicResistRescaled::check_resistance(*this_, *magic_item, *effect, bound_object,
+                                                        config);
+}
+
+auto OnCheckResistancePc::check_resistance(RE::MagicTarget*    this_, RE::MagicItem* magic_item,
+                                           RE::Effect*         effect,
+                                           RE::TESBoundObject* bound_object) -> float {
+  if (!this_ || !magic_item || !effect) {
+    logger::debug("Original resistance call");
+    return check_resistance_(this_, magic_item, effect, bound_object);
+  }
+  const auto& config = Reflyem::Config::get_singleton();
+  return Reflyem::MagicResistRescaled::check_resistance(*this_, *magic_item, *effect, bound_object,
+                                                        config);
+}
+
 
 auto install_hooks() -> void {
   logger::info("start install hooks"sv);
   auto& trampoline = SKSE::GetTrampoline();
   trampoline.create(1024);
   OnWeaponHit::install_hook(trampoline);
+  // OnCheckResistance::install_hook(trampoline);
+  OnCheckResistanceNpc::install_hook();
+  OnCheckResistancePc::install_hook();
   // OnMainUpdate::install_hook(trampoline);
   // OnAdjustActiveEffect::install_hook(trampoline);
   OnAnimationEventNpc::install_hook();
