@@ -25,7 +25,7 @@ auto cheat_death(RE::Actor& target, float& damage_value, const Config& config) -
   }
 }
 
-auto modify_actor_value(RE::ValueModifierEffect* this_, RE::Actor* actor, float& value,
+auto modify_actor_value(const RE::ValueModifierEffect* this_, RE::Actor* actor, float& value,
                         const RE::ActorValue av, const Config& config) -> void {
   if (Core::can_modify_actor_value(this_, actor, value, av)) {
     value = std::abs(value);

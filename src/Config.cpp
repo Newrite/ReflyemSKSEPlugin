@@ -3,82 +3,82 @@
 #include <latch>
 
 namespace Reflyem {
-constexpr inline std::string_view PathToConfig               = "Data\\SKSE\\Plugins\\Reflyem.toml";
-constexpr inline std::string_view Reflyem                    = "Reflyem";
-constexpr inline std::string_view ModName                    = "ModName";
-constexpr inline std::string_view Enable                     = "Enable";
-constexpr inline std::string_view ActorValueIndex            = "ActorValueIndex";
-constexpr inline std::string_view MagicShield                = "MagicShield";
-constexpr inline std::string_view Vampirism                  = "Vampirism";
-constexpr inline std::string_view MagicVampirism             = "MagicVampirism";
-constexpr inline std::string_view PetrifiedBlood             = "PetrifiedBlood";
-constexpr inline std::string_view SpellId                    = "SpellId";
-constexpr inline std::string_view CheatDeath                 = "CheatDeath";
+constexpr inline std::string_view PathToConfig = "Data\\SKSE\\Plugins\\Reflyem.toml";
+constexpr inline std::string_view Reflyem = "Reflyem";
+constexpr inline std::string_view ModName = "ModName";
+constexpr inline std::string_view Enable = "Enable";
+constexpr inline std::string_view ActorValueIndex = "ActorValueIndex";
+constexpr inline std::string_view MagicShield = "MagicShield";
+constexpr inline std::string_view Vampirism = "Vampirism";
+constexpr inline std::string_view MagicVampirism = "MagicVampirism";
+constexpr inline std::string_view PetrifiedBlood = "PetrifiedBlood";
+constexpr inline std::string_view SpellId = "SpellId";
+constexpr inline std::string_view CheatDeath = "CheatDeath";
 constexpr inline std::string_view CheatDeathPercentKeywordId = "CheatDeathPercentKeywordId";
-constexpr inline std::string_view SpeedCasting               = "SpeedCasting";
-constexpr inline std::string_view GlobalId                   = "GlobalId";
-constexpr inline std::string_view Low                        = "Low";
-constexpr inline std::string_view High                       = "High";
-constexpr inline std::string_view CostEffectKeywordId        = "CostEffectKeywordId";
-constexpr inline std::string_view EnableMGEFHealth           = "EnableMGEFHealth";
-constexpr inline std::string_view MGEFHealthKeywordId        = "MGEFHealthKeywordId";
-constexpr inline std::string_view EnableMGEFStamina          = "EnableMGEFStamina";
-constexpr inline std::string_view MGEFStaminaKeywordId       = "MGEFStaminaKeywordId";
-constexpr inline std::string_view EnableMGEFMagicka          = "EnableMGEFMagicka";
-constexpr inline std::string_view MGEFMagickaKeywordId       = "MGEFMagickaKeywordId";
-constexpr inline std::string_view WeaponCrit                 = "WeaponCrit";
-constexpr inline std::string_view ActorValueIndexCritChance  = "ActorValueIndexCritChance";
-constexpr inline std::string_view ActorValueIndexCritDamage  = "ActorValueIndexCritDamage";
-constexpr inline std::string_view CastOnCrit                 = "CastOnCrit";
-constexpr inline std::string_view FormListSpellsId           = "FormListSpellsId";
-constexpr inline std::string_view FormListKeywordId          = "FormListKeywordId";
-constexpr inline std::string_view CastOnHit                  = "CastOnHit";
-constexpr inline std::string_view ResourceManager            = "ResourceManager";
-constexpr inline std::string_view EnableInfamy               = "EnableInfamy";
-constexpr inline std::string_view EnableRegeneration         = "EnableRegeneration";
-constexpr inline std::string_view EnableWeaponSpend          = "EnableWeaponSpend";
-constexpr inline std::string_view EnableBashSpend            = "EnableBashSpend";
-constexpr inline std::string_view EnableBlock                = "EnableBlock";
-constexpr inline std::string_view WeightMult                 = "WeightMult";
-constexpr inline std::string_view GlobalMult                 = "GlobalMult";
-constexpr inline std::string_view DamageMult                 = "DamageMult";
-constexpr inline std::string_view ArmorMult                  = "ArmorMult";
-constexpr inline std::string_view JumpCost                   = "JumpCost";
-constexpr inline std::string_view PowerAttackMult            = "PowerAttackMult";
-constexpr inline std::string_view ActorValueAttackCostIndex  = "ActorValueAttackCostIndex";
-constexpr inline std::string_view AttackCostHigh             = "AttackCostHigh";
-constexpr inline std::string_view AttackCostLow              = "AttackCostLow";
+constexpr inline std::string_view SpeedCasting = "SpeedCasting";
+constexpr inline std::string_view GlobalId = "GlobalId";
+constexpr inline std::string_view Low = "Low";
+constexpr inline std::string_view High = "High";
+constexpr inline std::string_view CostEffectKeywordId = "CostEffectKeywordId";
+constexpr inline std::string_view EnableMGEFHealth = "EnableMGEFHealth";
+constexpr inline std::string_view MGEFHealthKeywordId = "MGEFHealthKeywordId";
+constexpr inline std::string_view EnableMGEFStamina = "EnableMGEFStamina";
+constexpr inline std::string_view MGEFStaminaKeywordId = "MGEFStaminaKeywordId";
+constexpr inline std::string_view EnableMGEFMagicka = "EnableMGEFMagicka";
+constexpr inline std::string_view MGEFMagickaKeywordId = "MGEFMagickaKeywordId";
+constexpr inline std::string_view WeaponCrit = "WeaponCrit";
+constexpr inline std::string_view ActorValueIndexCritChance = "ActorValueIndexCritChance";
+constexpr inline std::string_view ActorValueIndexCritDamage = "ActorValueIndexCritDamage";
+constexpr inline std::string_view CastOnCrit = "CastOnCrit";
+constexpr inline std::string_view FormListSpellsId = "FormListSpellsId";
+constexpr inline std::string_view FormListKeywordId = "FormListKeywordId";
+constexpr inline std::string_view CastOnHit = "CastOnHit";
+constexpr inline std::string_view ResourceManager = "ResourceManager";
+constexpr inline std::string_view EnableInfamy = "EnableInfamy";
+constexpr inline std::string_view EnableRegeneration = "EnableRegeneration";
+constexpr inline std::string_view EnableWeaponSpend = "EnableWeaponSpend";
+constexpr inline std::string_view EnableBashSpend = "EnableBashSpend";
+constexpr inline std::string_view EnableBlock = "EnableBlock";
+constexpr inline std::string_view WeightMult = "WeightMult";
+constexpr inline std::string_view GlobalMult = "GlobalMult";
+constexpr inline std::string_view DamageMult = "DamageMult";
+constexpr inline std::string_view ArmorMult = "ArmorMult";
+constexpr inline std::string_view JumpCost = "JumpCost";
+constexpr inline std::string_view PowerAttackMult = "PowerAttackMult";
+constexpr inline std::string_view ActorValueAttackCostIndex = "ActorValueAttackCostIndex";
+constexpr inline std::string_view AttackCostHigh = "AttackCostHigh";
+constexpr inline std::string_view AttackCostLow = "AttackCostLow";
 constexpr inline std::string_view ActorValuePowerAttackCostIndex = "ActorValuePowerAttackCostIndex";
-constexpr inline std::string_view PowerAttackCostHigh            = "PowerAttackCostHigh";
-constexpr inline std::string_view PowerAttackCostLow             = "PowerAttackCostLow";
-constexpr inline std::string_view UnarmedWeaponId                = "UnarmedWeaponId";
-constexpr inline std::string_view KeywordHealthId                = "KeywordHealthId";
-constexpr inline std::string_view KeywordMagickaId               = "KeywordMagickaId";
-constexpr inline std::string_view KeywordStaminaId               = "KeywordStaminaId";
-constexpr inline std::string_view ConvertionStaminaToHealthId    = "ConvertionStaminaToHealthId";
-constexpr inline std::string_view ConvertionMagickaToHealthId    = "ConvertionMagickaToHealthId";
-constexpr inline std::string_view ConvertionStaminaToMagickaId   = "ConvertionStaminaToMagickaId";
-constexpr inline std::string_view ConvertionMagickaToStaminaId   = "ConvertionMagickaToStaminaId";
-constexpr inline std::string_view ConvertionHealthToStaminaId    = "ConvertionHealthToStaminaId";
-constexpr inline std::string_view ConvertionHealthToMagickaId    = "ConvertionHealthToMagickaId";
-constexpr inline std::string_view Physical                       = "Physical";
-constexpr inline std::string_view Magick                         = "Magick";
-constexpr inline std::string_view TKDodge                        = "TKDodge";
-constexpr inline std::string_view DodgeKey                       = "DodgeKey";
-constexpr inline std::string_view EnableTappingDodge             = "EnableTappingDodge";
-constexpr inline std::string_view StepDodge                      = "StepDodge";
-constexpr inline std::string_view iFrameDuration                 = "iFrameDuration";
-constexpr inline std::string_view iFrameDurationMGEFKeywordId    = "iFrameDurationMGEFKeywordId";
-constexpr inline std::string_view KeyUpDelay                     = "KeyUpDelay";
-constexpr inline std::string_view MaxCost                        = "MaxCost";
-constexpr inline std::string_view MinCost                        = "MinCost";
-constexpr inline std::string_view AccumulateEffectKeywordId      = "AccumulateEffectKeywordId";
-constexpr inline std::string_view Timer100KeywordId              = "Timer100KeywordId";
-constexpr inline std::string_view FlatCost                       = "FlatCost";
-constexpr inline std::string_view FlatCostMGEFKeywordId          = "FlatCostMGEFKeywordId";
-constexpr inline std::string_view BlockDodgeWhenAttack           = "BlockDodgeWhenAttack";
-constexpr inline std::string_view BlockDodgeWhenAttackPerkId     = "BlockDodgeWhenAttackPerkId";
-constexpr inline std::string_view BlockDodgeWhenPowerAttack      = "BlockDodgeWhenPowerAttack";
+constexpr inline std::string_view PowerAttackCostHigh = "PowerAttackCostHigh";
+constexpr inline std::string_view PowerAttackCostLow = "PowerAttackCostLow";
+constexpr inline std::string_view UnarmedWeaponId = "UnarmedWeaponId";
+constexpr inline std::string_view KeywordHealthId = "KeywordHealthId";
+constexpr inline std::string_view KeywordMagickaId = "KeywordMagickaId";
+constexpr inline std::string_view KeywordStaminaId = "KeywordStaminaId";
+constexpr inline std::string_view ConvertionStaminaToHealthId = "ConvertionStaminaToHealthId";
+constexpr inline std::string_view ConvertionMagickaToHealthId = "ConvertionMagickaToHealthId";
+constexpr inline std::string_view ConvertionStaminaToMagickaId = "ConvertionStaminaToMagickaId";
+constexpr inline std::string_view ConvertionMagickaToStaminaId = "ConvertionMagickaToStaminaId";
+constexpr inline std::string_view ConvertionHealthToStaminaId = "ConvertionHealthToStaminaId";
+constexpr inline std::string_view ConvertionHealthToMagickaId = "ConvertionHealthToMagickaId";
+constexpr inline std::string_view Physical = "Physical";
+constexpr inline std::string_view Magick = "Magick";
+constexpr inline std::string_view TKDodge = "TKDodge";
+constexpr inline std::string_view DodgeKey = "DodgeKey";
+constexpr inline std::string_view EnableTappingDodge = "EnableTappingDodge";
+constexpr inline std::string_view StepDodge = "StepDodge";
+constexpr inline std::string_view iFrameDuration = "iFrameDuration";
+constexpr inline std::string_view iFrameDurationMGEFKeywordId = "iFrameDurationMGEFKeywordId";
+constexpr inline std::string_view KeyUpDelay = "KeyUpDelay";
+constexpr inline std::string_view MaxCost = "MaxCost";
+constexpr inline std::string_view MinCost = "MinCost";
+constexpr inline std::string_view AccumulateEffectKeywordId = "AccumulateEffectKeywordId";
+constexpr inline std::string_view Timer100KeywordId = "Timer100KeywordId";
+constexpr inline std::string_view FlatCost = "FlatCost";
+constexpr inline std::string_view FlatCostMGEFKeywordId = "FlatCostMGEFKeywordId";
+constexpr inline std::string_view BlockDodgeWhenAttack = "BlockDodgeWhenAttack";
+constexpr inline std::string_view BlockDodgeWhenAttackPerkId = "BlockDodgeWhenAttackPerkId";
+constexpr inline std::string_view BlockDodgeWhenPowerAttack = "BlockDodgeWhenPowerAttack";
 constexpr inline std::string_view BlockDodgeWhenPowerAttackPerkId =
     "BlockDodgeWhenPowerAttackPerkId";
 constexpr inline std::string_view BlockDodgeWhenCasting       = "BlockDodgeWhenCasting";
@@ -98,7 +98,7 @@ constexpr inline std::string_view MagickCrit                  = "MagickCrit";
 constexpr inline std::string_view CastOnBlock                 = "CastOnBlock";
 constexpr inline std::string_view RegenDelay                  = "RegenDelay";
 
-Config::MagicShieldConfig::MagicShieldConfig(toml::table& tbl, RE::TESDataHandler& data_handler,
+Config::MagicShieldConfig::MagicShieldConfig(toml::table&  tbl, RE::TESDataHandler& data_handler,
                                              const Config& config) {
 
   logger::info("config init: magic shield..."sv);
@@ -132,7 +132,7 @@ Config::PetrifiedBloodConfig::PetrifiedBloodConfig(toml::table&        tbl,
     av_ = static_cast<RE::ActorValue>(tbl[PetrifiedBlood][Enable].value_or(120));
 
     const auto blood_spell_form_id = tbl[PetrifiedBlood][SpellId].value<RE::FormID>();
-    blood_spell_ =
+    blood_spell_                   =
         data_handler.LookupForm<RE::SpellItem>(blood_spell_form_id.value(), config.mod_name());
 
     const auto effect_accumulate_keyword_form_id =
@@ -153,7 +153,7 @@ Config::PetrifiedBloodConfig::PetrifiedBloodConfig(toml::table&        tbl,
   }
 }
 
-Config::CheatDeathConfig::CheatDeathConfig(toml::table& tbl, RE::TESDataHandler& data_handler,
+Config::CheatDeathConfig::CheatDeathConfig(toml::table&  tbl, RE::TESDataHandler& data_handler,
                                            const Config& config) {
   logger::info("config init: cheat death"sv);
   enable_ = tbl[CheatDeath][Enable].value_or(false);
@@ -168,7 +168,7 @@ Config::CheatDeathConfig::CheatDeathConfig(toml::table& tbl, RE::TESDataHandler&
   }
 }
 
-Config::VampirismConfig::VampirismConfig(toml::table& tbl, RE::TESDataHandler& data_handler,
+Config::VampirismConfig::VampirismConfig(toml::table&  tbl, RE::TESDataHandler& data_handler,
                                          const Config& config) {
   logger::info("config init: vampirism..."sv);
   enable_ = tbl[Vampirism][Enable].value_or(false);
@@ -252,7 +252,7 @@ Config::MagicVampirismConfig::MagicVampirismConfig(toml::table&        tbl,
   }
 }
 
-Config::SpeedCastingConfig::SpeedCastingConfig(toml::table& tbl, RE::TESDataHandler& data_handler,
+Config::SpeedCastingConfig::SpeedCastingConfig(toml::table&  tbl, RE::TESDataHandler& data_handler,
                                                const Config& config) {
   logger::info("config init: speed casting"sv);
   enable_ = tbl[SpeedCasting][Enable].value_or(false);
@@ -279,7 +279,7 @@ Config::WeaponCritConfig::WeaponCritConfig(toml::table& tbl, RE::TESDataHandler&
   }
 }
 
-Config::MagickCritConfig::MagickCritConfig(toml::table& tbl, RE::TESDataHandler& data_handler,
+Config::MagickCritConfig::MagickCritConfig(toml::table&  tbl, RE::TESDataHandler& data_handler,
                                            const Config& config) {
   {
     logger::info("config init: magick crit"sv);
@@ -304,7 +304,7 @@ Config::MagickCritConfig::MagickCritConfig(toml::table& tbl, RE::TESDataHandler&
   }
 }
 
-Config::CastOnCritConfig::CastOnCritConfig(toml::table& tbl, RE::TESDataHandler& data_handler,
+Config::CastOnCritConfig::CastOnCritConfig(toml::table&  tbl, RE::TESDataHandler& data_handler,
                                            const Config& config) {
   logger::info("config init: cast on crit"sv);
   enable_ = tbl[CastOnCrit][Enable].value_or(false);
@@ -316,35 +316,35 @@ Config::CastOnCritConfig::CastOnCritConfig(toml::table& tbl, RE::TESDataHandler&
 
     const auto form_keywords_form_id = tbl[CastOnCrit][FormListKeywordId].value<RE::FormID>();
     const auto form_spells_form_id   = tbl[CastOnCrit][FormListSpellsId].value<RE::FormID>();
-    formlist_needkw_ =
+    formlist_needkw_                 =
         data_handler.LookupForm<RE::BGSListForm>(form_keywords_form_id.value(), config.mod_name());
     formlist_spells_ =
         data_handler.LookupForm<RE::BGSListForm>(form_spells_form_id.value(), config.mod_name());
   }
 }
 
-Config::CastOnHitConfig::CastOnHitConfig(toml::table& tbl, RE::TESDataHandler& data_handler,
+Config::CastOnHitConfig::CastOnHitConfig(toml::table&  tbl, RE::TESDataHandler& data_handler,
                                          const Config& config) {
   logger::info("config init: cast on hit"sv);
   enable_ = tbl[CastOnHit][Enable].value_or(false);
   if (enable_) {
     const auto form_keywords_form_id = tbl[CastOnHit][FormListKeywordId].value<RE::FormID>();
     const auto form_spells_form_id   = tbl[CastOnHit][FormListSpellsId].value<RE::FormID>();
-    formlist_needkw_ =
+    formlist_needkw_                 =
         data_handler.LookupForm<RE::BGSListForm>(form_keywords_form_id.value(), config.mod_name());
     formlist_spells_ =
         data_handler.LookupForm<RE::BGSListForm>(form_spells_form_id.value(), config.mod_name());
   }
 }
 
-Config::CastOnBlockConfig::CastOnBlockConfig(toml::table& tbl, RE::TESDataHandler& data_handler,
+Config::CastOnBlockConfig::CastOnBlockConfig(toml::table&  tbl, RE::TESDataHandler& data_handler,
                                              const Config& config) {
   logger::info("config init: cast on hit"sv);
   enable_ = tbl[CastOnBlock][Enable].value_or(false);
   if (enable_) {
     const auto form_keywords_form_id = tbl[CastOnBlock][FormListKeywordId].value<RE::FormID>();
     const auto form_spells_form_id   = tbl[CastOnBlock][FormListSpellsId].value<RE::FormID>();
-    formlist_needkw_ =
+    formlist_needkw_                 =
         data_handler.LookupForm<RE::BGSListForm>(form_keywords_form_id.value(), config.mod_name());
     formlist_spells_ =
         data_handler.LookupForm<RE::BGSListForm>(form_spells_form_id.value(), config.mod_name());
@@ -380,7 +380,7 @@ Config::ResourceManagerConfig::ResourceManagerConfig(toml::table&        tbl,
     attack_cost_av_ =
         static_cast<RE::ActorValue>(tbl[ResourceManager][ActorValueAttackCostIndex].value_or(120));
     power_attack_cost_av_ = static_cast<RE::ActorValue>(
-        tbl[ResourceManager][ActorValuePowerAttackCostIndex].value_or(120));
+      tbl[ResourceManager][ActorValuePowerAttackCostIndex].value_or(120));
     attack_cost_high_       = tbl[ResourceManager][AttackCostHigh].value_or(100);
     attack_cost_low_        = tbl[ResourceManager][AttackCostLow].value_or(-100);
     power_attack_cost_high_ = tbl[ResourceManager][PowerAttackCostHigh].value_or(100);
@@ -436,7 +436,7 @@ Config::ResourceManagerConfig::ResourceManagerConfig(toml::table&        tbl,
   }
 }
 
-Config::TkDodgeConfig::TkDodgeConfig(toml::table& tbl, RE::TESDataHandler& data_handler,
+Config::TkDodgeConfig::TkDodgeConfig(toml::table&  tbl, RE::TESDataHandler& data_handler,
                                      const Config& config) {
   logger::info("config init: tk dodge"sv);
   enable_ = tbl[TKDodge][Enable].value_or(false);
@@ -470,7 +470,7 @@ Config::TkDodgeConfig::TkDodgeConfig(toml::table& tbl, RE::TESDataHandler& data_
     const auto effect_keyword_flat_cost_form_id =
         tbl[TKDodge][FlatCostMGEFKeywordId].value<RE::FormID>();
 
-    health_kw_  = data_handler.LookupForm<RE::BGSKeyword>(health_spend_keyword_form_id.value(),
+    health_kw_ = data_handler.LookupForm<RE::BGSKeyword>(health_spend_keyword_form_id.value(),
                                                          config.mod_name());
     stamina_kw_ = data_handler.LookupForm<RE::BGSKeyword>(stamina_spend_keyword_form_id.value(),
                                                           config.mod_name());
@@ -507,7 +507,7 @@ Config::CasterAdditionsConfig::CasterAdditionsConfig(toml::table&        tbl,
   }
 }
 
-Config::MagicWeaponConfig::MagicWeaponConfig(toml::table& tbl, RE::TESDataHandler& data_handler,
+Config::MagicWeaponConfig::MagicWeaponConfig(toml::table&  tbl, RE::TESDataHandler& data_handler,
                                              const Config& config) {
   logger::info("config init: magic weapon"sv);
   enable_ = tbl[MagicWeapon][Enable].value_or(false);
@@ -519,46 +519,41 @@ Config::MagicWeaponConfig::MagicWeaponConfig(toml::table& tbl, RE::TESDataHandle
 
     keywords_ = data_handler.LookupForm<RE::BGSListForm>(formlist_keywords_form_id.value(),
                                                          config.mod_name());
-    spells_   = data_handler.LookupForm<RE::BGSListForm>(formlist_spells_form_id.value(),
+    spells_ = data_handler.LookupForm<RE::BGSListForm>(formlist_spells_form_id.value(),
                                                        config.mod_name());
-    globals_  = data_handler.LookupForm<RE::BGSListForm>(formlist_globals_form_id.value(),
+    globals_ = data_handler.LookupForm<RE::BGSListForm>(formlist_globals_form_id.value(),
                                                         config.mod_name());
   }
 }
 
+Config::Config() {
+  logger::info("start init config toml"sv);
+  auto       tbl          = toml::parse_file(PathToConfig);
+  const auto data_handler = RE::TESDataHandler::GetSingleton();
+
+  mod_name_         = tbl[Reflyem][ModName].value_or("Skyrim.esm"sv);
+  magic_shield_     = MagicShieldConfig(tbl, *data_handler, *this);
+  petrified_blood_  = PetrifiedBloodConfig(tbl, *data_handler, *this);
+  cheat_death_      = CheatDeathConfig(tbl, *data_handler, *this);
+  vampirism_        = VampirismConfig(tbl, *data_handler, *this);
+  magic_vampirism_  = MagicVampirismConfig(tbl, *data_handler, *this);
+  speed_casting_    = SpeedCastingConfig(tbl, *data_handler, *this);
+  weapon_crit_      = WeaponCritConfig(tbl, *data_handler, *this);
+  magick_crit_      = MagickCritConfig(tbl, *data_handler, *this);
+  cast_on_crit_     = CastOnCritConfig(tbl, *data_handler, *this);
+  cast_on_hit_      = CastOnHitConfig(tbl, *data_handler, *this);
+  cast_on_block_    = CastOnBlockConfig(tbl, *data_handler, *this);
+  resource_manager_ = ResourceManagerConfig(tbl, *data_handler, *this);
+  tk_dodge_         = TkDodgeConfig(tbl, *data_handler, *this);
+  caster_additions_ = CasterAdditionsConfig(tbl, *data_handler, *this);
+  magic_weapon_     = MagicWeaponConfig(tbl, *data_handler, *this);
+
+  logger::info("finish init config"sv);
+}
+
+
 auto Config::get_singleton() noexcept -> const Config& {
   static Config instance;
-
-  static std::atomic_bool initialized;
-  static std::latch       latch(1);
-  if (!initialized.exchange(true)) {
-    logger::info("start init config toml"sv);
-    auto       tbl          = toml::parse_file(PathToConfig);
-    const auto data_handler = RE::TESDataHandler::GetSingleton();
-
-    instance.mod_name_ = tbl[Reflyem][ModName].value_or("Skyrim.esm"sv);
-
-    instance.magic_shield_     = MagicShieldConfig(tbl, *data_handler, instance);
-    instance.petrified_blood_  = PetrifiedBloodConfig(tbl, *data_handler, instance);
-    instance.cheat_death_      = CheatDeathConfig(tbl, *data_handler, instance);
-    instance.vampirism_        = VampirismConfig(tbl, *data_handler, instance);
-    instance.magic_vampirism_  = MagicVampirismConfig(tbl, *data_handler, instance);
-    instance.speed_casting_    = SpeedCastingConfig(tbl, *data_handler, instance);
-    instance.weapon_crit_      = WeaponCritConfig(tbl, *data_handler, instance);
-    instance.magick_crit_      = MagickCritConfig(tbl, *data_handler, instance);
-    instance.cast_on_crit_     = CastOnCritConfig(tbl, *data_handler, instance);
-    instance.cast_on_hit_      = CastOnHitConfig(tbl, *data_handler, instance);
-    instance.cast_on_block_    = CastOnBlockConfig(tbl, *data_handler, instance);
-    instance.resource_manager_ = ResourceManagerConfig(tbl, *data_handler, instance);
-    instance.tk_dodge_         = TkDodgeConfig(tbl, *data_handler, instance);
-    instance.caster_additions_ = CasterAdditionsConfig(tbl, *data_handler, instance);
-    instance.magic_weapon_     = MagicWeaponConfig(tbl, *data_handler, instance);
-
-    logger::info("finish init config"sv);
-    latch.count_down();
-  }
-  latch.wait();
-
   return instance;
 }
 } // namespace Reflyem

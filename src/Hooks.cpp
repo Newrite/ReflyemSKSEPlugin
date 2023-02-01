@@ -1,7 +1,11 @@
+// TODO: 1. Реген ресурс манагера когда блидаут не в бою, включить его для хп
+// TODO: 2. Запилить новые резисты
+
 #include "Hooks.hpp"
 #include "Core.hpp"
 #include "plugin/CastOnHit.hpp"
 #include "plugin/CasterAdditions.hpp"
+#include "plugin/CastOnBlock.hpp"
 #include "plugin/CheatDeath.hpp"
 #include "plugin/Crit.hpp"
 #include "plugin/MagicShield.hpp"
@@ -19,7 +23,7 @@ static uint64_t timer100          = 0;
 static float    player_last_delta = 0.f;
 
 auto update_actor(RE::Character& character, const float delta, const Reflyem::Config& config)
-    -> void {
+  -> void {
 
   logger::debug("update actor"sv);
 
@@ -38,6 +42,11 @@ auto update_actor(RE::Character& character, const float delta, const Reflyem::Co
 
   if (config.resource_manager().enable() && config.resource_manager().regeneration_enable()) {
     Reflyem::ResourceManager::on_update_actor_regeneration(character, actor_data);
+    actor_data.mod_all_regens_delay(-player_last_delta);
+  }
+
+  if (config.magick_crit().enable() && config.cast_on_crit().enable()) {
+    actor_data.mod_cast_on_crit_delay(-player_last_delta);
   }
 
   if (tick - last_actor_tick50 >= 50) {
@@ -53,9 +62,6 @@ auto update_actor(RE::Character& character, const float delta, const Reflyem::Co
     }
     if (config.caster_additions().enable()) {
       Reflyem::CasterAdditions::on_update_actor(character, delta, config);
-    }
-    if (config.resource_manager().enable() && config.resource_manager().regeneration_enable()) {
-      actor_data.mod_all_regens_delay(-0.1f);
     }
   }
 
@@ -114,7 +120,7 @@ auto OnCharacterUpdate::update(RE::Character* this_, float delta) -> void {
 }
 
 auto OnAttackData::process_attack(RE::ActorValueOwner* value_owner, RE::BGSAttackData* attack_data)
-    -> void {
+  -> void {
   process_attack_(value_owner, attack_data);
   return;
 }
@@ -128,7 +134,7 @@ auto OnAttackAction::attack_action(const RE::TESActionData* action_data) -> bool
 auto OnAnimationEventNpc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   this_,
                                         RE::BSAnimationGraphEvent*                     event,
                                         RE::BSTEventSource<RE::BSAnimationGraphEvent>* dispatcher)
-    -> void {
+  -> void {
   if (event && event->holder) {
     auto& config = Reflyem::Config::get_singleton();
     Reflyem::AnimationEventHandler::animation_handler(event, config);
@@ -140,7 +146,7 @@ auto OnAnimationEventNpc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEve
 auto OnAnimationEventPc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   this_,
                                        RE::BSAnimationGraphEvent*                     event,
                                        RE::BSTEventSource<RE::BSAnimationGraphEvent>* dispatcher)
-    -> void {
+  -> void {
   if (event && event->holder) {
     auto& config = Reflyem::Config::get_singleton();
     Reflyem::AnimationEventHandler::animation_handler(event, config);
@@ -150,7 +156,7 @@ auto OnAnimationEventPc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEven
 }
 
 auto OnAdjustActiveEffect::adjust_active_effect(RE::ActiveEffect* this_, float power, bool unk)
-    -> void {
+  -> void {
   if (this_) {
     const auto caster = this_->GetCasterActor();
     const auto target = this_->GetTargetActor();
@@ -200,8 +206,8 @@ auto OnModifyActorValue::modify_actor_value(RE::ValueModifierEffect* this_, RE::
 }
 
 auto OnPeakModifyActorValue::peak_modify_actor_value(RE::ValueModifierEffect* this_,
-                                                     RE::Actor* actor, float value,
-                                                     RE::ActorValue av) -> void {
+                                                     RE::Actor*               actor, float value,
+                                                     RE::ActorValue           av) -> void {
   logger::debug("peak mod actor value"sv);
 
   if (!actor || !this_) {
@@ -234,8 +240,8 @@ auto OnPeakModifyActorValue::peak_modify_actor_value(RE::ValueModifierEffect* th
 }
 
 auto OnDualModifyActorValue::dual_modify_actor_value(RE::ValueModifierEffect* this_,
-                                                     RE::Actor* actor, float value,
-                                                     RE::ActorValue av) -> void {
+                                                     RE::Actor*               actor, float value,
+                                                     RE::ActorValue           av) -> void {
   if (!actor || !this_) {
     dual_modify_actor_value_(this_, actor, value, av);
     return;
@@ -329,6 +335,10 @@ auto OnWeaponHit::weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void {
 
   if (config.cast_on_hit().enable()) {
     Reflyem::CastOnHit::on_weapon_hit(target, hit_data, config);
+  }
+
+  if (config.cast_on_block().enable()) {
+    Reflyem::CastOnBlock::on_weapon_hit(target, hit_data, config);
   }
 
   if (config.cheat_death().enable() && config.cheat_death().physical()) {

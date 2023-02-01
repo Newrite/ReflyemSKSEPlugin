@@ -5,7 +5,7 @@
 namespace Reflyem {
 struct Config {
 private:
-  Config() = default; // NOLINT(cppcoreguidelines-pro-type-member-init)
+  Config();
 
   struct MagicShieldConfig {
   public:
@@ -496,50 +496,50 @@ private:
   std::string_view mod_name_;
 
   // magic shield
-  MagicShieldConfig magic_shield_;
+  MagicShieldConfig magic_shield_{};
 
   // petrified blood
-  PetrifiedBloodConfig petrified_blood_;
+  PetrifiedBloodConfig petrified_blood_{};
 
   // cheat death
-  CheatDeathConfig cheat_death_;
+  CheatDeathConfig cheat_death_{};
 
   // vampirism
-  VampirismConfig vampirism_;
+  VampirismConfig vampirism_{};
 
   // magic vampirism
-  MagicVampirismConfig magic_vampirism_;
+  MagicVampirismConfig magic_vampirism_{};
 
   // FenixSpeedCasting addon
   // speed casting
-  SpeedCastingConfig speed_casting_;
+  SpeedCastingConfig speed_casting_{};
 
   // weapon crit
-  WeaponCritConfig weapon_crit_;
+  WeaponCritConfig weapon_crit_{};
 
   // magic crit
-  MagickCritConfig magick_crit_;
+  MagickCritConfig magick_crit_{};
 
   // cast on crit
-  CastOnCritConfig cast_on_crit_;
+  CastOnCritConfig cast_on_crit_{};
 
   // cast on hit
-  CastOnHitConfig cast_on_hit_;
+  CastOnHitConfig cast_on_hit_{};
 
   // cast on block
-  CastOnBlockConfig cast_on_block_;
+  CastOnBlockConfig cast_on_block_{};
 
   // resource manager
-  ResourceManagerConfig resource_manager_;
+  ResourceManagerConfig resource_manager_{};
 
   // TK Dodge RE reimplement
-  TkDodgeConfig tk_dodge_;
+  TkDodgeConfig tk_dodge_{};
 
   // caster additions
-  CasterAdditionsConfig caster_additions_;
+  CasterAdditionsConfig caster_additions_{};
 
   // magic weapon
-  MagicWeaponConfig magic_weapon_;
+  MagicWeaponConfig magic_weapon_{};
 
 public:
   [[nodiscard]] static auto get_singleton() noexcept -> const Config&;

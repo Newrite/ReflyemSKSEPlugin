@@ -16,28 +16,28 @@ auto eval_percent(const float value) -> float {
 };
 
 auto percent_from_enchantment(RE::EnchantmentItem& weapon_ench, const RE::BGSKeyword& keyword)
-    -> std::optional<float> {
+  -> std::optional<float> {
   for (const auto& effect : weapon_ench.effects) {
 
     if (effect && effect->baseEffect && effect->baseEffect->HasKeyword(&keyword)) {
-      return std::optional(eval_percent(effect->effectItem.magnitude));
+      return {eval_percent(effect->effectItem.magnitude)};
     }
   }
   return std::nullopt;
 }
 
-[[nodiscard]] auto handle_cast(RE::Actor& caster, RE::Actor& target, RE::SpellItem& spell,
-                               const float percent, float real_damage, RE::HitData& hit_data)
-    -> float {
-  const auto spell_damage                = real_damage * percent;
-  real_damage                            = real_damage - spell_damage;
-  hit_data.totalDamage                   = hit_data.totalDamage * (1.f - percent);
-  spell.effects[0]->effectItem.magnitude = spell_damage;
+auto handle_cast(RE::Actor&  caster, RE::Actor& target, RE::SpellItem& spell,
+                 const float magnitude)
+  -> void {
+  for (const auto& effect : spell.effects) {
+    if (effect) {
+      effect->effectItem.magnitude = magnitude;
+    }
+  }
   Core::cast(spell, target, caster);
-  return real_damage;
 };
 
-auto handle_cast_magic_weapon_spell(RE::Actor& caster, RE::Actor& target, float real_damage,
+auto handle_cast_magic_weapon_spell(RE::Actor&   caster, RE::Actor& target, float real_damage,
                                     RE::HitData& hit_data) -> void {
 
   const auto& config = Config::get_singleton();
@@ -51,6 +51,41 @@ auto handle_cast_magic_weapon_spell(RE::Actor& caster, RE::Actor& target, float 
   if (spells_size != globals->forms.size() || spells_size != keywords->forms.size()) {
     return;
   }
+
+  const auto total_damage          = real_damage;
+  const auto physical_total_damage = hit_data.totalDamage;
+
+  const auto eval_magnitude = [&](const RE::SpellItem& spell, const float percent) -> float {
+
+    auto magnitude = total_damage * percent;
+
+    if (real_damage >= magnitude) {
+      real_damage = real_damage - magnitude;
+    } else {
+      magnitude   = real_damage;
+      real_damage = 0.f;
+    }
+
+    if (const auto minus_damage = physical_total_damage * percent;
+      hit_data.totalDamage >= minus_damage) {
+      hit_data.totalDamage = hit_data.totalDamage - minus_damage;
+    } else {
+      hit_data.totalDamage = 0.f;
+    }
+
+    const auto mult = [&]() -> float {
+      if (1 == spell.boundData.boundMax.x == spell.boundData.boundMax.y == spell.boundData.boundMax.
+          z == spell.boundData.boundMin.x == spell.boundData.boundMin.y == spell.boundData.boundMin.
+          z) {
+        logger::info("magic weapon:: mult count of spell");
+        return static_cast<float>(spell.effects.size());
+      }
+      logger::info("magic weapon:: one count of spell");
+      return 1.f;
+    }();
+
+    return magnitude * mult;
+  };
 
   for (uint32_t index = 0; index < spells_size; index++) {
 
@@ -66,15 +101,17 @@ auto handle_cast_magic_weapon_spell(RE::Actor& caster, RE::Actor& target, float 
       continue;
     }
 
+    if (spell->data.delivery != RE::MagicSystem::Delivery::kTouch) {
+      continue;
+    }
+
     if (global) {
 
       if (!Core::has_absolute_keyword(caster, *keyword)) {
         continue;
       }
 
-      const auto percent = eval_percent(global->value);
-      real_damage =
-          real_damage - handle_cast(caster, target, *spell, percent, real_damage, hit_data);
+      handle_cast(caster, target, *spell, eval_magnitude(*spell, eval_percent(global->value)));
 
     } else {
       // ReSharper disable once CppTooWideScopeInitStatement
@@ -87,8 +124,7 @@ auto handle_cast_magic_weapon_spell(RE::Actor& caster, RE::Actor& target, float 
       if (!percent.has_value()) {
         continue;
       }
-      real_damage =
-          real_damage - handle_cast(caster, target, *spell, percent.value(), real_damage, hit_data);
+      handle_cast(caster, target, *spell, eval_magnitude(*spell, percent.value()));
     }
   }
 }
