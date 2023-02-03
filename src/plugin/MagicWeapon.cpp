@@ -3,6 +3,20 @@
 
 namespace Reflyem::MagicWeapon {
 
+struct MagnitudeData {
+  float magnitude;
+  bool  only_first_effect;
+};
+
+namespace Flag {
+enum : int16_t {
+  kNone = 0,
+  kDivideMagnitude = 1,
+  kFirstEffectOnly = 2,
+};
+}
+
+
 auto eval_percent(const float value) -> float {
   if (value > 100.f) {
     return 1.f;
@@ -26,13 +40,20 @@ auto percent_from_enchantment(RE::EnchantmentItem& weapon_ench, const RE::BGSKey
   return std::nullopt;
 }
 
-auto handle_cast(RE::Actor&  caster, RE::Actor& target, RE::SpellItem& spell,
-                 const float magnitude)
+auto handle_cast(RE::Actor&           caster, RE::Actor& target, RE::SpellItem& spell,
+                 const MagnitudeData& data)
   -> void {
-  for (const auto& effect : spell.effects) {
-    if (effect) {
-      effect->effectItem.magnitude = magnitude;
+  // TODO Добавить возможность выставить только в первый эффект магнитуду: DONE
+  if (data.only_first_effect && !spell.effects.empty() && spell.effects[0]) {
+    spell.effects[0]->effectItem.magnitude = data.magnitude;
+  } else {
+
+    for (const auto& effect : spell.effects) {
+      if (effect) {
+        effect->effectItem.magnitude = data.magnitude;
+      }
     }
+
   }
   Core::cast(spell, target, caster);
 };
@@ -55,7 +76,8 @@ auto handle_cast_magic_weapon_spell(RE::Actor&   caster, RE::Actor& target, floa
   const auto total_damage          = real_damage;
   const auto physical_total_damage = hit_data.totalDamage;
 
-  const auto eval_magnitude = [&](const RE::SpellItem& spell, const float percent) -> float {
+  const auto                 eval_magnitude = [&
+      ](const RE::SpellItem& spell, const float percent) -> MagnitudeData {
 
     auto magnitude = total_damage * percent;
 
@@ -74,9 +96,8 @@ auto handle_cast_magic_weapon_spell(RE::Actor&   caster, RE::Actor& target, floa
     }
 
     const auto mult = [&]() -> float {
-      if (1 == spell.boundData.boundMax.x == spell.boundData.boundMax.y == spell.boundData.boundMax.
-          z == spell.boundData.boundMin.x == spell.boundData.boundMin.y == spell.boundData.boundMin.
-          z) {
+      // TODO Проверить работу этой проверки, точно ли берет от самого спелла: DONE
+      if (Core::bound_data_comparer(spell.boundData, Flag::kDivideMagnitude)) {
         logger::info("magic weapon:: mult count of spell");
         return static_cast<float>(spell.effects.size());
       }
@@ -84,7 +105,9 @@ auto handle_cast_magic_weapon_spell(RE::Actor&   caster, RE::Actor& target, floa
       return 1.f;
     }();
 
-    return magnitude * mult;
+    return MagnitudeData{magnitude / mult,
+                         Core::bound_data_comparer(spell.boundData, Flag::kFirstEffectOnly)};
+
   };
 
   for (uint32_t index = 0; index < spells_size; index++) {

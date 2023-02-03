@@ -6,8 +6,8 @@
 
 namespace Reflyem::ResourceManager {
 
-using FormMask  = std::array<std::array<std::int16_t, 3>, 1>;
-using ActorMask = std::array<std::array<std::int16_t, 3>, 3>;
+using FormMask  = std::array<std::array<std::int32_t, 3>, 1>;
+using ActorMask = std::array<std::array<std::int32_t, 3>, 3>;
 
 struct ResourceDrain {
 public:

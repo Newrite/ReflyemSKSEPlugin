@@ -1,3 +1,4 @@
+#include "Core.hpp"
 #include "Hooks.hpp"
 #include "plugin/ActionEventHandler.hpp"
 #include "plugin/InputEventHandler.hpp"
@@ -28,7 +29,7 @@ auto init_logger() -> void {
 auto initialize_messaging() -> void {
   // ReSharper disable once CppParameterMayBeConstPtrOrRef
   if (!SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message*
-                                                              message) {
+      message) {
         switch (message->type) {
         // Skyrim lifecycle events.
         case SKSE::MessagingInterface::kPostLoad: // Called after all plugins have finished running
@@ -40,7 +41,7 @@ auto initialize_messaging() -> void {
         case SKSE::MessagingInterface::kInputLoaded: // Called when all game data has been found.
           break;
         case SKSE::MessagingInterface::kDataLoaded: // All ESM/ESL/ESP plugins have loaded, main
-                                                    // menu is now active.
+          // menu is now active.
         {
 
           // It is now safe to access form data.

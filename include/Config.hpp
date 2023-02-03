@@ -492,6 +492,21 @@ private:
     RE::BGSListForm* globals_;
   };
 
+  struct ResistTweaksConfig {
+    [[nodiscard]] auto enable() const -> bool { return enable_; }
+    [[nodiscard]] auto check_resistance() const -> bool { return check_resistance_; }
+    [[nodiscard]] auto ench_get_no_absorb() const -> bool { return ench_get_no_absorb_; }
+    [[nodiscard]] auto ench_ignore_resistance() const -> bool { return ench_ignore_resistance_; }
+    ResistTweaksConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
+    ResistTweaksConfig() = default;
+
+  private:
+    bool enable_;
+    bool check_resistance_;
+    bool ench_get_no_absorb_;
+    bool ench_ignore_resistance_;
+  };
+
   // general
   std::string_view mod_name_;
 
@@ -541,6 +556,9 @@ private:
   // magic weapon
   MagicWeaponConfig magic_weapon_{};
 
+  // resist tweaks
+  ResistTweaksConfig resist_tweaks_{};
+
 public:
   [[nodiscard]] static auto get_singleton() noexcept -> const Config&;
 
@@ -577,6 +595,8 @@ public:
   }
 
   [[nodiscard]] auto magic_weapon() const -> const MagicWeaponConfig& { return magic_weapon_; }
+
+  [[nodiscard]] auto resist_tweaks() const -> const ResistTweaksConfig& { return resist_tweaks_; }
 };
 
 } // namespace Reflyem

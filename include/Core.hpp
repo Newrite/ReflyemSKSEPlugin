@@ -38,7 +38,7 @@ struct ActorsCache {
 
     float cast_on_crit_delay_;
 
-  private:
+    // TODO Переписать с тик апдейтов на дельту полностью (ТикКаунт продолжает накапливаться во время паузы и тд)
     uint64_t last_update_tick50_;
     uint64_t last_update_tick100_;
     uint64_t last_update_tick1000_;
@@ -212,6 +212,9 @@ public:
 
 auto character_timer_map_handler(ULONGLONG                            now_time,
                                  std::map<std::uintptr_t, ULONGLONG>& character_timer_map) -> void;
+
+auto bound_data_comparer(const RE::TESBoundObject::BOUND_DATA& bound_data,
+                         const int16_t                         comparer_value) -> bool;
 
 auto get_random_int() -> int;
 

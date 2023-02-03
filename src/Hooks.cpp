@@ -1,5 +1,3 @@
-// TODO: 1. Запилить новые резисты
-
 #include "Hooks.hpp"
 #include "Core.hpp"
 #include "plugin/CastOnHit.hpp"
@@ -7,7 +5,7 @@
 #include "plugin/CastOnBlock.hpp"
 #include "plugin/CheatDeath.hpp"
 #include "plugin/Crit.hpp"
-#include "plugin/MagicResistRescaled.hpp"
+#include "plugin/ResistTweaks.hpp"
 #include "plugin/MagicShield.hpp"
 #include "plugin/MagicWepon.hpp"
 #include "plugin/PetrifiedBlood.hpp"
@@ -377,9 +375,15 @@ auto OnCheckResistanceNpc::check_resistance(RE::MagicTarget*    this_, RE::Magic
     logger::debug("Original resistance call");
     return check_resistance_(this_, magic_item, effect, bound_object);
   }
+
   const auto& config = Reflyem::Config::get_singleton();
-  return Reflyem::MagicResistRescaled::check_resistance(*this_, *magic_item, *effect, bound_object,
-                                                        config);
+
+  if (config.resist_tweaks().enable() && config.resist_tweaks().check_resistance()) {
+    return Reflyem::ResistTweaks::check_resistance(*this_, *magic_item, *effect, bound_object,
+                                                   config);
+  }
+
+  return check_resistance_(this_, magic_item, effect, bound_object);
 }
 
 auto OnCheckResistancePc::check_resistance(RE::MagicTarget*    this_, RE::MagicItem* magic_item,
@@ -389,9 +393,44 @@ auto OnCheckResistancePc::check_resistance(RE::MagicTarget*    this_, RE::MagicI
     logger::debug("Original resistance call");
     return check_resistance_(this_, magic_item, effect, bound_object);
   }
+
   const auto& config = Reflyem::Config::get_singleton();
-  return Reflyem::MagicResistRescaled::check_resistance(*this_, *magic_item, *effect, bound_object,
-                                                        config);
+
+  if (config.resist_tweaks().enable() && config.resist_tweaks().check_resistance()) {
+    return Reflyem::ResistTweaks::check_resistance(*this_, *magic_item, *effect, bound_object,
+                                                   config);
+  }
+
+  return check_resistance_(this_, magic_item, effect, bound_object);
+}
+
+auto OnEnchIgnoresResistance::ignores_resistance(RE::MagicItem* this_) -> bool {
+  if (!this_) {
+    return ignores_resistance_(this_);
+  }
+
+  const auto& config = Reflyem::Config::get_singleton();
+
+  if (config.resist_tweaks().enable() && config.resist_tweaks().ench_ignore_resistance()) {
+    return Reflyem::ResistTweaks::ignores_resistance(*this_);
+  }
+
+  return ignores_resistance_(this_);
+
+}
+
+auto OnEnchGetNoAbsorb::get_no_absorb(RE::MagicItem* this_) -> bool {
+  if (!this_) {
+    return get_no_absorb_(this_);
+  }
+
+  const auto& config = Reflyem::Config::get_singleton();
+
+  if (config.resist_tweaks().enable() && config.resist_tweaks().ench_get_no_absorb()) {
+    return Reflyem::ResistTweaks::get_no_absorb(*this_);
+  }
+
+  return get_no_absorb_(this_);
 }
 
 
@@ -403,6 +442,8 @@ auto install_hooks() -> void {
   // OnCheckResistance::install_hook(trampoline);
   OnCheckResistanceNpc::install_hook();
   OnCheckResistancePc::install_hook();
+  OnEnchIgnoresResistance::install_hook();
+  OnEnchGetNoAbsorb::install_hook();
   // OnMainUpdate::install_hook(trampoline);
   // OnAdjustActiveEffect::install_hook(trampoline);
   OnAnimationEventNpc::install_hook();

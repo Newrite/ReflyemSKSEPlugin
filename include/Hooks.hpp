@@ -18,6 +18,8 @@ static inline REL::Relocation<uintptr_t> on_actor_update_npc{RELOCATION_ID(26139
 static inline REL::Relocation<uintptr_t> on_check_resistance{RELOCATION_ID(37788, 0)};
 static inline REL::Relocation<uintptr_t> on_check_resistance_npc{RELOCATION_ID(261401, 0)};
 static inline REL::Relocation<uintptr_t> on_check_resistance_pc{RELOCATION_ID(261920, 0)};
+static inline REL::Relocation<uintptr_t> on_ench_ignores_resistance{RELOCATION_ID(228570, 0)};
+static inline REL::Relocation<uintptr_t> on_ench_get_no_absorb{RELOCATION_ID(228570, 0)};
 } // namespace Adresses
 
 namespace Offsets {
@@ -36,7 +38,9 @@ static inline auto on_actor_update_pc                           = RELOCATION_OFF
 static inline auto on_actor_update_npc                          = RELOCATION_OFFSET(0xAD, 0);
 static inline auto on_check_resistance                          = RELOCATION_OFFSET(0x102, 0);
 static inline auto on_check_resistance_npc                      = RELOCATION_OFFSET(0x0A, 0);
-static inline auto on_check_resistance_pc                      = RELOCATION_OFFSET(0x0A, 0);
+static inline auto on_check_resistance_pc                       = RELOCATION_OFFSET(0x0A, 0);
+static inline auto on_ench_ignores_resistance                   = RELOCATION_OFFSET(0x5B, 0);
+static inline auto on_ench_get_no_absorb                        = RELOCATION_OFFSET(0x5E, 0);
 } // namespace Offsets
 
 namespace Hooks {
@@ -269,7 +273,7 @@ public:
 
 private:
   static auto check_resistance(RE::MagicTarget* this_, RE::MagicItem*       magic_item,
-                               RE::Effect*    effect, RE::TESBoundObject* bound_object) -> float;
+                               RE::Effect*      effect, RE::TESBoundObject* bound_object) -> float;
 
   static inline REL::Relocation<decltype(check_resistance)> check_resistance_;
 };
@@ -285,9 +289,39 @@ public:
 
 private:
   static auto check_resistance(RE::MagicTarget* this_, RE::MagicItem*       magic_item,
-                               RE::Effect*    effect, RE::TESBoundObject* bound_object) -> float;
+                               RE::Effect*      effect, RE::TESBoundObject* bound_object) -> float;
 
   static inline REL::Relocation<decltype(check_resistance)> check_resistance_;
+};
+
+struct OnEnchIgnoresResistance {
+public:
+  static auto install_hook() -> void {
+    logger::info("start hook OnEnchIgnoresResistance"sv);
+    ignores_resistance_ = Adresses::on_ench_ignores_resistance.write_vfunc(
+        Offsets::on_ench_ignores_resistance, ignores_resistance);
+    logger::info("finish hook OnEnchIgnoresResistance"sv);
+  }
+
+private:
+  static auto ignores_resistance(RE::MagicItem* this_) -> bool;
+
+  static inline REL::Relocation<decltype(ignores_resistance)> ignores_resistance_;
+};
+
+struct OnEnchGetNoAbsorb {
+public:
+  static auto install_hook() -> void {
+    logger::info("start hook OnEnchGetNoAbsorb"sv);
+    get_no_absorb_ = Adresses::on_ench_get_no_absorb.write_vfunc(
+        Offsets::on_ench_get_no_absorb, get_no_absorb);
+    logger::info("finish hook OnEnchGetNoAbsorb"sv);
+  }
+
+private:
+  static auto get_no_absorb(RE::MagicItem* this_) -> bool;
+
+  static inline REL::Relocation<decltype(get_no_absorb)> get_no_absorb_;
 };
 
 auto install_hooks() -> void;

@@ -1,5 +1,6 @@
 #include "plugin/ResourceManager.hpp"
 
+// TODO Переписать с хуков анимаций на прямые хуки в атаку
 namespace Reflyem::ResourceManager {
 
 using WeaponOrArmor = Core::Either<RE::TESObjectWEAP*, RE::TESObjectARMO*>;
@@ -12,7 +13,6 @@ auto spend_actor_value(RE::Actor& actor, const RE::ActorValue av, float value) -
     auto& actor_data = Core::ActorsCache::get_singleton().get_or_add(actor.formID).get();
 
     switch (av) {
-    // NOLINT(clang-diagnostic-switch-enum)
     // NOLINT(clang-diagnostic-switch-enum)
     case RE::ActorValue::kStamina: {
       const auto stamina = actor.GetActorValue(RE::ActorValue::kStamina);
@@ -52,6 +52,7 @@ auto spend_actor_value(RE::Actor& actor, const RE::ActorValue av, float value) -
   Core::damage_actor_value(actor, av, value);
 }
 
+// TODO Переписать попробовать на хук который хукается конкретно в функцию регенерации стата 
 auto regeneration_actor_value(RE::Character&       character, const RE::ActorValue av,
                               const RE::ActorValue regen_av, const RE::ActorValue  regen_av_mult,
                               const float          delta) -> void {
@@ -162,9 +163,9 @@ auto weap_actor_mask_multiply(const FormMask& matrix1, const ActorMask& matrix2)
     constexpr auto column = 3;
 
     for (auto y = 0; y < column; y++) {
-      auto acc = 0i16;
+      int32_t acc = 0;
       for (auto z = 0; z < 3; z++) {
-        acc = acc + (matrix1.at(x).at(z) * matrix2.at(z).at(y));
+        acc += matrix1.at(x).at(z) * matrix2.at(z).at(y);
       }
       result.at(x).at(y) = acc;
     }
@@ -238,7 +239,7 @@ auto get_drain_value(RE::Actor&  actor, const RE::BGSKeywordForm& form, const Co
   -> std::shared_ptr<ResourceDrain> {
   const auto f_mask = get_form_mask(form, config);
 
-  auto mask_sum = 0;
+  int32_t mask_sum;
 
   if (!enable_conversions) {
     mask_sum = calc_mask_sum(*f_mask);
@@ -463,6 +464,7 @@ auto bash_spend(RE::Actor&    actor, const WeaponOrArmor& form, const bool is_po
   return;
 }
 
+// TODO Добавить обработку арбалетов
 auto ranged_weapon_spend(RE::Actor& actor, const RE::TESObjectWEAP& weapon, const Config& config)
   -> void {
   const auto cost        = get_attack_drain_cost(actor, weapon, false, config) * 0.1f;
@@ -472,6 +474,7 @@ auto ranged_weapon_spend(RE::Actor& actor, const RE::TESObjectWEAP& weapon, cons
   return;
 }
 
+// TODO Переписать что бы обрабатывалось в UpdateActor и удалить эту обработку
 auto ranged_spend_handler() -> void {
   for (auto& [actor, drain_value] : rm_map) {
     if (actor && drain_value) {
@@ -671,7 +674,7 @@ auto animation_handler(const AnimationEventHandler::AnimationEvent animation, RE
     return;
   }
   case AnimationEventHandler::AnimationEvent::kNone:
-  default: {
+  {
     return;
   }
   }

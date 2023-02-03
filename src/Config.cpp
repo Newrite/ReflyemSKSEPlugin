@@ -1,6 +1,5 @@
 // ReSharper disable CppInconsistentNaming
 #include "Config.hpp"
-#include <latch>
 
 namespace Reflyem {
 constexpr inline std::string_view PathToConfig = "Data\\SKSE\\Plugins\\Reflyem.toml";
@@ -97,6 +96,10 @@ constexpr inline std::string_view MustBeOrNotBe               = "MustBeOrNotBe";
 constexpr inline std::string_view MagickCrit                  = "MagickCrit";
 constexpr inline std::string_view CastOnBlock                 = "CastOnBlock";
 constexpr inline std::string_view RegenDelay                  = "RegenDelay";
+constexpr inline std::string_view ResistTweaks                = "ResistTweaks";
+constexpr inline std::string_view CheckResistance             = "CheckResistance";
+constexpr inline std::string_view EnchGetNoAbsorb             = "EnchGetNoAbsorb";
+constexpr inline std::string_view EnchIgnoreResistance        = "EnchIgnoreResistance";
 
 Config::MagicShieldConfig::MagicShieldConfig(toml::table&  tbl, RE::TESDataHandler& data_handler,
                                              const Config& config) {
@@ -526,6 +529,17 @@ Config::MagicWeaponConfig::MagicWeaponConfig(toml::table&  tbl, RE::TESDataHandl
   }
 }
 
+Config::ResistTweaksConfig::ResistTweaksConfig(toml::table& tbl, RE::TESDataHandler&,
+                                               const Config&) {
+  logger::info("config init: resist tweaks"sv);
+  enable_ = tbl[ResistTweaks][Enable].value_or(false);
+  if (enable_) {
+    ench_get_no_absorb_     = tbl[ResistTweaks][EnchGetNoAbsorb].value_or(false);
+    check_resistance_       = tbl[ResistTweaks][CheckResistance].value_or(false);
+    ench_ignore_resistance_ = tbl[ResistTweaks][EnchIgnoreResistance].value_or(false);
+  }
+}
+
 Config::Config() {
   logger::info("start init config toml"sv);
   auto       tbl          = toml::parse_file(PathToConfig);
@@ -547,6 +561,7 @@ Config::Config() {
   tk_dodge_         = TkDodgeConfig(tbl, *data_handler, *this);
   caster_additions_ = CasterAdditionsConfig(tbl, *data_handler, *this);
   magic_weapon_     = MagicWeaponConfig(tbl, *data_handler, *this);
+  resist_tweaks_    = ResistTweaksConfig(tbl, *data_handler, *this);
 
   logger::info("finish init config"sv);
 }
