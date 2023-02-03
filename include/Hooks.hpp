@@ -84,7 +84,7 @@ public:
 
 private:
   static auto process_attack(RE::ActorValueOwner* value_owner, RE::BGSAttackData* attack_data)
-    -> void;
+      -> void;
   static inline REL::Relocation<decltype(process_attack)> process_attack_;
 };
 
@@ -113,7 +113,7 @@ public:
 
 private:
   static auto modify_actor_value(RE::ValueModifierEffect* this_, RE::Actor* actor, float value,
-                                 RE::ActorValue           av) -> void;
+                                 RE::ActorValue av) -> void;
 
   static inline REL::Relocation<decltype(modify_actor_value)> modify_actor_value_;
 };
@@ -129,7 +129,7 @@ public:
 
 private:
   static auto peak_modify_actor_value(RE::ValueModifierEffect* this_, RE::Actor* actor, float value,
-                                      RE::ActorValue           av) -> void;
+                                      RE::ActorValue av) -> void;
 
   static inline REL::Relocation<decltype(peak_modify_actor_value)> peak_modify_actor_value_;
 };
@@ -145,7 +145,7 @@ public:
 
 private:
   static auto dual_modify_actor_value(RE::ValueModifierEffect* this_, RE::Actor* actor, float value,
-                                      RE::ActorValue           av) -> void;
+                                      RE::ActorValue av) -> void;
 
   static inline REL::Relocation<decltype(dual_modify_actor_value)> dual_modify_actor_value_;
 };
@@ -156,18 +156,18 @@ public:
     logger::info("start hook OnDualModifyActorValueSecondInnerCall"sv);
     dual_modify_actor_value_second_inner_call_ =
         trampoline.write_call<5>(Adresses::on_dual_modify_actor_value_second_inner_call.address() +
-                                 Offsets::on_dual_modify_actor_value_second_inner_call,
+                                     Offsets::on_dual_modify_actor_value_second_inner_call,
                                  dual_modify_actor_value_second_inner_call);
     logger::info("finish hook OnDualModifyActorValueSecondInnerCall"sv);
   }
 
 private:
   static auto dual_modify_actor_value_second_inner_call(RE::ValueModifierEffect* this_,
-                                                        RE::Actor*               actor, float value,
-                                                        RE::ActorValue           av) -> void;
+                                                        RE::Actor* actor, float value,
+                                                        RE::ActorValue av) -> void;
 
   static inline REL::Relocation<decltype(dual_modify_actor_value_second_inner_call)>
-  dual_modify_actor_value_second_inner_call_;
+      dual_modify_actor_value_second_inner_call_;
 };
 
 struct OnAnimationEventPc {
@@ -209,7 +209,7 @@ public:
   static auto install_hook(SKSE::Trampoline& trampoline) -> void {
     logger::info("start hook on_adjust_active_effect"sv);
     adjust_active_effect_ = trampoline.write_call<5>(Adresses::on_adjust_active_effect.address() +
-                                                     Offsets::on_adjust_active_effect,
+                                                         Offsets::on_adjust_active_effect,
                                                      adjust_active_effect);
     logger::info("on_adjust_active_effect hook install"sv);
   }
@@ -257,8 +257,8 @@ public:
   }
 
 private:
-  static auto check_resistance(RE::MagicTarget* this_, RE::MagicItem*       magic_item,
-                               RE::Effect*      effect, RE::TESBoundObject* bound_object) -> float;
+  static auto check_resistance(RE::MagicTarget* this_, RE::MagicItem* magic_item,
+                               RE::Effect* effect, RE::TESBoundObject* bound_object) -> float;
   static inline REL::Relocation<decltype(check_resistance)> check_resistance_;
 };
 
@@ -272,8 +272,8 @@ public:
   }
 
 private:
-  static auto check_resistance(RE::MagicTarget* this_, RE::MagicItem*       magic_item,
-                               RE::Effect*      effect, RE::TESBoundObject* bound_object) -> float;
+  static auto check_resistance(RE::MagicTarget* this_, RE::MagicItem* magic_item,
+                               RE::Effect* effect, RE::TESBoundObject* bound_object) -> float;
 
   static inline REL::Relocation<decltype(check_resistance)> check_resistance_;
 };
@@ -288,8 +288,8 @@ public:
   }
 
 private:
-  static auto check_resistance(RE::MagicTarget* this_, RE::MagicItem*       magic_item,
-                               RE::Effect*      effect, RE::TESBoundObject* bound_object) -> float;
+  static auto check_resistance(RE::MagicTarget* this_, RE::MagicItem* magic_item,
+                               RE::Effect* effect, RE::TESBoundObject* bound_object) -> float;
 
   static inline REL::Relocation<decltype(check_resistance)> check_resistance_;
 };
@@ -313,8 +313,8 @@ struct OnEnchGetNoAbsorb {
 public:
   static auto install_hook() -> void {
     logger::info("start hook OnEnchGetNoAbsorb"sv);
-    get_no_absorb_ = Adresses::on_ench_get_no_absorb.write_vfunc(
-        Offsets::on_ench_get_no_absorb, get_no_absorb);
+    get_no_absorb_ =
+        Adresses::on_ench_get_no_absorb.write_vfunc(Offsets::on_ench_get_no_absorb, get_no_absorb);
     logger::info("finish hook OnEnchGetNoAbsorb"sv);
   }
 

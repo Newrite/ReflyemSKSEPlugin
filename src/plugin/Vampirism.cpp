@@ -58,7 +58,7 @@ auto modify_actor_value(const RE::ValueModifierEffect* this_, RE::Actor* actor, 
   if (Core::can_modify_actor_value(this_, actor, value, av)) {
     const auto aggressor = this_->GetCasterActor().get();
 
-    if (!aggressor || actor->IsDead()) {
+    if (!aggressor) {
       return;
     }
 

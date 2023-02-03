@@ -30,7 +30,7 @@ auto calc_mask_sum(const FormMask& f_mask) -> std::int32_t;
 auto handle_mask_sum_for_drain_values(std::int32_t mask_sum, float cost)
     -> std::shared_ptr<ResourceDrain>;
 
-auto ranged_spend_handler() -> void;
+auto ranged_spend_handler(RE::Character& character, const Config& config) -> void;
 
 auto update_actor(RE::Character& character, float delta, const Config& config) -> void;
 

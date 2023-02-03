@@ -1,34 +1,32 @@
 #include "Hooks.hpp"
 #include "Core.hpp"
+#include "plugin/CastOnBlock.hpp"
 #include "plugin/CastOnHit.hpp"
 #include "plugin/CasterAdditions.hpp"
-#include "plugin/CastOnBlock.hpp"
 #include "plugin/CheatDeath.hpp"
 #include "plugin/Crit.hpp"
-#include "plugin/ResistTweaks.hpp"
 #include "plugin/MagicShield.hpp"
 #include "plugin/MagicWepon.hpp"
 #include "plugin/PetrifiedBlood.hpp"
+#include "plugin/ResistTweaks.hpp"
 #include "plugin/ResourceManager.hpp"
 #include "plugin/SpeedCasting.hpp"
 #include "plugin/Vampirism.hpp"
 
 namespace Hooks {
 
-static uint64_t timer1000         = 0;
-static uint64_t timer500          = 0;
-static uint64_t timer100          = 0;
-static float    player_last_delta = 0.f;
+static float player_last_delta = 0.f;
 
 auto update_actor(RE::Character& character, const float delta, const Reflyem::Config& config)
-  -> void {
+    -> void {
 
   logger::debug("update actor"sv);
 
-  const auto tick = GetTickCount64();
-
   auto& actors_cache = Reflyem::Core::ActorsCache::get_singleton();
   auto& actor_data   = actors_cache.get_or_add(character.formID).get();
+
+  actor_data.set_delta_update(player_last_delta);
+  actor_data.update_ticks(player_last_delta);
 
   const auto last_actor_tick50 =
       actor_data.last_update_tick(Reflyem::Core::ActorsCache::Data::TickValues::k50Ms);
@@ -36,7 +34,6 @@ auto update_actor(RE::Character& character, const float delta, const Reflyem::Co
       actor_data.last_update_tick(Reflyem::Core::ActorsCache::Data::TickValues::k100Ms);
   const auto last_actor_tick1000 =
       actor_data.last_update_tick(Reflyem::Core::ActorsCache::Data::TickValues::k1000Ms);
-  actor_data.set_delta_update(player_last_delta);
 
   if (config.resource_manager().enable() && config.resource_manager().regeneration_enable()) {
     Reflyem::ResourceManager::on_update_actor_regeneration(character, actor_data);
@@ -47,25 +44,29 @@ auto update_actor(RE::Character& character, const float delta, const Reflyem::Co
     actor_data.mod_cast_on_crit_delay(-player_last_delta);
   }
 
-  if (tick - last_actor_tick50 >= 50) {
+  if (last_actor_tick50 <= 0.f) {
     logger::debug("update actor map50 tick"sv);
-    actor_data.update_tick(Reflyem::Core::ActorsCache::Data::TickValues::k50Ms);
+    actor_data.set_tick(Reflyem::Core::ActorsCache::Data::TickValues::k50Ms);
   }
 
-  if (tick - last_actor_tick100 >= 100) {
+  if (last_actor_tick100 <= 0.f) {
     logger::debug("update actor map100 tick"sv);
-    actor_data.update_tick(Reflyem::Core::ActorsCache::Data::TickValues::k100Ms);
+    actor_data.set_tick(Reflyem::Core::ActorsCache::Data::TickValues::k100Ms);
     if (config.resource_manager().enable()) {
       Reflyem::ResourceManager::update_actor(character, delta, config);
+      if (config.resource_manager().weapon_spend_enable()) {
+        Reflyem::ResourceManager::ranged_spend_handler(character, config);
+      }
     }
     if (config.caster_additions().enable()) {
       Reflyem::CasterAdditions::on_update_actor(character, delta, config);
     }
   }
 
-  if (tick - last_actor_tick1000 >= 1000) {
+  if (last_actor_tick1000 <= 0.f) {
     logger::debug("update actor map1000 tick"sv);
-    actor_data.update_tick(Reflyem::Core::ActorsCache::Data::TickValues::k1000Ms);
+    actor_data.set_tick(Reflyem::Core::ActorsCache::Data::TickValues::k1000Ms);
+    actor_data.set_last_update();
     logger::debug("ActorData: st {} mp {} hp {}", actor_data.regen_stamina_delay(),
                   actor_data.regen_magicka_delay(), actor_data.regen_health_delay());
     if (config.petrified_blood().enable() && config.petrified_blood().magick()) {
@@ -76,24 +77,9 @@ auto update_actor(RE::Character& character, const float delta, const Reflyem::Co
       Reflyem::Core::set_av_regen_delay(character.currentProcess, RE::ActorValue::kStamina, 2.f);
       Reflyem::Core::set_av_regen_delay(character.currentProcess, RE::ActorValue::kHealth, 2.f);
     }
-  }
-
-  if (tick - timer100 >= 100) {
-    timer100 = tick;
-    if (config.resource_manager().enable()) {
-      Reflyem::ResourceManager::ranged_spend_handler();
-    }
-  }
-
-  if (tick - timer500 >= 500) {
-    timer500 = tick;
     if (config.speed_casting().enable() && character.IsPlayerRef()) {
       Reflyem::SpeedCasting::on_update_actor(character, delta, config);
     }
-  }
-
-  if (tick - timer1000 >= 1000) {
-    timer1000 = tick;
   }
 }
 
@@ -118,7 +104,7 @@ auto OnCharacterUpdate::update(RE::Character* this_, float delta) -> void {
 }
 
 auto OnAttackData::process_attack(RE::ActorValueOwner* value_owner, RE::BGSAttackData* attack_data)
-  -> void {
+    -> void {
   process_attack_(value_owner, attack_data);
   return;
 }
@@ -132,7 +118,7 @@ auto OnAttackAction::attack_action(const RE::TESActionData* action_data) -> bool
 auto OnAnimationEventNpc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   this_,
                                         RE::BSAnimationGraphEvent*                     event,
                                         RE::BSTEventSource<RE::BSAnimationGraphEvent>* dispatcher)
-  -> void {
+    -> void {
   if (event && event->holder) {
     auto& config = Reflyem::Config::get_singleton();
     Reflyem::AnimationEventHandler::animation_handler(event, config);
@@ -144,7 +130,7 @@ auto OnAnimationEventNpc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEve
 auto OnAnimationEventPc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   this_,
                                        RE::BSAnimationGraphEvent*                     event,
                                        RE::BSTEventSource<RE::BSAnimationGraphEvent>* dispatcher)
-  -> void {
+    -> void {
   if (event && event->holder) {
     auto& config = Reflyem::Config::get_singleton();
     Reflyem::AnimationEventHandler::animation_handler(event, config);
@@ -154,7 +140,7 @@ auto OnAnimationEventPc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEven
 }
 
 auto OnAdjustActiveEffect::adjust_active_effect(RE::ActiveEffect* this_, float power, bool unk)
-  -> void {
+    -> void {
   if (this_) {
     const auto caster = this_->GetCasterActor();
     const auto target = this_->GetTargetActor();
@@ -204,8 +190,8 @@ auto OnModifyActorValue::modify_actor_value(RE::ValueModifierEffect* this_, RE::
 }
 
 auto OnPeakModifyActorValue::peak_modify_actor_value(RE::ValueModifierEffect* this_,
-                                                     RE::Actor*               actor, float value,
-                                                     RE::ActorValue           av) -> void {
+                                                     RE::Actor* actor, float value,
+                                                     RE::ActorValue av) -> void {
   logger::debug("peak mod actor value"sv);
 
   if (!actor || !this_) {
@@ -238,8 +224,8 @@ auto OnPeakModifyActorValue::peak_modify_actor_value(RE::ValueModifierEffect* th
 }
 
 auto OnDualModifyActorValue::dual_modify_actor_value(RE::ValueModifierEffect* this_,
-                                                     RE::Actor*               actor, float value,
-                                                     RE::ActorValue           av) -> void {
+                                                     RE::Actor* actor, float value,
+                                                     RE::ActorValue av) -> void {
   if (!actor || !this_) {
     dual_modify_actor_value_(this_, actor, value, av);
     return;
@@ -356,9 +342,9 @@ auto OnWeaponHit::weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void {
   return weapon_hit_(target, hit_data);
 }
 
-auto OnCheckResistance::check_resistance(RE::MagicTarget*    this_, RE::MagicItem* magic_item,
-                                         RE::Effect*         effect,
-                                         RE::TESBoundObject* bound_object) -> float {
+auto OnCheckResistance::check_resistance(RE::MagicTarget* this_, RE::MagicItem* magic_item,
+                                         RE::Effect* effect, RE::TESBoundObject* bound_object)
+    -> float {
   logger::info("Yeay it's check resistance"sv);
   if (!this_ || !magic_item || !effect) {
     logger::info("Null object resist"sv);
@@ -368,9 +354,9 @@ auto OnCheckResistance::check_resistance(RE::MagicTarget*    this_, RE::MagicIte
   return check_resistance_(this_, magic_item, effect, bound_object);
 }
 
-auto OnCheckResistanceNpc::check_resistance(RE::MagicTarget*    this_, RE::MagicItem* magic_item,
-                                            RE::Effect*         effect,
-                                            RE::TESBoundObject* bound_object) -> float {
+auto OnCheckResistanceNpc::check_resistance(RE::MagicTarget* this_, RE::MagicItem* magic_item,
+                                            RE::Effect* effect, RE::TESBoundObject* bound_object)
+    -> float {
   if (!this_ || !magic_item || !effect) {
     logger::debug("Original resistance call");
     return check_resistance_(this_, magic_item, effect, bound_object);
@@ -378,7 +364,7 @@ auto OnCheckResistanceNpc::check_resistance(RE::MagicTarget*    this_, RE::Magic
 
   const auto& config = Reflyem::Config::get_singleton();
 
-  if (config.resist_tweaks().enable() && config.resist_tweaks().check_resistance()) {
+  if (config.resist_tweaks().enable() && config.resist_tweaks().enable_check_resistance()) {
     return Reflyem::ResistTweaks::check_resistance(*this_, *magic_item, *effect, bound_object,
                                                    config);
   }
@@ -386,9 +372,9 @@ auto OnCheckResistanceNpc::check_resistance(RE::MagicTarget*    this_, RE::Magic
   return check_resistance_(this_, magic_item, effect, bound_object);
 }
 
-auto OnCheckResistancePc::check_resistance(RE::MagicTarget*    this_, RE::MagicItem* magic_item,
-                                           RE::Effect*         effect,
-                                           RE::TESBoundObject* bound_object) -> float {
+auto OnCheckResistancePc::check_resistance(RE::MagicTarget* this_, RE::MagicItem* magic_item,
+                                           RE::Effect* effect, RE::TESBoundObject* bound_object)
+    -> float {
   if (!this_ || !magic_item || !effect) {
     logger::debug("Original resistance call");
     return check_resistance_(this_, magic_item, effect, bound_object);
@@ -396,7 +382,7 @@ auto OnCheckResistancePc::check_resistance(RE::MagicTarget*    this_, RE::MagicI
 
   const auto& config = Reflyem::Config::get_singleton();
 
-  if (config.resist_tweaks().enable() && config.resist_tweaks().check_resistance()) {
+  if (config.resist_tweaks().enable() && config.resist_tweaks().enable_check_resistance()) {
     return Reflyem::ResistTweaks::check_resistance(*this_, *magic_item, *effect, bound_object,
                                                    config);
   }
@@ -416,7 +402,6 @@ auto OnEnchIgnoresResistance::ignores_resistance(RE::MagicItem* this_) -> bool {
   }
 
   return ignores_resistance_(this_);
-
 }
 
 auto OnEnchGetNoAbsorb::get_no_absorb(RE::MagicItem* this_) -> bool {
@@ -432,7 +417,6 @@ auto OnEnchGetNoAbsorb::get_no_absorb(RE::MagicItem* this_) -> bool {
 
   return get_no_absorb_(this_);
 }
-
 
 auto install_hooks() -> void {
   logger::info("start install hooks"sv);

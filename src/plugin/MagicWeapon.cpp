@@ -3,19 +3,20 @@
 
 namespace Reflyem::MagicWeapon {
 
+// TODO: Воткнуть очередной костыль ради ползунков: DONE
 struct MagnitudeData {
   float magnitude;
   bool  only_first_effect;
+  float diff_mult;
 };
 
 namespace Flag {
 enum : int16_t {
-  kNone = 0,
+  kNone            = 0,
   kDivideMagnitude = 1,
   kFirstEffectOnly = 2,
 };
 }
-
 
 auto eval_percent(const float value) -> float {
   if (value > 100.f) {
@@ -30,7 +31,7 @@ auto eval_percent(const float value) -> float {
 };
 
 auto percent_from_enchantment(RE::EnchantmentItem& weapon_ench, const RE::BGSKeyword& keyword)
-  -> std::optional<float> {
+    -> std::optional<float> {
   for (const auto& effect : weapon_ench.effects) {
 
     if (effect && effect->baseEffect && effect->baseEffect->HasKeyword(&keyword)) {
@@ -40,25 +41,33 @@ auto percent_from_enchantment(RE::EnchantmentItem& weapon_ench, const RE::BGSKey
   return std::nullopt;
 }
 
-auto handle_cast(RE::Actor&           caster, RE::Actor& target, RE::SpellItem& spell,
-                 const MagnitudeData& data)
-  -> void {
+auto handle_cast(RE::Actor& caster, RE::Actor& target, RE::SpellItem& spell,
+                 const MagnitudeData& data) -> void {
+
+  const auto set_magnitude = [data](RE::Effect* effect) -> void {
+    if (effect->baseEffect && effect->baseEffect->data.primaryAV != RE::ActorValue::kHealth) {
+      effect->effectItem.magnitude = data.magnitude * data.diff_mult;
+    } else {
+      effect->effectItem.magnitude = data.magnitude;
+    }
+  };
+
   // TODO Добавить возможность выставить только в первый эффект магнитуду: DONE
   if (data.only_first_effect && !spell.effects.empty() && spell.effects[0]) {
     spell.effects[0]->effectItem.magnitude = data.magnitude;
+    set_magnitude(spell.effects[0]);
   } else {
 
     for (const auto& effect : spell.effects) {
       if (effect) {
-        effect->effectItem.magnitude = data.magnitude;
+        set_magnitude(effect);
       }
     }
-
   }
   Core::cast(spell, target, caster);
-};
+}
 
-auto handle_cast_magic_weapon_spell(RE::Actor&   caster, RE::Actor& target, float real_damage,
+auto handle_cast_magic_weapon_spell(RE::Actor& caster, RE::Actor& target, float real_damage,
                                     RE::HitData& hit_data) -> void {
 
   const auto& config = Config::get_singleton();
@@ -76,9 +85,8 @@ auto handle_cast_magic_weapon_spell(RE::Actor&   caster, RE::Actor& target, floa
   const auto total_damage          = real_damage;
   const auto physical_total_damage = hit_data.totalDamage;
 
-  const auto                 eval_magnitude = [&
-      ](const RE::SpellItem& spell, const float percent) -> MagnitudeData {
-
+  const auto eval_magnitude = [&](const RE::SpellItem& spell,
+                                  const float          percent) -> MagnitudeData {
     auto magnitude = total_damage * percent;
 
     if (real_damage >= magnitude) {
@@ -89,7 +97,7 @@ auto handle_cast_magic_weapon_spell(RE::Actor&   caster, RE::Actor& target, floa
     }
 
     if (const auto minus_damage = physical_total_damage * percent;
-      hit_data.totalDamage >= minus_damage) {
+        hit_data.totalDamage >= minus_damage) {
       hit_data.totalDamage = hit_data.totalDamage - minus_damage;
     } else {
       hit_data.totalDamage = 0.f;
@@ -106,8 +114,8 @@ auto handle_cast_magic_weapon_spell(RE::Actor&   caster, RE::Actor& target, floa
     }();
 
     return MagnitudeData{magnitude / mult,
-                         Core::bound_data_comparer(spell.boundData, Flag::kFirstEffectOnly)};
-
+                         Core::bound_data_comparer(spell.boundData, Flag::kFirstEffectOnly),
+                         Core::getting_damage_mult(target)};
   };
 
   for (uint32_t index = 0; index < spells_size; index++) {

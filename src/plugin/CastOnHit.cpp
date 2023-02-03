@@ -13,7 +13,7 @@ auto on_weapon_hit(RE::Actor* target, const RE::HitData& hit_data, const Config&
   if (!config.cast_on_hit().formlist_needkw() || !config.cast_on_hit().formlist_spells()) {
     return;
   }
-  
+
   const auto length_kw = config.cast_on_hit().formlist_needkw()->forms.size();
   const auto length_sp = config.cast_on_hit().formlist_spells()->forms.size();
   for (std::uint32_t index = 0u; index < length_kw && index < length_sp; index++) {

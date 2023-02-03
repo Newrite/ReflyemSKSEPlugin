@@ -32,7 +32,7 @@ public:
   }
 
   static auto create_safety_effect_data(RE::ActiveEffect* active_effect)
-    -> std::optional<SafetyEffectData> {
+      -> std::optional<SafetyEffectData> {
 
     if (!active_effect) {
       return std::nullopt;
@@ -52,19 +52,16 @@ public:
 
 auto bound_data_comparer(const RE::TESBoundObject::BOUND_DATA& bound_data,
                          const int16_t                         comparer_value) -> bool {
-  return comparer_value == bound_data.boundMax.x
-         && comparer_value == bound_data.boundMax.y
-         && comparer_value == bound_data.boundMax.z
-         && comparer_value == bound_data.boundMin.x
-         && comparer_value == bound_data.boundMin.y
-         && comparer_value == bound_data.boundMin.z;
+  return comparer_value == bound_data.boundMax.x && comparer_value == bound_data.boundMax.y &&
+         comparer_value == bound_data.boundMax.z && comparer_value == bound_data.boundMin.x &&
+         comparer_value == bound_data.boundMin.y && comparer_value == bound_data.boundMin.z;
 }
 
 auto get_random_int() -> int {
   // StackOverflow:
   // https://stackoverflow.com/questions/5008804/generating-a-random-integer-from-a-range
-  static std::random_device rd; // Only used once to initialise (seed) engine
-  static std::mt19937 rng(rd()); // Random-number engine used (Mersenne-Twister in this case)
+  static std::random_device rd;        // Only used once to initialise (seed) engine
+  static std::mt19937       rng(rd()); // Random-number engine used (Mersenne-Twister in this case)
   static std::uniform_int_distribution<int> uni(0, 100); // Guaranteed unbiased
   return uni(rng);
 }
@@ -112,6 +109,10 @@ auto can_modify_actor_value(const RE::ValueModifierEffect* a_this, const RE::Act
     return false;
   }
 
+  if (a_actor->IsDead()) {
+    return false;
+  }
+
   const auto caster_ptr = a_this->GetCasterActor();
   if (!caster_ptr || !a_actor || !a_this->effect || !a_this->effect->baseEffect) {
     return false;
@@ -153,7 +154,7 @@ auto can_modify_actor_value(const RE::ValueModifierEffect* a_this, const RE::Act
 // }
 
 auto get_effects_magnitude_sum(const std::vector<RE::ActiveEffect*>& effects)
-  -> std::optional<float> {
+    -> std::optional<float> {
   auto pos_value = 0.f;
   auto neg_value = 0.f;
 
@@ -180,7 +181,7 @@ auto get_effects_magnitude_sum(const std::vector<RE::ActiveEffect*>& effects)
 }
 
 auto get_effects_by_keyword(RE::Actor& actor, const RE::BGSKeyword& keyword)
-  -> std::vector<RE::ActiveEffect*> {
+    -> std::vector<RE::ActiveEffect*> {
   auto                           active_effects = actor.GetActiveEffectList();
   std::vector<RE::ActiveEffect*> effects        = {};
   for (auto active_effect : *active_effects) {
@@ -201,24 +202,24 @@ auto get_effects_by_keyword(RE::Actor& actor, const RE::BGSKeyword& keyword)
   return effects;
 }
 
-auto get_dual_value_mult(const RE::ValueModifierEffect& value_effect) -> float {
-  if (!value_effect.effect || !value_effect.effect->baseEffect) {
+auto get_dual_value_mult(const RE::ValueModifierEffect& active_effect) -> float {
+  if (!active_effect.effect || !active_effect.effect->baseEffect) {
     return 0.f;
   }
-  return value_effect.effect->baseEffect->data.secondAVWeight;
+  return active_effect.effect->baseEffect->data.secondAVWeight;
 }
 
-auto get_second_av(const RE::ValueModifierEffect& value_effect) -> RE::ActorValue {
-  if (!value_effect.effect || !value_effect.effect->baseEffect) {
+auto get_second_av(const RE::ActiveEffect& active_effect) -> RE::ActorValue {
+  if (!active_effect.effect || !active_effect.effect->baseEffect) {
     return RE::ActorValue::kNone;
   }
 
-  if (!value_effect.effect->baseEffect->HasArchetype(
-      RE::EffectSetting::Archetype::kDualValueModifier)) {
+  if (!active_effect.effect->baseEffect->HasArchetype(
+          RE::EffectSetting::Archetype::kDualValueModifier)) {
     return RE::ActorValue::kNone;
   }
 
-  return value_effect.effect->baseEffect->data.secondaryAV;
+  return active_effect.effect->baseEffect->data.secondaryAV;
 }
 
 auto set_av_regen_delay(RE::AIProcess* process, RE::ActorValue av, float time) -> void {
@@ -273,15 +274,15 @@ auto actor_has_active_mgef_with_keyword(RE::Actor& actor, const RE::BGSKeyword& 
 auto cast(RE::SpellItem& spell, RE::Actor& target, RE::Actor& caster) -> void {
   if (spell.data.delivery == RE::MagicSystem::Delivery::kSelf) {
     caster.GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)
-          ->CastSpellImmediate(&spell, true, &caster, 1.00f, false, 0.0f, &caster);
+        ->CastSpellImmediate(&spell, true, &caster, 1.00f, false, 0.0f, &caster);
   } else {
     caster.GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)
-          ->CastSpellImmediate(&spell, true, &target, 1.00f, false, 0.0f, &caster);
+        ->CastSpellImmediate(&spell, true, &target, 1.00f, false, 0.0f, &caster);
   }
 }
 
 auto cast_on_handle(RE::TESForm* keyword, RE::TESForm* spell, RE::Actor& target, RE::Actor& caster)
-  -> void {
+    -> void {
   if (!spell) {
     return;
   }
@@ -303,7 +304,7 @@ auto cast_on_handle(RE::TESForm* keyword, RE::TESForm* spell, RE::Actor& target,
     allow_cast = true;
   }
 
-  if (!allow_cast && !actor_has_active_mgef_with_keyword(caster, *keyword_ptr)) {
+  if (!allow_cast && !has_absolute_keyword(caster, *keyword_ptr)) {
     return;
   }
 
@@ -344,7 +345,7 @@ auto worn_has_keyword(RE::Actor* actor, RE::BGSKeyword* keyword) -> bool {
 }
 
 auto do_combat_spell_apply(RE::Actor* actor, RE::SpellItem* spell, RE::TESObjectREFR* target)
-  -> void {
+    -> void {
   if (!actor || !spell || !target) {
     return;
   }

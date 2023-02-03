@@ -24,8 +24,8 @@ template <typename L, typename R> struct Either {
 struct ActorsCache {
   struct Data {
     enum class TickValues {
-      k50Ms = 0,
-      k100Ms = 1,
+      k50Ms   = 0,
+      k100Ms  = 1,
       k1000Ms = 2,
     };
 
@@ -38,16 +38,19 @@ struct ActorsCache {
 
     float cast_on_crit_delay_;
 
-    // TODO Переписать с тик апдейтов на дельту полностью (ТикКаунт продолжает накапливаться во время паузы и тд)
-    uint64_t last_update_tick50_;
-    uint64_t last_update_tick100_;
-    uint64_t last_update_tick1000_;
+    // TODO Переписать с тик апдейтов на дельту полностью (ТикКаунт продолжает накапливаться во
+    // время паузы и тд): DONE
+    float last_update_tick50_;
+    float last_update_tick100_;
+    float last_update_tick1000_;
+
+    uint64_t last_update_;
 
   public:
     explicit Data()
-      : regen_health_delay_(0.f), regen_stamina_delay_(0.f), regen_magicka_delay_(0.f),
-        delta_update_(0.f), cast_on_crit_delay_(0.f), last_update_tick50_(GetTickCount64()),
-        last_update_tick100_(GetTickCount64()), last_update_tick1000_(GetTickCount64()) {}
+        : regen_health_delay_(0.f), regen_stamina_delay_(0.f), regen_magicka_delay_(0.f),
+          delta_update_(0.f), cast_on_crit_delay_(0.f), last_update_tick50_(0.f),
+          last_update_tick100_(0.f), last_update_tick1000_(0.f), last_update_(GetTickCount64()) {}
 
     [[nodiscard]] auto delta_update() const -> float { return delta_update_; }
 
@@ -69,8 +72,10 @@ struct ActorsCache {
     [[nodiscard]] auto regen_health_delay() const -> float { return regen_health_delay_; }
     [[nodiscard]] auto regen_stamina_delay() const -> float { return regen_stamina_delay_; }
     [[nodiscard]] auto regen_magicka_delay() const -> float { return regen_magicka_delay_; }
+    [[nodiscard]] auto last_update() const -> uint64_t { return last_update_; }
+    auto               set_last_update() -> void { last_update_ = GetTickCount64(); }
 
-    [[nodiscard]] auto last_update_tick(const TickValues tick) const -> uint64_t {
+    [[nodiscard]] auto last_update_tick(const TickValues tick) const -> float {
       if (tick == TickValues::k50Ms) {
         return last_update_tick50_;
       }
@@ -80,26 +85,22 @@ struct ActorsCache {
       return last_update_tick1000_;
     }
 
-    [[nodiscard]] auto delta_tick(const TickValues tick) const -> uint64_t {
+    auto set_tick(const TickValues tick) -> void {
       if (tick == TickValues::k50Ms) {
-        return GetTickCount64() - last_update_tick50_;
+        last_update_tick50_ = 0.05f;
+        return;
       }
       if (tick == TickValues::k100Ms) {
-        return GetTickCount64() - last_update_tick100_;
+        last_update_tick100_ = 0.1f;
+        return;
       }
-      return GetTickCount64() - last_update_tick1000_;
+      last_update_tick1000_ = 1.f;
     }
 
-    auto update_tick(const TickValues tick) -> void {
-      if (tick == TickValues::k50Ms) {
-        last_update_tick50_ = GetTickCount64();
-        return;
-      }
-      if (tick == TickValues::k100Ms) {
-        last_update_tick100_ = GetTickCount64();
-        return;
-      }
-      last_update_tick1000_ = GetTickCount64();
+    auto update_ticks(const float delta) -> void {
+      last_update_tick50_ -= delta;
+      last_update_tick100_ -= delta;
+      last_update_tick1000_ -= delta;
     }
 
     auto set_regen_health_delay(const float delay) -> void {
@@ -162,7 +163,8 @@ private:
   std::mutex                mutex_;
 
   [[nodiscard]] static auto is_garbage(const Data& data) -> bool {
-    return data.delta_tick(Data::TickValues::k1000Ms) >= garbage_time;
+    const auto tick_now = GetTickCount64();
+    return (tick_now - data.last_update()) >= garbage_time;
   }
 
   auto garbage_collector() -> void {
@@ -173,8 +175,7 @@ private:
     }
   }
 
-  explicit ActorsCache()
-    : cache_map_(FormsMap{}) {}
+  explicit ActorsCache() : cache_map_(FormsMap{}) {}
 
 public:
   auto at_try(const RE::FormID key) -> std::optional<std::reference_wrapper<Data>> {
@@ -223,28 +224,28 @@ auto damage_actor_value(RE::Actor& actor, RE::ActorValue av, float value) -> voi
 auto set_av_regen_delay(RE::AIProcess* process, RE::ActorValue av, float time) -> void;
 
 auto can_modify_actor_value(const RE::ValueModifierEffect* a_this, const RE::Actor* a_actor,
-                            float                          a_value, RE::ActorValue  av) -> bool;
+                            float a_value, RE::ActorValue av) -> bool;
 
 auto flash_hud_meter(const RE::ActorValue av) -> void;
 
 auto actor_has_active_mgef_with_keyword(RE::Actor& actor, const RE::BGSKeyword& keyword) -> bool;
 
 auto get_effects_magnitude_sum(const std::vector<RE::ActiveEffect*>& effects)
-  -> std::optional<float>;
+    -> std::optional<float>;
 
 auto get_effects_by_keyword(RE::Actor& actor, const RE::BGSKeyword& keyword)
-  -> std::vector<RE::ActiveEffect*>;
+    -> std::vector<RE::ActiveEffect*>;
 
-auto get_dual_value_mult(const RE::ValueModifierEffect& value_effect) -> float;
+auto get_dual_value_mult(const RE::ValueModifierEffect& active_effect) -> float;
 
-auto get_second_av(const RE::ValueModifierEffect& value_effect) -> RE::ActorValue;
+auto get_second_av(const RE::ActiveEffect& active_effect) -> RE::ActorValue;
 
 auto getting_damage_mult(RE::Actor& actor) -> float;
 
 auto cast(RE::SpellItem& spell, RE::Actor& target, RE::Actor& caster) -> void;
 
 auto cast_on_handle(RE::TESForm* keyword, RE::TESForm* spell, RE::Actor& target, RE::Actor& caster)
-  -> void;
+    -> void;
 
 auto is_power_attacking(RE::Actor& actor) -> bool;
 
@@ -253,6 +254,6 @@ auto has_absolute_keyword(RE::Actor& actor, RE::BGSKeyword& keyword) -> bool;
 auto is_casting_actor(RE::Character& character) -> bool;
 
 auto do_combat_spell_apply(RE::Actor* actor, RE::SpellItem* spell, RE::TESObjectREFR* target)
-  -> void;
+    -> void;
 
 } // namespace Reflyem::Core

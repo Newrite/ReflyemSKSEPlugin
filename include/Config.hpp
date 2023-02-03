@@ -192,15 +192,17 @@ private:
     [[nodiscard]] auto chance_av() const -> RE::ActorValue { return chance_av_; }
     [[nodiscard]] auto damage_av() const -> RE::ActorValue { return damage_av_; }
     [[nodiscard]] auto high() const -> std::int32_t { return high_; }
+    [[nodiscard]] auto keyword_immun() const -> RE::BGSKeyword* { return keyword_immun_; }
 
     WeaponCritConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     WeaponCritConfig() = default;
 
   private:
-    bool           enable_;
-    RE::ActorValue chance_av_;
-    RE::ActorValue damage_av_;
-    std::int32_t   high_;
+    bool            enable_;
+    RE::ActorValue  chance_av_;
+    RE::ActorValue  damage_av_;
+    std::int32_t    high_;
+    RE::BGSKeyword* keyword_immun_;
   };
 
   struct MagickCritConfig {
@@ -211,6 +213,7 @@ private:
     [[nodiscard]] auto high() const -> std::int32_t { return high_; }
     [[nodiscard]] auto must_be_or_not_be() const -> bool { return must_be_or_not_be_; }
     [[nodiscard]] auto mgef_keyword() const -> RE::BGSKeyword* { return mgef_keyword_; }
+    [[nodiscard]] auto keyword_immun() const -> RE::BGSKeyword* { return keyword_immun_; }
 
     MagickCritConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     MagickCritConfig() = default;
@@ -222,6 +225,7 @@ private:
     std::int32_t    high_;
     bool            must_be_or_not_be_;
     RE::BGSKeyword* mgef_keyword_;
+    RE::BGSKeyword* keyword_immun_;
   };
 
   struct CastOnCritConfig {
@@ -493,18 +497,62 @@ private:
   };
 
   struct ResistTweaksConfig {
+    [[nodiscard]] auto enable_damage_resist_tweak() const -> bool {
+      return enable_damage_resist_tweak_;
+    }
+
+    [[nodiscard]] auto no_double_damage_resist_check() const -> bool {
+      return no_double_damage_resist_check_;
+    }
+
+    [[nodiscard]] auto enable_resist_penetration() const -> bool {
+      return enable_resist_penetration_;
+    }
+
+    [[nodiscard]] auto flat_penetration() const -> bool { return flat_penetration_; }
+    [[nodiscard]] auto penetration_av() const -> RE::ActorValue { return penetration_av_; }
+    [[nodiscard]] auto penetration_kw() const -> RE::BGSKeyword* { return penetration_kw_; }
+    [[nodiscard]] auto penetration_high() const -> std::int32_t { return penetration_high_; }
+
     [[nodiscard]] auto enable() const -> bool { return enable_; }
-    [[nodiscard]] auto check_resistance() const -> bool { return check_resistance_; }
+    [[nodiscard]] auto enable_check_resistance() const -> bool { return enable_check_resistance_; }
+
+    [[nodiscard]] auto no_double_resist_check_magick() const -> bool {
+      return no_double_resist_check_magick_;
+    }
+
+    [[nodiscard]] auto no_double_resist_check_poison() const -> bool {
+      return no_double_resist_check_poison_;
+    }
+
+    [[nodiscard]] auto no_av_damage_resist_penetration() const -> bool {
+      return no_av_damage_resist_penetration_;
+    }
+
+    [[nodiscard]] auto npc_max_resistance() const -> bool { return npc_max_resistance_; }
+    [[nodiscard]] auto resist_weight() const -> float { return resist_weight_; }
     [[nodiscard]] auto ench_get_no_absorb() const -> bool { return ench_get_no_absorb_; }
     [[nodiscard]] auto ench_ignore_resistance() const -> bool { return ench_ignore_resistance_; }
     ResistTweaksConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     ResistTweaksConfig() = default;
 
   private:
-    bool enable_;
-    bool check_resistance_;
-    bool ench_get_no_absorb_;
-    bool ench_ignore_resistance_;
+    bool            enable_;
+    bool            enable_check_resistance_;
+    bool            no_double_resist_check_magick_;
+    bool            no_double_resist_check_poison_;
+    bool            no_av_damage_resist_penetration_;
+    bool            enable_damage_resist_tweak_;
+    bool            no_double_damage_resist_check_;
+    bool            enable_resist_penetration_;
+    bool            flat_penetration_;
+    RE::ActorValue  penetration_av_;
+    RE::BGSKeyword* penetration_kw_;
+    std::int32_t    penetration_high_;
+    bool            npc_max_resistance_;
+    float           resist_weight_;
+    bool            ench_get_no_absorb_;
+    bool            ench_ignore_resistance_;
   };
 
   // general
