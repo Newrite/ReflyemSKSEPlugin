@@ -1,6 +1,6 @@
 #include "plugin/ResourceManager.hpp"
 
-// TODO Переписать с хуков анимаций на прямые хуки в атаку
+// TODO: Переписать с хуков анимаций на прямые хуки в атаку
 namespace Reflyem::ResourceManager {
 
 using WeaponOrArmor = Core::Either<RE::TESObjectWEAP*, RE::TESObjectARMO*>;
@@ -457,17 +457,9 @@ auto bash_spend(RE::Actor& actor, const WeaponOrArmor& form, const bool is_power
   logger::debug("end drain value"sv);
   drain_value->drain(actor);
   logger::debug("end drain"sv);
-  return;
 }
 
-// TODO Добавить обработку арбалетов
-auto ranged_weapon_spend(RE::Actor& actor, const RE::TESObjectWEAP& weapon, const Config& config)
-    -> void {
-  const auto cost        = get_attack_drain_cost(actor, weapon, false, config) * 0.1f;
-  const auto drain_value = get_drain_value(actor, weapon, config, cost, true);
-  drain_value->drain(actor);
-}
-
+// TODO: Нужен прямой хук в прыжок, для совместимости с CGO
 auto jump_spend(RE::Actor& actor, const Config& config) -> void {
   spend_actor_value(actor, RE::ActorValue::kStamina, -config.resource_manager().jump_cost());
 }
@@ -490,16 +482,18 @@ auto get_weapon(const RE::Actor& actor, const bool is_left_hand, const Config& c
 }
 
 auto ranged_spend_handler(RE::Character& character, const Config& config) -> void {
+  const auto& weapon  = get_weapon(character, false, config);
+  const auto  state   = character.actorState1.meleeAttackState;
+  auto        is_draw = state == RE::ATTACK_STATE_ENUM::kBowDraw ||
+                 state == RE::ATTACK_STATE_ENUM::kBowDrawn ||
+                 state == RE::ATTACK_STATE_ENUM::kBowAttached;
 
-  const auto& weapon = get_weapon(character, false, config);
+  if (weapon.IsCrossbow()) {
+    is_draw = state == RE::ATTACK_STATE_ENUM::kBowAttached;
+  }
 
-  const auto state   = character.actorState1.meleeAttackState;
-  const auto is_draw = state == RE::ATTACK_STATE_ENUM::kBowDraw ||
-                       state == RE::ATTACK_STATE_ENUM::kBowDrawn ||
-                       state == RE::ATTACK_STATE_ENUM::kBowAttached;
-
-  // TODO: Добавить обработку и арбалета
-  if (weapon.IsBow() && is_draw) {
+  // TODO: Добавить обработку и арбалета: DONE
+  if ((weapon.IsBow() || weapon.IsCrossbow()) && is_draw) {
     const auto cost        = get_attack_drain_cost(character, weapon, false, config) * 0.1f;
     const auto drain_value = get_drain_value(character, weapon, config, cost, true);
     drain_value->drain(character);

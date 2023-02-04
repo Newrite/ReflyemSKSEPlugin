@@ -107,10 +107,6 @@ auto check_resistance(RE::MagicTarget& this_, RE::MagicItem& magic_item, const R
   }
 
   const auto resist_av = effect.baseEffect->data.resistVariable;
-  if (resist_av == RE::ActorValue::kNone) {
-    logger::debug("Resist kNone"sv);
-    return 1.f;
-  }
 
   // ReSharper disable once CppCStyleCast  // NOLINT(clang-diagnostic-cast-align)
   const auto actor = (RE::Actor*)((char*)&this_ - 0x98);
@@ -200,7 +196,10 @@ auto check_resistance(RE::MagicTarget& this_, RE::MagicItem& magic_item, const R
     return resist_percent * second_resist_percent;
   }
 
-  const auto resist_value = resist_value_after_penetration(actor, resist_av);
+  auto resist_value = 0.f;
+  if (resist_av != RE::ActorValue::kNone) {
+    resist_value = resist_value_after_penetration(actor, resist_av);
+  }
   if (resist_value <= low_cap) {
     return 1.f * second_resist_percent;
   }

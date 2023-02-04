@@ -31,16 +31,16 @@ const std::vector DIRECTIONS{MovementPair(MovementDirections::kForward, "Forward
 auto get_actor_effects_mask(RE::Actor& actor, const Config& config) -> std::unique_ptr<MgefMask> {
   MgefMask f_mask{{{0, 0, 0}}};
   logger::debug("start get actor mgef keyword"sv);
-  f_mask.at(0).at(0) = 1;
-  if (Core::actor_has_active_mgef_with_keyword(actor, *config.tk_dodge().health_kw())) {
+  f_mask.at(0).at(0) = 1; 
+  if (Core::has_absolute_keyword(actor, *config.tk_dodge().health_kw())) {
     f_mask.at(0).at(0) = 0;
     f_mask.at(0).at(1) = 1;
   }
-  if (Core::actor_has_active_mgef_with_keyword(actor, *config.tk_dodge().magicka_kw())) {
+  if (Core::has_absolute_keyword(actor, *config.tk_dodge().magicka_kw())) {
     f_mask.at(0).at(0) = 0;
     f_mask.at(0).at(2) = 1;
   }
-  if (Core::actor_has_active_mgef_with_keyword(actor, *config.tk_dodge().stamina_kw())) {
+  if (Core::has_absolute_keyword(actor, *config.tk_dodge().stamina_kw())) {
     f_mask.at(0).at(0) = 1;
   }
   logger::debug("end get actor mgef keyword"sv);
