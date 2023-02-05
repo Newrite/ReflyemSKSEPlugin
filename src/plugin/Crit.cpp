@@ -1,7 +1,6 @@
 #include "plugin/Crit.hpp"
 #include "Core.hpp"
 
-// TODO: Добавить возможность выдать кейворд который гарантирует иммунитет к критам: DONE
 namespace Reflyem::Crit {
 
 auto is_critical(RE::Actor& aggressor, const RE::ActorValue crit_chance_av) -> bool {

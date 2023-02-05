@@ -3,7 +3,6 @@
 
 namespace Reflyem::MagicWeapon {
 
-// TODO: Воткнуть очередной костыль ради ползунков: DONE
 struct MagnitudeData {
   float magnitude;
   bool  only_first_effect;
@@ -51,8 +50,7 @@ auto handle_cast(RE::Actor& caster, RE::Actor& target, RE::SpellItem& spell,
       effect->effectItem.magnitude = data.magnitude;
     }
   };
-
-  // TODO Добавить возможность выставить только в первый эффект магнитуду: DONE
+  
   if (data.only_first_effect && !spell.effects.empty() && spell.effects[0]) {
     spell.effects[0]->effectItem.magnitude = data.magnitude;
     set_magnitude(spell.effects[0]);
@@ -104,12 +102,11 @@ auto handle_cast_magic_weapon_spell(RE::Actor& caster, RE::Actor& target, float 
     }
 
     const auto mult = [&]() -> float {
-      // TODO Проверить работу этой проверки, точно ли берет от самого спелла: DONE
       if (Core::bound_data_comparer(spell.boundData, Flag::kDivideMagnitude)) {
-        logger::info("magic weapon:: mult count of spell");
+        logger::debug("magic weapon:: mult count of spell");
         return static_cast<float>(spell.effects.size());
       }
-      logger::info("magic weapon:: one count of spell");
+      logger::debug("magic weapon:: one count of spell");
       return 1.f;
     }();
 

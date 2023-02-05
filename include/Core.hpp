@@ -23,38 +23,115 @@ template <typename L, typename R> struct Either {
 
 struct ActorsCache {
   struct Data {
-    enum class TickValues {
+    enum class Updates {
       k50Ms   = 0,
       k100Ms  = 1,
       k1000Ms = 2,
     };
 
   private:
-    float regen_health_delay_;
-    float regen_stamina_delay_;
-    float regen_magicka_delay_;
+    float regen_health_delay_{0.f};
+    float regen_stamina_delay_{0.f};
+    float regen_magicka_delay_{0.f};
 
-    float delta_update_;
+    float last_delta_update_{0.f};
 
-    float cast_on_crit_delay_;
+    float cast_on_crit_delay_{0.f};
 
-    // TODO Переписать с тик апдейтов на дельту полностью (ТикКаунт продолжает накапливаться во
-    // время паузы и тд): DONE
-    float last_update_tick50_;
-    float last_update_tick100_;
-    float last_update_tick1000_;
+    float timing_block_start_delta_{0.f};
+    bool  blocking_flag_{false};
 
-    uint64_t last_update_;
+    float update005_{0.f};
+    float update01_{0.f};
+    float update1_{0.f};
+
+    uint64_t last_tick_count_;
+
+    // TODO: Тайминг блок реализовать
+    // Поднимается щит, ставится делей на 1.0 и начинает убывать каждый фрейм, делей меньше 0 быть
+    // не может Последующие удары которые заблокированы, смотрят дельту с 1.0 - делей, если она
+    // меньше нужного значения, засчитывается тайминг блок \ парри флаг на из блокинг, который может
+    // замутироваться только когда делй дойдет до 0 и позволит снова поставить его на 1 при поднятии
+    // щита
+
+    auto mod_timing_block_start_delta(const float delta) -> float {
+      timing_block_start_delta_ -= std::abs(delta);
+      if (timing_block_start_delta_ < 0.f) {
+        timing_block_start_delta_ = 0.f;
+      }
+      return timing_block_start_delta_;
+    }
+
+    auto mod_health_delay(const float delta) -> float {
+      regen_health_delay_ -= delta;
+      if (regen_health_delay_ < 0.f) {
+        regen_health_delay_ = 0.f;
+      }
+      return regen_health_delay_;
+    }
+
+    auto mod_stamina_delay(const float delta) -> float {
+      regen_stamina_delay_ -= delta;
+      if (regen_stamina_delay_ < 0.f) {
+        regen_stamina_delay_ = 0.f;
+      }
+      return regen_stamina_delay_;
+    }
+
+    auto mod_magicka_delay(const float delta) -> float {
+      regen_magicka_delay_ -= delta;
+      if (regen_magicka_delay_ < 0.f) {
+        regen_magicka_delay_ = 0.f;
+      }
+      return regen_magicka_delay_;
+    }
+
+    auto mod_all_regens_delay(const float delta) -> void {
+      mod_magicka_delay(delta);
+      mod_health_delay(delta);
+      mod_stamina_delay(delta);
+    }
+
+    auto mod_cast_on_crit_delay(const float delay) -> void {
+      cast_on_crit_delay_ -= delay;
+      if (cast_on_crit_delay_ < 0.f) {
+        cast_on_crit_delay_ = 0.f;
+      }
+    }
+
+    auto mod_update_ticks(const float delta) -> void {
+      update005_ -= delta;
+      update01_ -= delta;
+      update1_ -= delta;
+    }
 
   public:
-    explicit Data()
-        : regen_health_delay_(0.f), regen_stamina_delay_(0.f), regen_magicka_delay_(0.f),
-          delta_update_(0.f), cast_on_crit_delay_(0.f), last_update_tick50_(0.f),
-          last_update_tick100_(0.f), last_update_tick1000_(0.f), last_update_(GetTickCount64()) {}
+    explicit Data() : last_tick_count_(GetTickCount64()) {}
 
-    [[nodiscard]] auto delta_update() const -> float { return delta_update_; }
+    [[nodiscard]] auto blocking_flag() const -> bool { return blocking_flag_; }
 
-    auto set_delta_update(const float delta) -> void { delta_update_ = delta; }
+    auto set_blocking_flag(const bool flag) -> void {
+      if (flag) {
+        blocking_flag_ = true;
+      }
+      if (timing_block_start_delta_ <= 0.f) {
+        blocking_flag_ = flag;
+      }
+    }
+
+    auto set_timing_block_start_delta(const float delta) -> void {
+      if (!blocking_flag_ && timing_block_start_delta_ <= 0.f) {
+        timing_block_start_delta_ = delta;
+      }
+    }
+
+    [[nodiscard]] auto timing_block_start_delta() const -> float {
+      return timing_block_start_delta_;
+    }
+
+    [[nodiscard]] auto last_delta_update() const -> float { return last_delta_update_; }
+
+    auto set_last_delta_update(const float delta) -> void { last_delta_update_ = delta; }
 
     [[nodiscard]] auto cast_on_crit_delay() const -> float { return cast_on_crit_delay_; }
 
@@ -62,45 +139,41 @@ struct ActorsCache {
       cast_on_crit_delay_ = cast_on_crit_delay;
     }
 
-    auto mod_cast_on_crit_delay(const float delay) -> void {
-      cast_on_crit_delay_ = delay;
-      if (cast_on_crit_delay_ < 0.f) {
-        cast_on_crit_delay_ = 0.f;
-      }
-    }
-
     [[nodiscard]] auto regen_health_delay() const -> float { return regen_health_delay_; }
     [[nodiscard]] auto regen_stamina_delay() const -> float { return regen_stamina_delay_; }
     [[nodiscard]] auto regen_magicka_delay() const -> float { return regen_magicka_delay_; }
-    [[nodiscard]] auto last_update() const -> uint64_t { return last_update_; }
-    auto               set_last_update() -> void { last_update_ = GetTickCount64(); }
+    [[nodiscard]] auto last_tick_count() const -> uint64_t { return last_tick_count_; }
+    auto               refresh_last_tick_count() -> void { last_tick_count_ = GetTickCount64(); }
 
-    [[nodiscard]] auto last_update_tick(const TickValues tick) const -> float {
-      if (tick == TickValues::k50Ms) {
-        return last_update_tick50_;
+    [[nodiscard]] auto update(const Updates tick) const -> float {
+      switch (tick) {
+      case Updates::k50Ms: {
+        return update005_;
       }
-      if (tick == TickValues::k100Ms) {
-        return last_update_tick100_;
+      case Updates::k100Ms: {
+        return update01_;
       }
-      return last_update_tick1000_;
+      case Updates::k1000Ms: {
+        return update1_;
+      }
+      }
+      return 1.f;
     }
 
-    auto set_tick(const TickValues tick) -> void {
-      if (tick == TickValues::k50Ms) {
-        last_update_tick50_ = 0.05f;
+    auto refresh_update(const Updates tick) -> void {
+      switch (tick) {
+      case Updates::k50Ms: {
+        update005_ = 0.05f;
         return;
       }
-      if (tick == TickValues::k100Ms) {
-        last_update_tick100_ = 0.1f;
+      case Updates::k100Ms: {
+        update01_ = 0.1f;
         return;
       }
-      last_update_tick1000_ = 1.f;
-    }
-
-    auto update_ticks(const float delta) -> void {
-      last_update_tick50_ -= delta;
-      last_update_tick100_ -= delta;
-      last_update_tick1000_ -= delta;
+      case Updates::k1000Ms: {
+        update1_ = 1.f;
+      }
+      }
     }
 
     auto set_regen_health_delay(const float delay) -> void {
@@ -124,34 +197,11 @@ struct ActorsCache {
       }
     }
 
-    auto mod_health_delay(const float delta) -> float {
-      regen_health_delay_ += delta;
-      if (regen_health_delay_ < 0.f) {
-        regen_health_delay_ = 0.f;
-      }
-      return regen_health_delay_;
-    }
-
-    auto mod_stamina_delay(const float delta) -> float {
-      regen_stamina_delay_ += delta;
-      if (regen_stamina_delay_ < 0.f) {
-        regen_stamina_delay_ = 0.f;
-      }
-      return regen_stamina_delay_;
-    }
-
-    auto mod_magicka_delay(const float delta) -> float {
-      regen_magicka_delay_ += delta;
-      if (regen_magicka_delay_ < 0.f) {
-        regen_magicka_delay_ = 0.f;
-      }
-      return regen_magicka_delay_;
-    }
-
-    auto mod_all_regens_delay(const float delta) -> void {
-      mod_magicka_delay(delta);
-      mod_health_delay(delta);
-      mod_stamina_delay(delta);
+    auto handle_delta(const float delta) -> void {
+      mod_update_ticks(delta);
+      mod_all_regens_delay(delta);
+      mod_cast_on_crit_delay(delta);
+      mod_timing_block_start_delta(delta);
     }
   };
 
@@ -164,7 +214,7 @@ private:
 
   [[nodiscard]] static auto is_garbage(const Data& data) -> bool {
     const auto tick_now = GetTickCount64();
-    return (tick_now - data.last_update()) >= garbage_time;
+    return (tick_now - data.last_tick_count()) >= garbage_time;
   }
 
   auto garbage_collector() -> void {
@@ -255,5 +305,8 @@ auto is_casting_actor(RE::Character& character) -> bool;
 
 auto do_combat_spell_apply(RE::Actor* actor, RE::SpellItem* spell, RE::TESObjectREFR* target)
     -> void;
+
+auto place_at_me(RE::TESObjectREFR* target, RE::TESForm* form, std::uint32_t count,
+                 bool force_persist, bool initially_disabled) -> RE::TESObjectREFR*;
 
 } // namespace Reflyem::Core

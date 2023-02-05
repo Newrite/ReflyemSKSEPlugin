@@ -46,7 +46,7 @@ target("Reflyem")
         description = "Reflyem additions"
     })
 
-    set_targetdir("G:\\MO2Enderal\\mods\\Reflyem\\SKSE\\Plugins")
+    set_targetdir("G:/MO2Enderal/mods/Reflyem/SKSE/Plugins/")
 
     add_files("/src/**.cpp")
     -- add_files("src/**.ixx", "src/plugin/**.ixx")

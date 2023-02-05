@@ -31,7 +31,7 @@ const std::vector DIRECTIONS{MovementPair(MovementDirections::kForward, "Forward
 auto get_actor_effects_mask(RE::Actor& actor, const Config& config) -> std::unique_ptr<MgefMask> {
   MgefMask f_mask{{{0, 0, 0}}};
   logger::debug("start get actor mgef keyword"sv);
-  f_mask.at(0).at(0) = 1; 
+  f_mask.at(0).at(0) = 1;
   if (Core::has_absolute_keyword(actor, *config.tk_dodge().health_kw())) {
     f_mask.at(0).at(0) = 0;
     f_mask.at(0).at(1) = 1;
@@ -380,31 +380,36 @@ auto get_sprint_key(const RE::INPUT_DEVICE a_device) -> std::uint32_t {
   return key;
 }
 
-auto process_event_player_animation(const RE::BSAnimationGraphEvent* event,
-                                    RE::BSTEventSource<RE::BSAnimationGraphEvent>*,
-                                    const Config& config) -> RE::BSEventNotifyControl {
-  if (!event) {
-    return RE::BSEventNotifyControl::kContinue;
+auto animation_handler(const RE::BSAnimationGraphEvent& event, const Config& config) -> void {
+  
+  if (!event.holder->IsPlayerRef()) {
+    return;
   }
 
-  if (event->holder && event->holder->IsPlayerRef()) {
-    if (event->tag == "TKDR_DodgeStart"sv) {
-      const auto actor = const_cast<RE::Actor*>(event->holder->As<RE::Actor>());
-      if (!actor) {
-        return RE::BSEventNotifyControl::kContinue;
-      }
+  if (const auto actor = const_cast<RE::Actor*>(event.holder->As<RE::Actor>()); actor) {
 
+    switch (AnimationEventHandler::try_find_animation(fmt::format("{}"sv, event.tag))) {
+    case AnimationEventHandler::AnimationEvent::kTkDodgeStart: {
+      
       if (const auto drain_values = get_drain_value(*actor, config)) {
         drain_values->drain(*actor);
       }
+       
       logger::debug(FMT_STRING("TK Dodge Start, Time {}!"), clock());
-
-    } else if (event->tag == "TKDR_IFrameEnd") {
+      return;
+    }        
+    case AnimationEventHandler::AnimationEvent::kTkDodgeIFrameEnd: {
       logger::debug(FMT_STRING("Invulnerable Frame End!, Time {}"), clock());
+      return;
+    }
+    case AnimationEventHandler::AnimationEvent::kWeaponSwing:
+    case AnimationEventHandler::AnimationEvent::kWeaponLeftSwing:
+    case AnimationEventHandler::AnimationEvent::kJumpUp:
+    case AnimationEventHandler::AnimationEvent::kBowDrawStart:
+    case AnimationEventHandler::AnimationEvent::kBashExit:
+    case AnimationEventHandler::AnimationEvent::kNone:;
     }
   }
-
-  return RE::BSEventNotifyControl::kContinue;
 }
 
 auto is_dodge_button_active(const RE::ButtonEvent& button, const std::uint32_t key,
@@ -503,7 +508,6 @@ auto process_event_input_handler(RE::InputEvent* const* event, RE::BSTEventSourc
         player_character->SetGraphVariableFloat(
             "TKDR_IframeDuration",
             i_frame_duration);                                   // Set invulnerable frame duration
-        PlayerAnimationHandler::register_sink(player_character); // Register event sink
         player_character->NotifyAnimationGraph(dodge_event);     // Send TK Dodge Event
         return RE::BSEventNotifyControl::kContinue;
       }

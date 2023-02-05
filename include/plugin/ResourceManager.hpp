@@ -34,8 +34,7 @@ auto ranged_spend_handler(RE::Character& character, const Config& config) -> voi
 
 auto update_actor(RE::Character& character, float delta, const Config& config) -> void;
 
-auto animation_handler(AnimationEventHandler::AnimationEvent animation, RE::Actor& actor,
-                       bool is_power_attack, const Config& config) -> void;
+auto animation_handler(const RE::BSAnimationGraphEvent& event, const Config& config) -> void;
 
 auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& config) -> void;
 

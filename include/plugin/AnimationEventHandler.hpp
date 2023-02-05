@@ -1,33 +1,37 @@
 #pragma once
 
 #include "Config.hpp"
-#include <cache/cache.hpp>
 
-namespace Reflyem {
-namespace AnimationEventHandler {
+namespace Reflyem::AnimationEventHandler {
 
 enum class AnimationEvent {
-  kWeaponSwing     = 0,
-  kWeaponLeftSwing = 1,
-  kJumpUp          = 2,
-  kBowDrawStart    = 3,
-  kBashExit        = 4,
-  kNone            = 99,
+  kWeaponSwing      = 0,
+  kWeaponLeftSwing  = 1,
+  kJumpUp           = 2,
+  kBowDrawStart     = 3,
+  kBashExit         = 4,
+  kTkDodgeStart     = 5,
+  kTkDodgeIFrameEnd = 6,
+  kNone             = 99,
 };
 
-auto animation_handler(const RE::BSAnimationGraphEvent* event, const Config& config) -> void;
+constexpr inline auto WEAPON_SWING      = "weaponSwing"sv;
+constexpr inline auto WEAPON_SWING_LEFT = "weaponLeftSwing"sv;
+constexpr inline auto JUMP_UP           = "JumpUp"sv;
+constexpr inline auto BOW_DRAW_START    = "bowDrawStart"sv;
+constexpr inline auto BASH_EXIT         = "bashExit"sv;
+constexpr inline auto TKDR_DODGE_START  = "TKDR_DodgeStart"sv;
+constexpr inline auto TKDR_I_FRAME_END  = "TKDR_IFrameEnd"sv;
 
-} // namespace AnimationEventHandler
+static std::map<std::string_view, AnimationEvent> animation_map{
+    {WEAPON_SWING, AnimationEvent::kWeaponSwing},
+    {WEAPON_SWING_LEFT, AnimationEvent::kWeaponLeftSwing},
+    {JUMP_UP, AnimationEvent::kJumpUp},
+    {BOW_DRAW_START, AnimationEvent::kBowDrawStart},
+    {BASH_EXIT, AnimationEvent::kBashExit},
+    {TKDR_DODGE_START, AnimationEvent::kTkDodgeStart},
+    {TKDR_I_FRAME_END, AnimationEvent::kTkDodgeIFrameEnd}};
 
-// TK Dodge RE
-// https://github.com/max-su-2019/TK_Dodge_RE
-class PlayerAnimationHandler final : public RE::BSTEventSink<RE::BSAnimationGraphEvent> {
-public:
-  auto ProcessEvent(const RE::BSAnimationGraphEvent*               event,
-                    RE::BSTEventSource<RE::BSAnimationGraphEvent>* event_source)
-      -> RE::BSEventNotifyControl override;
+auto try_find_animation(const std::string& key) -> AnimationEvent;
 
-  static auto register_sink(const RE::Actor* actor) -> bool;
-};
-
-} // namespace Reflyem
+} // namespace Reflyem::AnimationEventHandler

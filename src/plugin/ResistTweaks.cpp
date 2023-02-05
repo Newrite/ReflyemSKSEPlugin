@@ -1,8 +1,6 @@
 ﻿#include "plugin/ResistTweaks.hpp"
 
 #include "Core.hpp"
-// TODO: Добавить реализацию игнорирования резистов для чантов: DONE
-// TODO: Добавить реализацию игнорирования абсорба для чантов: DONE
 
 namespace Reflyem::ResistTweaks {
 
@@ -25,10 +23,6 @@ auto ignores_resistance(const RE::MagicItem& this_) -> bool {
          Core::bound_data_comparer(this_.boundData, EnchFlag::kTotal);
 }
 
-// TODO: Имплементировать логику новых резистов: DONE
-// TODO: Реализовать пробивание сопротивления, флатовое и в %, общее и на каждый резист, складывать
-// их: DONE
-// TODO: Дополнить логику новых резистов для эффектов большей вариативностью в конфиге: DONE
 auto check_resistance(RE::MagicTarget& this_, RE::MagicItem& magic_item, const RE::Effect& effect,
                       const RE::TESBoundObject* bound_object, const Config& config) -> float {
 

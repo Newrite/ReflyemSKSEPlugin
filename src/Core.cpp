@@ -375,5 +375,20 @@ auto is_casting_actor(RE::Character& character) -> bool {
   return false;
 }
 
+auto place_at_me(RE::TESObjectREFR* target, RE::TESForm* form, std::uint32_t count,
+                 bool force_persist, bool initially_disabled) -> RE::TESObjectREFR* {
+
+  using FuncT = RE::TESObjectREFR*(RE::BSScript::Internal::VirtualMachine*, RE::VMStackID,
+                                   RE::TESObjectREFR*, RE::TESForm*, std::uint32_t, bool, bool);
+
+  RE::VMStackID frame = 0;
+
+  const REL::Relocation<FuncT> func{RELOCATION_ID(55672, 56203)};
+
+  auto vm = RE::BSScript::Internal::VirtualMachine::GetSingleton();
+
+  return func(vm, frame, target, form, count, force_persist, initially_disabled);
+};
+
 } // namespace Core
 } // namespace Reflyem

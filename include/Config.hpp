@@ -555,6 +555,49 @@ private:
     bool            ench_ignore_resistance_;
   };
 
+  struct TimingBlockConfig {
+  public:
+    [[nodiscard]] auto enable() const -> bool { return enable_; }
+    [[nodiscard]] auto parry_timing() const -> float { return parry_timing_; }
+    [[nodiscard]] auto block_timing() const -> float { return block_timing_; }
+    [[nodiscard]] auto blank_activator() const -> RE::TESObjectACTI* { return blank_activator_; }
+    [[nodiscard]] auto spark() const -> RE::Explosion* { return spark_; }
+    [[nodiscard]] auto spark_flare() const -> RE::Explosion* { return spark_flare_; }
+    [[nodiscard]] auto parry_keyword() const -> RE::BGSKeyword* { return parry_keyword_; }
+    [[nodiscard]] auto parry_immun_keyword() const -> RE::BGSKeyword* {
+      return parry_immun_keyword_;
+    }
+    [[nodiscard]] auto parry_timing_keyword() const -> RE::BGSKeyword* {
+      return parry_timing_keyword_;
+    }
+    [[nodiscard]] auto block_keyword() const -> RE::BGSKeyword* { return block_keyword_; }
+    [[nodiscard]] auto block_immun_keyword() const -> RE::BGSKeyword* {
+      return block_immun_keyword_;
+    }
+    [[nodiscard]] auto block_timing_keyword() const -> RE::BGSKeyword* {
+      return block_timing_keyword_;
+    }
+    [[nodiscard]] auto enable_sparks() const -> bool { return enable_sparks_; }
+
+    TimingBlockConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
+    TimingBlockConfig() = default;
+
+  private:
+    bool               enable_;
+    RE::BGSKeyword*    parry_keyword_;
+    RE::BGSKeyword*    parry_immun_keyword_;
+    RE::BGSKeyword*    parry_timing_keyword_;
+    float              parry_timing_;
+    RE::BGSKeyword*    block_keyword_;
+    RE::BGSKeyword*    block_immun_keyword_;
+    RE::BGSKeyword*    block_timing_keyword_;
+    float              block_timing_;
+    bool               enable_sparks_;
+    RE::TESObjectACTI* blank_activator_;
+    RE::Explosion*     spark_;
+    RE::Explosion*     spark_flare_;
+  };
+
   // general
   std::string_view mod_name_;
 
@@ -607,6 +650,9 @@ private:
   // resist tweaks
   ResistTweaksConfig resist_tweaks_{};
 
+  // timing block
+  TimingBlockConfig timing_block_{};
+
 public:
   [[nodiscard]] static auto get_singleton() noexcept -> const Config&;
 
@@ -645,6 +691,8 @@ public:
   [[nodiscard]] auto magic_weapon() const -> const MagicWeaponConfig& { return magic_weapon_; }
 
   [[nodiscard]] auto resist_tweaks() const -> const ResistTweaksConfig& { return resist_tweaks_; }
+
+  [[nodiscard]] auto timing_block() const -> const TimingBlockConfig& { return timing_block_; }
 };
 
 } // namespace Reflyem

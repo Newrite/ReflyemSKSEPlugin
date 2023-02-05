@@ -110,6 +110,18 @@ constexpr inline std::string_view EnableResistPenetration     = "EnableResistPen
 constexpr inline std::string_view FlatPenetration             = "FlatPenetration";
 constexpr inline std::string_view NoAvDamageResistPenetration = "NoAvDamageResistPenetration";
 constexpr inline std::string_view KeywordImmunId              = "KeywordImmunId";
+constexpr inline std::string_view TimingBlock                 = "TimingBlock";
+constexpr inline std::string_view BlockTiming                 = "BlockTiming";
+constexpr inline std::string_view ParryTiming                 = "ParryTiming";
+constexpr inline std::string_view BlankActivatorId            = "BlankActivatorId";
+constexpr inline std::string_view SparkId                     = "SparkId";
+constexpr inline std::string_view SparkFlareId                = "SparkFlareId";
+constexpr inline std::string_view ParryKeywordId              = "ParryKeywordId";
+constexpr inline std::string_view ParryImmunKeywordId         = "ParryImmunKeywordId";
+constexpr inline std::string_view ParryTimingKeywordId        = "ParryTimingKeywordId";
+constexpr inline std::string_view BlockKeywordId              = "BlockKeywordId";
+constexpr inline std::string_view BlockImmunKeywordId         = "BlockImmunKeywordId";
+constexpr inline std::string_view BlockTimingKeywordId        = "BlockTimingKeywordId";
 
 Config::MagicShieldConfig::MagicShieldConfig(toml::table& tbl, RE::TESDataHandler& data_handler,
                                              const Config& config) {
@@ -577,6 +589,28 @@ Config::ResistTweaksConfig::ResistTweaksConfig(toml::table& tbl, RE::TESDataHand
   }
 }
 
+Config::TimingBlockConfig::TimingBlockConfig(toml::table& tbl, RE::TESDataHandler& data_handler,
+                                             const Config& config) {
+  logger::info("config init: timing block"sv);
+  enable_ = tbl[TimingBlock][Enable].value_or(false);
+  if (enable_) {
+
+    block_timing_ = tbl[TimingBlock][BlockTiming].value_or(0.25f);
+    parry_timing_ = tbl[TimingBlock][ParryTiming].value_or(0.15f);
+
+    const auto blank_activator_form_id = tbl[TimingBlock][BlankActivatorId].value<RE::FormID>();
+    const auto spark_form_id           = tbl[TimingBlock][SparkId].value<RE::FormID>();
+    const auto spark_flare_form_id     = tbl[TimingBlock][SparkFlareId].value<RE::FormID>();
+    const auto parry_keyword_form_id = tbl[TimingBlock][ParryKeywordId].value<RE::FormID>();
+
+    blank_activator_ = data_handler.LookupForm<RE::TESObjectACTI>(blank_activator_form_id.value(),
+                                                                  config.mod_name());
+    spark_ = data_handler.LookupForm<RE::Explosion>(spark_form_id.value(), config.mod_name());
+    spark_flare_ =
+        data_handler.LookupForm<RE::Explosion>(spark_flare_form_id.value(), config.mod_name());
+  }
+}
+
 Config::Config() {
   logger::info("start init config toml"sv);
   auto       tbl          = toml::parse_file(PathToConfig);
@@ -599,6 +633,7 @@ Config::Config() {
   caster_additions_ = CasterAdditionsConfig(tbl, *data_handler, *this);
   magic_weapon_     = MagicWeaponConfig(tbl, *data_handler, *this);
   resist_tweaks_    = ResistTweaksConfig(tbl, *data_handler, *this);
+  timing_block_     = TimingBlockConfig(tbl, *data_handler, *this);
 
   logger::info("finish init config"sv);
 }

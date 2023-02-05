@@ -90,7 +90,7 @@ auto regeneration_stamina(RE::Character& character, const Core::ActorsCache::Dat
     auto constexpr av            = RE::ActorValue::kStamina;
     auto constexpr regen_av      = RE::ActorValue::kStaminaRate;
     auto constexpr regen_av_mult = RE::ActorValue::kStaminaRateMult;
-    regeneration_actor_value(character, av, regen_av, regen_av_mult, actor_data.delta_update());
+    regeneration_actor_value(character, av, regen_av, regen_av_mult, actor_data.last_delta_update());
   }
 }
 
@@ -100,7 +100,7 @@ auto regeneration_health(RE::Character& character, const Core::ActorsCache::Data
     auto constexpr av            = RE::ActorValue::kHealth;
     auto constexpr regen_av      = RE::ActorValue::kHealRate;
     auto constexpr regen_av_mult = RE::ActorValue::kHealRateMult;
-    regeneration_actor_value(character, av, regen_av, regen_av_mult, actor_data.delta_update());
+    regeneration_actor_value(character, av, regen_av, regen_av_mult, actor_data.last_delta_update());
   }
 }
 
@@ -110,7 +110,7 @@ auto regeneration_magicka(RE::Character& character, const Core::ActorsCache::Dat
     auto constexpr av            = RE::ActorValue::kMagicka;
     auto constexpr regen_av      = RE::ActorValue::kMagickaRate;
     auto constexpr regen_av_mult = RE::ActorValue::kMagickaRateMult;
-    regeneration_actor_value(character, av, regen_av, regen_av_mult, actor_data.delta_update());
+    regeneration_actor_value(character, av, regen_av, regen_av_mult, actor_data.last_delta_update());
   }
 }
 
@@ -492,7 +492,6 @@ auto ranged_spend_handler(RE::Character& character, const Config& config) -> voi
     is_draw = state == RE::ATTACK_STATE_ENUM::kBowAttached;
   }
 
-  // TODO: Добавить обработку и арбалета: DONE
   if ((weapon.IsBow() || weapon.IsCrossbow()) && is_draw) {
     const auto cost        = get_attack_drain_cost(character, weapon, false, config) * 0.1f;
     const auto drain_value = get_drain_value(character, weapon, config, cost, true);
@@ -604,61 +603,58 @@ auto update_actor(RE::Character& character, float, const Config& config) -> void
   }
 }
 
-auto animation_handler(const AnimationEventHandler::AnimationEvent animation, RE::Actor& actor,
-                       const bool is_power_attack, const Config& config) -> void {
-  switch (animation) {
-  case AnimationEventHandler::AnimationEvent::kBashExit: {
-    if (!config.resource_manager().bash_spend_enable()) {
+auto animation_handler(const RE::BSAnimationGraphEvent& event, const Config& config) -> void {
+
+  // ReSharper disable once CppLocalVariableMayBeConst
+  if (auto actor = const_cast<RE::Actor*>(event.holder->As<RE::Actor>()); actor) {
+    const auto anim_event      = fmt::format("{}"sv, event.tag);
+    const auto is_power_attack = Core::is_power_attacking(*actor);
+
+    switch (AnimationEventHandler::try_find_animation(anim_event)) {
+    case AnimationEventHandler::AnimationEvent::kBashExit: {
+      if (!config.resource_manager().bash_spend_enable()) {
+        return;
+      }
+
+      const auto weapon_or_shield = get_weapon_or_shield(*actor);
+      if (!weapon_or_shield.has_value()) {
+        return;
+      }
+
+      const auto& value = weapon_or_shield.value();
+      logger::debug("get value from option (weapon or shield)"sv);
+      bash_spend(*actor, value, is_power_attack, config);
       return;
     }
+    case AnimationEventHandler::AnimationEvent::kWeaponSwing: {
+      if (!config.resource_manager().weapon_spend_enable()) {
+        return;
+      }
 
-    const auto weapon_or_shield = get_weapon_or_shield(actor);
-    if (!weapon_or_shield.has_value()) {
+      const auto& weapon = get_weapon(*actor, false, config);
+      logger::debug("get weapon end");
+      melee_weapon_spend(*actor, weapon, is_power_attack, config);
       return;
     }
+    case AnimationEventHandler::AnimationEvent::kWeaponLeftSwing: {
+      if (!config.resource_manager().weapon_spend_enable()) {
+        return;
+      }
 
-    const auto& value = weapon_or_shield.value();
-    logger::debug("get value from option (weapon or shield)"sv);
-    bash_spend(actor, value, is_power_attack, config);
-    return;
-  }
-  case AnimationEventHandler::AnimationEvent::kWeaponSwing: {
-    if (!config.resource_manager().weapon_spend_enable()) {
+      const auto& weapon = get_weapon(*actor, true, config);
+      logger::debug("get weapon end"sv);
+      melee_weapon_spend(*actor, weapon, is_power_attack, config);
       return;
     }
-
-    const auto& weapon = get_weapon(actor, false, config);
-    logger::debug("get weapon end");
-    melee_weapon_spend(actor, weapon, is_power_attack, config);
-    return;
-  }
-  case AnimationEventHandler::AnimationEvent::kWeaponLeftSwing: {
-    if (!config.resource_manager().weapon_spend_enable()) {
+    case AnimationEventHandler::AnimationEvent::kJumpUp: {
+      jump_spend(*actor, config);
       return;
     }
-
-    const auto& weapon = get_weapon(actor, true, config);
-    logger::debug("get weapon end"sv);
-    melee_weapon_spend(actor, weapon, is_power_attack, config);
-    return;
-  }
-  case AnimationEventHandler::AnimationEvent::kBowDrawStart: {
-    // if (!config.resource_manager().weapon_spend_enable()) {
-    //   return;
-    // }
-    //
-    // const auto& weapon = get_weapon(actor, false, config);
-    // logger::debug("get weapon end"sv);
-    // ranged_weapon_spend(actor, weapon, config);
-    return;
-  }
-  case AnimationEventHandler::AnimationEvent::kJumpUp: {
-    jump_spend(actor, config);
-    return;
-  }
-  case AnimationEventHandler::AnimationEvent::kNone: {
-    return;
-  }
+    case AnimationEventHandler::AnimationEvent::kBowDrawStart:
+    case AnimationEventHandler::AnimationEvent::kTkDodgeStart:
+    case AnimationEventHandler::AnimationEvent::kTkDodgeIFrameEnd:
+    case AnimationEventHandler::AnimationEvent::kNone:;
+    }
   }
 }
 

@@ -11,7 +11,10 @@
 #include "plugin/ResistTweaks.hpp"
 #include "plugin/ResourceManager.hpp"
 #include "plugin/SpeedCasting.hpp"
+#include "plugin/TKDodge.hpp"
+#include "plugin/TimingBlock.hpp"
 #include "plugin/Vampirism.hpp"
+#include "plugin/WeightTweak.hpp"
 
 namespace Hooks {
 
@@ -25,58 +28,72 @@ auto update_actor(RE::Character& character, const float delta, const Reflyem::Co
   auto& actors_cache = Reflyem::Core::ActorsCache::get_singleton();
   auto& actor_data   = actors_cache.get_or_add(character.formID).get();
 
-  actor_data.set_delta_update(player_last_delta);
-  actor_data.update_ticks(player_last_delta);
+  actor_data.set_last_delta_update(player_last_delta);
+  actor_data.handle_delta(player_last_delta);
 
   const auto last_actor_tick50 =
-      actor_data.last_update_tick(Reflyem::Core::ActorsCache::Data::TickValues::k50Ms);
+      actor_data.update(Reflyem::Core::ActorsCache::Data::Updates::k50Ms);
   const auto last_actor_tick100 =
-      actor_data.last_update_tick(Reflyem::Core::ActorsCache::Data::TickValues::k100Ms);
+      actor_data.update(Reflyem::Core::ActorsCache::Data::Updates::k100Ms);
   const auto last_actor_tick1000 =
-      actor_data.last_update_tick(Reflyem::Core::ActorsCache::Data::TickValues::k1000Ms);
+      actor_data.update(Reflyem::Core::ActorsCache::Data::Updates::k1000Ms);
+
+  if (character.IsBlocking()) {
+    constexpr auto block_start_delta = 1.f;
+    actor_data.set_timing_block_start_delta(block_start_delta);
+    actor_data.set_blocking_flag(true);
+  } else {
+    actor_data.set_blocking_flag(false);
+  }
 
   if (config.resource_manager().enable() && config.resource_manager().regeneration_enable()) {
     Reflyem::ResourceManager::on_update_actor_regeneration(character, actor_data);
-    actor_data.mod_all_regens_delay(-player_last_delta);
-  }
-
-  if (config.magick_crit().enable() && config.cast_on_crit().enable()) {
-    actor_data.mod_cast_on_crit_delay(-player_last_delta);
   }
 
   if (last_actor_tick50 <= 0.f) {
+
     logger::debug("update actor map50 tick"sv);
-    actor_data.set_tick(Reflyem::Core::ActorsCache::Data::TickValues::k50Ms);
+    actor_data.refresh_update(Reflyem::Core::ActorsCache::Data::Updates::k50Ms);
   }
 
   if (last_actor_tick100 <= 0.f) {
+
     logger::debug("update actor map100 tick"sv);
-    actor_data.set_tick(Reflyem::Core::ActorsCache::Data::TickValues::k100Ms);
+
+    actor_data.refresh_update(Reflyem::Core::ActorsCache::Data::Updates::k100Ms);
+
     if (config.resource_manager().enable()) {
       Reflyem::ResourceManager::update_actor(character, delta, config);
       if (config.resource_manager().weapon_spend_enable()) {
         Reflyem::ResourceManager::ranged_spend_handler(character, config);
       }
     }
+
     if (config.caster_additions().enable()) {
       Reflyem::CasterAdditions::on_update_actor(character, delta, config);
     }
   }
 
   if (last_actor_tick1000 <= 0.f) {
+
     logger::debug("update actor map1000 tick"sv);
-    actor_data.set_tick(Reflyem::Core::ActorsCache::Data::TickValues::k1000Ms);
-    actor_data.set_last_update();
+
+    actor_data.refresh_update(Reflyem::Core::ActorsCache::Data::Updates::k1000Ms);
+    actor_data.refresh_last_tick_count();
+
     logger::debug("ActorData: st {} mp {} hp {}", actor_data.regen_stamina_delay(),
                   actor_data.regen_magicka_delay(), actor_data.regen_health_delay());
+
     if (config.petrified_blood().enable() && config.petrified_blood().magick()) {
       Reflyem::PetrifiedBlood::character_update(character, delta, config);
     }
+
     if (config.resource_manager().enable() && config.resource_manager().regeneration_enable()) {
       Reflyem::Core::set_av_regen_delay(character.currentProcess, RE::ActorValue::kMagicka, 2.f);
       Reflyem::Core::set_av_regen_delay(character.currentProcess, RE::ActorValue::kStamina, 2.f);
       Reflyem::Core::set_av_regen_delay(character.currentProcess, RE::ActorValue::kHealth, 2.f);
     }
+
     if (config.speed_casting().enable() && character.IsPlayerRef()) {
       Reflyem::SpeedCasting::on_update_actor(character, delta, config);
     }
@@ -119,24 +136,34 @@ auto OnAnimationEventNpc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEve
                                         RE::BSAnimationGraphEvent*                     event,
                                         RE::BSTEventSource<RE::BSAnimationGraphEvent>* dispatcher)
     -> void {
-  if (event && event->holder) {
-    auto& config = Reflyem::Config::get_singleton();
-    Reflyem::AnimationEventHandler::animation_handler(event, config);
+  if (!event || !event->holder) {
+    return process_event_(this_, event, dispatcher);
   }
-  process_event_(this_, event, dispatcher);
-  return;
+  auto& config = Reflyem::Config::get_singleton();
+  if (config.resource_manager().enable()) {
+    Reflyem::ResourceManager::animation_handler(*event, config);
+  }
+  if (config.tk_dodge().enable()) {
+    Reflyem::TkDodge::animation_handler(*event, config);
+  }
+  return process_event_(this_, event, dispatcher);
 }
 
 auto OnAnimationEventPc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   this_,
                                        RE::BSAnimationGraphEvent*                     event,
                                        RE::BSTEventSource<RE::BSAnimationGraphEvent>* dispatcher)
     -> void {
-  if (event && event->holder) {
-    auto& config = Reflyem::Config::get_singleton();
-    Reflyem::AnimationEventHandler::animation_handler(event, config);
+  if (!event || !event->holder) {
+    return process_event_(this_, event, dispatcher);
   }
-  process_event_(this_, event, dispatcher);
-  return;
+  auto& config = Reflyem::Config::get_singleton();
+  if (config.resource_manager().enable()) {
+    Reflyem::ResourceManager::animation_handler(*event, config);
+  }
+  if (config.tk_dodge().enable()) {
+    Reflyem::TkDodge::animation_handler(*event, config);
+  }
+  return process_event_(this_, event, dispatcher);
 }
 
 auto OnAdjustActiveEffect::adjust_active_effect(RE::ActiveEffect* this_, float power, bool unk)
@@ -305,6 +332,10 @@ auto OnWeaponHit::weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void {
 
   auto& config = Reflyem::Config::get_singleton();
 
+  if (config.timing_block().enable()) {
+    Reflyem::TimingBlock::on_weapon_hit(*target, hit_data, config);
+  }
+
   if (config.magic_weapon().enable()) {
     Reflyem::MagicWeapon::on_weapon_hit(*target, hit_data);
   }
@@ -340,6 +371,18 @@ auto OnWeaponHit::weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void {
   Reflyem::Vampirism::on_weapon_hit(target, hit_data, config);
 
   return weapon_hit_(target, hit_data);
+}
+
+auto OnMeleeCollision::melee_collision(RE::Actor* attacker, RE::Actor* victim,
+                                       RE::Projectile* projectile, char aleft) -> void {
+  logger::info("Melee collusion");
+  if (!attacker && !victim) {
+    if (attacker->GetAttackState() == RE::ATTACK_STATE_ENUM::kBash) {
+      logger::info("Bash state");
+      return;
+    }
+  }
+  return melee_collision_(attacker, victim, projectile, aleft);
 }
 
 auto OnCheckResistance::check_resistance(RE::MagicTarget* this_, RE::MagicItem* magic_item,
@@ -418,16 +461,65 @@ auto OnEnchGetNoAbsorb::get_no_absorb(RE::MagicItem* this_) -> bool {
   return get_no_absorb_(this_);
 }
 
+auto OnActorValueOwnerNpc::get_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av) -> float {
+  if (!this_) {
+    return get_actor_value_(this_, av);
+  }
+  return Reflyem::WeightTweak::get_actor_value(*this_, av).value_or(get_actor_value_(this_, av));
+}
+
+auto OnActorValueOwnerNpc::set_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av,
+                                           float value) -> void {
+  if (!this_) {
+    return set_actor_value_(this_, av, value);
+  }
+  return set_actor_value_(this_, av, Reflyem::WeightTweak::set_actor_value(*this_, av, value));
+}
+
+auto OnActorValueOwnerNpc::mod_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av,
+                                           float value) -> void {
+  if (!this_) {
+    return mod_actor_value_(this_, av, value);
+  }
+  return mod_actor_value_(this_, av, Reflyem::WeightTweak::mod_actor_value(*this_, av, value));
+}
+
+auto OnActorValueOwnerPc::get_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av) -> float {
+  if (!this_) {
+    return get_actor_value_(this_, av);
+  }
+  return Reflyem::WeightTweak::get_actor_value(*this_, av).value_or(get_actor_value_(this_, av));
+}
+
+auto OnActorValueOwnerPc::set_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av,
+                                          float value) -> void {
+  if (!this_) {
+    return set_actor_value_(this_, av, value);
+  }
+  return set_actor_value_(this_, av, Reflyem::WeightTweak::set_actor_value(*this_, av, value));
+}
+
+auto OnActorValueOwnerPc::mod_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av,
+                                          float value) -> void {
+  if (!this_) {
+    return mod_actor_value_(this_, av, value);
+  }
+  return mod_actor_value_(this_, av, Reflyem::WeightTweak::mod_actor_value(*this_, av, value));
+}
+
 auto install_hooks() -> void {
   logger::info("start install hooks"sv);
   auto& trampoline = SKSE::GetTrampoline();
   trampoline.create(1024);
+  OnMeleeCollision::install_hook(trampoline);
   OnWeaponHit::install_hook(trampoline);
   // OnCheckResistance::install_hook(trampoline);
   OnCheckResistanceNpc::install_hook();
   OnCheckResistancePc::install_hook();
   OnEnchIgnoresResistance::install_hook();
   OnEnchGetNoAbsorb::install_hook();
+  OnActorValueOwnerNpc::install_hook();
+  OnActorValueOwnerPc::install_hook();
   // OnMainUpdate::install_hook(trampoline);
   // OnAdjustActiveEffect::install_hook(trampoline);
   OnAnimationEventNpc::install_hook();

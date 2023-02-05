@@ -2,6 +2,7 @@
 
 namespace Adresses {
 static inline REL::Relocation<uintptr_t> on_weapon_hit{RELOCATION_ID(37673, 0)};
+static inline REL::Relocation<uintptr_t> on_melee_collision{RELOCATION_ID(37650, 0)};
 static inline REL::Relocation<uintptr_t> on_main_update{RELOCATION_ID(35551, 0)};
 static inline REL::Relocation<uintptr_t> on_adjust_active_effect{RELOCATION_ID(33763, 0)};
 static inline REL::Relocation<uintptr_t> on_animation_event_npc{RELOCATION_ID(261399, 0)};
@@ -20,10 +21,23 @@ static inline REL::Relocation<uintptr_t> on_check_resistance_npc{RELOCATION_ID(2
 static inline REL::Relocation<uintptr_t> on_check_resistance_pc{RELOCATION_ID(261920, 0)};
 static inline REL::Relocation<uintptr_t> on_ench_ignores_resistance{RELOCATION_ID(228570, 0)};
 static inline REL::Relocation<uintptr_t> on_ench_get_no_absorb{RELOCATION_ID(228570, 0)};
+static inline REL::Relocation<uintptr_t> on_value_owner_get_actor_value_npc{
+    RELOCATION_ID(261402, 0)};
+static inline REL::Relocation<uintptr_t> on_value_owner_set_actor_value_npc{
+    RELOCATION_ID(261402, 0)};
+static inline REL::Relocation<uintptr_t> on_value_owner_mod_actor_value_npc{
+    RELOCATION_ID(261402, 0)};
+static inline REL::Relocation<uintptr_t> on_value_owner_get_actor_value_pc{
+    RELOCATION_ID(261921, 0)};
+static inline REL::Relocation<uintptr_t> on_value_owner_set_actor_value_pc{
+    RELOCATION_ID(261921, 0)};
+static inline REL::Relocation<uintptr_t> on_value_owner_mod_actor_value_pc{
+    RELOCATION_ID(261921, 0)};
 } // namespace Adresses
 
 namespace Offsets {
 static inline auto on_weapon_hit                                = RELOCATION_OFFSET(0x3C0, 0);
+static inline auto on_melee_collision                           = RELOCATION_OFFSET(0x38B, 0);
 static inline auto on_main_update                               = RELOCATION_OFFSET(0x11f, 0);
 static inline auto on_adjust_active_effect                      = RELOCATION_OFFSET(0x4A3, 0);
 static inline auto on_animation_event_npc                       = RELOCATION_OFFSET(0x1, 0);
@@ -41,6 +55,12 @@ static inline auto on_check_resistance_npc                      = RELOCATION_OFF
 static inline auto on_check_resistance_pc                       = RELOCATION_OFFSET(0x0A, 0);
 static inline auto on_ench_ignores_resistance                   = RELOCATION_OFFSET(0x5B, 0);
 static inline auto on_ench_get_no_absorb                        = RELOCATION_OFFSET(0x5E, 0);
+static inline auto on_value_owner_get_actor_value_npc           = RELOCATION_OFFSET(0x01, 0);
+static inline auto on_value_owner_set_actor_value_npc           = RELOCATION_OFFSET(0x07, 0);
+static inline auto on_value_owner_mod_actor_value_npc           = RELOCATION_OFFSET(0x05, 0);
+static inline auto on_value_owner_get_actor_value_pc            = RELOCATION_OFFSET(0x01, 0);
+static inline auto on_value_owner_set_actor_value_pc            = RELOCATION_OFFSET(0x07, 0);
+static inline auto on_value_owner_mod_actor_value_pc            = RELOCATION_OFFSET(0x05, 0);
 } // namespace Offsets
 
 namespace Hooks {
@@ -247,6 +267,21 @@ private:
   static inline REL::Relocation<decltype(weapon_hit)> weapon_hit_;
 };
 
+struct OnMeleeCollision {
+public:
+  static auto install_hook(SKSE::Trampoline& trampoline) -> void {
+    logger::info("start hook OnMeleeCollision"sv);
+    melee_collision_ = trampoline.write_call<5>(
+        Adresses::on_melee_collision.address() + Offsets::on_melee_collision, melee_collision);
+    logger::info("OnMeleeCollision hook install"sv);
+  }
+
+private:
+  static auto melee_collision(RE::Actor* attacker, RE::Actor* victim, RE::Projectile* projectile,
+                              char aleft) -> void;
+  static inline REL::Relocation<decltype(melee_collision)> melee_collision_;
+};
+
 struct OnCheckResistance {
 public:
   static auto install_hook(SKSE::Trampoline& trampoline) -> void {
@@ -322,6 +357,52 @@ private:
   static auto get_no_absorb(RE::MagicItem* this_) -> bool;
 
   static inline REL::Relocation<decltype(get_no_absorb)> get_no_absorb_;
+};
+
+struct OnActorValueOwnerNpc {
+public:
+  static auto install_hook() -> void {
+    logger::info("start hook OnActorValueOwnerNpc"sv);
+    get_actor_value_ = Adresses::on_value_owner_get_actor_value_npc.write_vfunc(
+        Offsets::on_value_owner_get_actor_value_npc, get_actor_value);
+    set_actor_value_ = Adresses::on_value_owner_set_actor_value_npc.write_vfunc(
+        Offsets::on_value_owner_set_actor_value_npc, set_actor_value);
+    mod_actor_value_ = Adresses::on_value_owner_mod_actor_value_npc.write_vfunc(
+        Offsets::on_value_owner_mod_actor_value_npc, mod_actor_value);
+    logger::info("finish hook OnActorValueOwnerNpc"sv);
+  }
+
+private:
+  static auto get_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av) -> float;
+  static auto set_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av, float value) -> void;
+  static auto mod_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av, float value) -> void;
+
+  static inline REL::Relocation<decltype(get_actor_value)> get_actor_value_;
+  static inline REL::Relocation<decltype(set_actor_value)> set_actor_value_;
+  static inline REL::Relocation<decltype(mod_actor_value)> mod_actor_value_;
+};
+
+struct OnActorValueOwnerPc {
+public:
+  static auto install_hook() -> void {
+    logger::info("start hook OnActorValueOwnerPc"sv);
+    get_actor_value_ = Adresses::on_value_owner_get_actor_value_pc.write_vfunc(
+        Offsets::on_value_owner_get_actor_value_pc, get_actor_value);
+    set_actor_value_ = Adresses::on_value_owner_set_actor_value_pc.write_vfunc(
+        Offsets::on_value_owner_set_actor_value_pc, set_actor_value);
+    mod_actor_value_ = Adresses::on_value_owner_mod_actor_value_pc.write_vfunc(
+        Offsets::on_value_owner_mod_actor_value_pc, mod_actor_value);
+    logger::info("finish hook OnActorValueOwnerPc"sv);
+  }
+
+private:
+  static auto get_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av) -> float;
+  static auto set_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av, float value) -> void;
+  static auto mod_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av, float value) -> void;
+
+  static inline REL::Relocation<decltype(get_actor_value)> get_actor_value_;
+  static inline REL::Relocation<decltype(set_actor_value)> set_actor_value_;
+  static inline REL::Relocation<decltype(mod_actor_value)> mod_actor_value_;
 };
 
 auto install_hooks() -> void;
