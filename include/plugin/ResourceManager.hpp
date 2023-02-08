@@ -7,19 +7,20 @@ namespace Reflyem::ResourceManager {
 
 // ReSharper disable once CppInconsistentNaming
 class GMST {
-  constexpr static auto STAMINA_BASH_BASE                = "fStaminaBashBase";
-  constexpr static auto STAMINA_POWER_BASH_BASE          = "fStaminaPowerBashBase";
-  constexpr static auto STAMINA_BLOCK_BASE               = "fStaminaBlockBase";
-  constexpr static auto STAMINA_ATTACK_WEAPON_BASE       = "fStaminaAttackWeaponBase";
-  constexpr static auto STAMINA_ATTACK_WEAPON_MULT       = "fStaminaAttackWeaponMult";
-  constexpr static auto STAMINA_BLOCK_DMG_MULT           = "fStaminaBlockDmgMult";
+  constexpr static auto STAMINA_BASH_BASE          = "fStaminaBashBase";
+  constexpr static auto STAMINA_POWER_BASH_BASE    = "fStaminaPowerBashBase";
+  constexpr static auto STAMINA_BLOCK_BASE         = "fStaminaBlockBase";
+  constexpr static auto STAMINA_ATTACK_WEAPON_BASE = "fStaminaAttackWeaponBase";
+  constexpr static auto STAMINA_ATTACK_WEAPON_MULT = "fStaminaAttackWeaponMult";
+  constexpr static auto STAMINA_BLOCK_DMG_MULT     = "fStaminaBlockDmgMult";
+
 public:
-  GMST()                                                 = delete;
-  ~GMST()                                                = delete;
-  GMST(const GMST& other)                                = delete;
-  GMST(GMST&& other) noexcept                            = delete;
-  GMST&                 operator=(const GMST& other)     = delete;
-  GMST&                 operator=(GMST&& other) noexcept = delete;
+  GMST()                                 = delete;
+  ~GMST()                                = delete;
+  GMST(const GMST& other)                = delete;
+  GMST(GMST&& other) noexcept            = delete;
+  GMST& operator=(const GMST& other)     = delete;
+  GMST& operator=(GMST&& other) noexcept = delete;
 
   static auto game_settings_handler(const Config& config) -> void {
 
@@ -45,18 +46,34 @@ public:
 using FormMask  = std::array<std::array<std::int32_t, 3>, 1>;
 using ActorMask = std::array<std::array<std::int32_t, 3>, 3>;
 
+auto spend_actor_value(RE::Actor& actor, const RE::ActorValue av, float value) -> void;
+
 struct ResourceDrain {
 public:
   float stamina;
   float health;
   float magicka;
 
-  explicit ResourceDrain(float a_stamina, float a_health, float a_magicka);
+  explicit ResourceDrain(float a_stamina, float a_health, float a_magicka) {
+    logger::debug("create drain values: S{} H{} M{}"sv, a_stamina, a_health, a_magicka);
+    stamina = a_stamina * -1.f;
+    health  = a_health * -1.f;
+    magicka = a_magicka * -1.f;
+  }
 
-  auto drain(RE::Actor& actor) -> void;
+  auto drain(RE::Actor& actor) -> void {
+    logger::debug("drain values: S{} H{} M{}"sv, stamina, health, magicka);
+    if (health != 0.f) {
+      spend_actor_value(actor, RE::ActorValue::kHealth, std::abs(health));
+    }
+    if (magicka != 0.f) {
+      spend_actor_value(actor, RE::ActorValue::kMagicka, std::abs(magicka));
+    }
+    if (stamina != 0.f) {
+      spend_actor_value(actor, RE::ActorValue::kStamina, std::abs(stamina));
+    }
+  }
 };
-
-auto spend_actor_value(RE::Actor& actor, const RE::ActorValue av, float value) -> void;
 
 auto on_update_actor_regeneration(RE::Character& character, Core::ActorsCache::Data& actor_data)
     -> void;

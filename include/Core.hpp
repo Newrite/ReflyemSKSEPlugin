@@ -384,4 +384,7 @@ auto do_combat_spell_apply(RE::Actor* actor, RE::SpellItem* spell, RE::TESObject
 auto place_at_me(RE::TESObjectREFR* target, RE::TESForm* form, std::uint32_t count,
                  bool force_persist, bool initially_disabled) -> RE::TESObjectREFR*;
 
+auto get_weapon(const RE::Actor& actor, const bool is_left_hand, RE::TESObjectWEAP* fallback_weapon)
+    -> RE::TESObjectWEAP*;
+
 } // namespace Reflyem::Core

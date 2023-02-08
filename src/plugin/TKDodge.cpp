@@ -1,7 +1,7 @@
 #include "plugin/TKDodge.hpp"
 #include "Core.hpp"
-#include "plugin/ResourceManager.hpp"
 #include "plugin/AnimationEventHandler.hpp"
+#include "plugin/ResourceManager.hpp"
 
 namespace Reflyem::TkDodge {
 

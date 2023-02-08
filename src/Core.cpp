@@ -1,54 +1,9 @@
 #include "Core.hpp"
 #include <random>
 
-namespace Reflyem {
-namespace Core {
+namespace Reflyem::Core {
 
 using EffectSettingFlag = RE::EffectSetting::EffectSettingData::Flag;
-
-struct SafetyEffectData {
-private:
-  RE::EffectSetting* effect_setting_;
-  RE::ActiveEffect*  active_effect_;
-  RE::Effect*        effect_;
-
-  explicit SafetyEffectData(RE::ActiveEffect* active_effect) {
-    effect_         = active_effect->effect;
-    effect_setting_ = active_effect->effect->baseEffect;
-    active_effect_  = active_effect;
-  }
-
-public:
-  [[nodiscard]] auto get_effect_setting() const -> RE::EffectSetting& { return *effect_setting_; }
-  [[nodiscard]] auto get_effect() const -> RE::Effect& { return *effect_; }
-  [[nodiscard]] auto get_active_effect() const -> RE::ActiveEffect& { return *active_effect_; }
-
-  [[nodiscard]] auto is_active_effect() const -> bool {
-    return active_effect_->flags.any(RE::ActiveEffect::Flag::kInactive);
-  }
-
-  [[nodiscard]] auto is_detrimental() const -> bool {
-    return effect_setting_->data.flags.any(EffectSettingFlag::kDetrimental);
-  }
-
-  static auto create_safety_effect_data(RE::ActiveEffect* active_effect)
-      -> std::optional<SafetyEffectData> {
-
-    if (!active_effect) {
-      return std::nullopt;
-    }
-
-    if (!active_effect->effect) {
-      return std::nullopt;
-    }
-
-    if (!active_effect->effect->baseEffect) {
-      return std::nullopt;
-    }
-
-    return std::optional{SafetyEffectData(active_effect)};
-  }
-};
 
 auto bound_data_comparer(const RE::TESBoundObject::BOUND_DATA& bound_data,
                          const int16_t                         comparer_value) -> bool {
@@ -137,21 +92,6 @@ auto can_modify_actor_value(const RE::ValueModifierEffect* a_this, const RE::Act
 
   return true;
 }
-
-// auto get_first_active_effect_by_keyword(RE::BSSimpleList<RE::ActiveEffect*>* active_effects,
-//                                         RE::BGSKeyword&                      keyword)
-//     -> std::optional<RE::ActiveEffect*> {
-//
-//   if (!active_effects) {
-//     return std::optional<RE::ActiveEffect*>{std::nullopt};
-//   }
-//
-//   for (const auto active_effect : *active_effects) {
-//     return std::optional<RE::ActiveEffect*>{std::nullopt};
-//   }
-//
-//   return std::optional<RE::ActiveEffect*>{std::nullopt};
-// }
 
 auto get_effects_magnitude_sum(const std::vector<RE::ActiveEffect*>& effects)
     -> std::optional<float> {
@@ -388,7 +328,23 @@ auto place_at_me(RE::TESObjectREFR* target, RE::TESForm* form, std::uint32_t cou
   auto vm = RE::BSScript::Internal::VirtualMachine::GetSingleton();
 
   return func(vm, frame, target, form, count, force_persist, initially_disabled);
-};
+}
 
-} // namespace Core
-} // namespace Reflyem
+auto get_weapon(const RE::Actor& actor, const bool is_left_hand, RE::TESObjectWEAP* fallback_weapon)
+    -> RE::TESObjectWEAP* {
+  logger::debug("get weapon start"sv);
+  const auto weapon = actor.GetEquippedObject(is_left_hand);
+  if (!weapon) {
+    return fallback_weapon;
+  }
+
+  const auto as_weapon = weapon->As<RE::TESObjectWEAP>();
+
+  if (!as_weapon) {
+    return fallback_weapon;
+  }
+
+  return as_weapon;
+}
+
+} // namespace Reflyem::Core

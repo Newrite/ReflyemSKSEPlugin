@@ -5,6 +5,7 @@
 #include "plugin/CasterAdditions.hpp"
 #include "plugin/CheatDeath.hpp"
 #include "plugin/Crit.hpp"
+#include "plugin/EquipLoad.hpp"
 #include "plugin/MagicShield.hpp"
 #include "plugin/MagicWepon.hpp"
 #include "plugin/ParryBash.hpp"
@@ -15,7 +16,6 @@
 #include "plugin/TKDodge.hpp"
 #include "plugin/TimingBlock.hpp"
 #include "plugin/Vampirism.hpp"
-#include "plugin/WeightTweak.hpp"
 
 namespace Hooks {
 
@@ -65,6 +65,10 @@ auto update_actor(RE::Character& character, const float delta, const Reflyem::Co
     if (config.caster_additions().enable()) {
       Reflyem::CasterAdditions::on_update_actor(character, delta, config);
     }
+
+    if (config.equip_load().enable()) {
+      Reflyem::EquipLoad::update_actor(character, config);
+    }
   }
 
   if (actor_data.update_1000_timer() <= 0.f) {
@@ -80,12 +84,11 @@ auto update_actor(RE::Character& character, const float delta, const Reflyem::Co
     if (config.petrified_blood().enable() && config.petrified_blood().magick()) {
       Reflyem::PetrifiedBlood::character_update(character, delta, config, actor_data);
     }
-    
 
     if (config.resource_manager().enable()) {
 
       Reflyem::ResourceManager::GMST::game_settings_handler(config);
-      
+
       if (config.resource_manager().regeneration_enable()) {
         Reflyem::Core::set_av_regen_delay(character.currentProcess, RE::ActorValue::kMagicka, 2.f);
         Reflyem::Core::set_av_regen_delay(character.currentProcess, RE::ActorValue::kStamina, 2.f);
@@ -466,7 +469,12 @@ auto OnActorValueOwnerNpc::get_actor_value(RE::ActorValueOwner* this_, RE::Actor
   if (!this_) {
     return get_actor_value_(this_, av);
   }
-  return Reflyem::WeightTweak::get_actor_value(*this_, av).value_or(get_actor_value_(this_, av));
+
+  if (Reflyem::Config::get_singleton().equip_load().enable()) {
+    return Reflyem::EquipLoad::get_actor_value(*this_, av).value_or(get_actor_value_(this_, av));
+  }
+
+  return get_actor_value_(this_, av);
 }
 
 auto OnActorValueOwnerNpc::set_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av,
@@ -474,7 +482,12 @@ auto OnActorValueOwnerNpc::set_actor_value(RE::ActorValueOwner* this_, RE::Actor
   if (!this_) {
     return set_actor_value_(this_, av, value);
   }
-  return set_actor_value_(this_, av, Reflyem::WeightTweak::set_actor_value(*this_, av, value));
+  
+  if (Reflyem::Config::get_singleton().equip_load().enable()) {
+    return set_actor_value_(this_, av, Reflyem::EquipLoad::set_actor_value(*this_, av, value));
+  }
+
+  return set_actor_value_(this_, av, value);
 }
 
 auto OnActorValueOwnerNpc::mod_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av,
@@ -482,14 +495,24 @@ auto OnActorValueOwnerNpc::mod_actor_value(RE::ActorValueOwner* this_, RE::Actor
   if (!this_) {
     return mod_actor_value_(this_, av, value);
   }
-  return mod_actor_value_(this_, av, Reflyem::WeightTweak::mod_actor_value(*this_, av, value));
+
+  if (Reflyem::Config::get_singleton().equip_load().enable()) {
+    return mod_actor_value_(this_, av, Reflyem::EquipLoad::mod_actor_value(*this_, av, value));
+  }
+  
+  return mod_actor_value_(this_, av, value);
 }
 
 auto OnActorValueOwnerPc::get_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av) -> float {
   if (!this_) {
     return get_actor_value_(this_, av);
   }
-  return Reflyem::WeightTweak::get_actor_value(*this_, av).value_or(get_actor_value_(this_, av));
+
+  if (Reflyem::Config::get_singleton().equip_load().enable()) {
+    return Reflyem::EquipLoad::get_actor_value(*this_, av).value_or(get_actor_value_(this_, av));
+  }
+
+  return get_actor_value_(this_, av);
 }
 
 auto OnActorValueOwnerPc::set_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av,
@@ -497,7 +520,12 @@ auto OnActorValueOwnerPc::set_actor_value(RE::ActorValueOwner* this_, RE::ActorV
   if (!this_) {
     return set_actor_value_(this_, av, value);
   }
-  return set_actor_value_(this_, av, Reflyem::WeightTweak::set_actor_value(*this_, av, value));
+  
+  if (Reflyem::Config::get_singleton().equip_load().enable()) {
+    return set_actor_value_(this_, av, Reflyem::EquipLoad::set_actor_value(*this_, av, value));
+  }
+
+  return set_actor_value_(this_, av, value);
 }
 
 auto OnActorValueOwnerPc::mod_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av,
@@ -505,7 +533,12 @@ auto OnActorValueOwnerPc::mod_actor_value(RE::ActorValueOwner* this_, RE::ActorV
   if (!this_) {
     return mod_actor_value_(this_, av, value);
   }
-  return mod_actor_value_(this_, av, Reflyem::WeightTweak::mod_actor_value(*this_, av, value));
+
+  if (Reflyem::Config::get_singleton().equip_load().enable()) {
+    return mod_actor_value_(this_, av, Reflyem::EquipLoad::mod_actor_value(*this_, av, value));
+  }
+  
+  return mod_actor_value_(this_, av, value);
 }
 
 auto install_hooks() -> void {

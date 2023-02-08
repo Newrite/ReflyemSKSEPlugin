@@ -105,4 +105,4 @@ auto animation_handler(const RE::BSAnimationGraphEvent& event, const Config&) ->
     }
   }
 }
-}
+} // namespace Reflyem::ParryBash

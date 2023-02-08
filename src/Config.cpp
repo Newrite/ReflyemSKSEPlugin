@@ -126,6 +126,15 @@ constexpr inline std::string_view ParryStaggerCount              = "ParryStagger
 constexpr inline std::string_view ParryStaggerCountKeywordId     = "ParryStaggerCountKeywordId";
 constexpr inline std::string_view ParryStaggerCountTimer         = "ParryStaggerCountTimer";
 constexpr inline std::string_view BlockTimer                     = "BlockTimer";
+constexpr inline std::string_view LowEquipAbilityId              = "LowEquipAbilityId";
+constexpr inline std::string_view MidEquipAbilityId              = "MidEquipAbilityId";
+constexpr inline std::string_view HigEquipAbilityId              = "HigEquipAbilityId";
+constexpr inline std::string_view EquipWeightMult                = "EquipWeightMult";
+constexpr inline std::string_view ArmorWeightMult                = "ArmorWeightMult";
+constexpr inline std::string_view WeaponWeightMult               = "WeaponWeightMult";
+constexpr inline std::string_view LowPercent                     = "LowPercent";
+constexpr inline std::string_view HighPercent                    = "HighPercent";
+constexpr inline std::string_view EquipLoad                      = "EquipLoad";
 
 Config::MagicShieldConfig::MagicShieldConfig(toml::table& tbl, RE::TESDataHandler& data_handler,
                                              const Config& config) {
@@ -646,6 +655,29 @@ Config::TimingBlockConfig::TimingBlockConfig(toml::table& tbl, RE::TESDataHandle
   }
 }
 
+Config::EquipLoadConfig::EquipLoadConfig(toml::table& tbl, RE::TESDataHandler& data_handler,
+                                         const Config& config) {
+  enable_ = tbl[EquipLoad][Enable].value_or(false);
+  if (enable_) {
+    equip_weight_mult_  = tbl[EquipLoad][EquipWeightMult].value_or(1.f);
+    armor_weight_mult_  = tbl[EquipLoad][ArmorWeightMult].value_or(1.f);
+    weapon_weight_mult_ = tbl[EquipLoad][WeaponWeightMult].value_or(1.f);
+    low_percent_        = tbl[EquipLoad][LowPercent].value_or(0.3f);
+    high_percent_       = tbl[EquipLoad][HighPercent].value_or(0.7f);
+
+    const auto low_equip_spell_form_id = tbl[EquipLoad][LowEquipAbilityId].value<RE::FormID>();
+    const auto med_equip_spell_form_id = tbl[EquipLoad][MidEquipAbilityId].value<RE::FormID>();
+    const auto hig_equip_spell_form_id = tbl[EquipLoad][HigEquipAbilityId].value<RE::FormID>();
+
+    low_equip_spell_ =
+        data_handler.LookupForm<RE::SpellItem>(low_equip_spell_form_id.value(), config.mod_name());
+    med_equip_spell_ =
+        data_handler.LookupForm<RE::SpellItem>(med_equip_spell_form_id.value(), config.mod_name());
+    hig_equip_spell_ =
+        data_handler.LookupForm<RE::SpellItem>(hig_equip_spell_form_id.value(), config.mod_name());
+  }
+}
+
 Config::Config() {
   logger::info("start init config toml"sv);
   auto       tbl          = toml::parse_file(PathToConfig);
@@ -669,6 +701,7 @@ Config::Config() {
   magic_weapon_     = MagicWeaponConfig(tbl, *data_handler, *this);
   resist_tweaks_    = ResistTweaksConfig(tbl, *data_handler, *this);
   timing_block_     = TimingBlockConfig(tbl, *data_handler, *this);
+  equip_load_       = EquipLoadConfig(tbl, *data_handler, *this);
 
   logger::info("finish init config"sv);
 }

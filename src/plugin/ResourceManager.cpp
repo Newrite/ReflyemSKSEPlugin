@@ -133,26 +133,6 @@ auto on_update_actor_regeneration(RE::Character& character, Core::ActorsCache::D
   }
 }
 
-ResourceDrain::ResourceDrain(float a_stamina, float a_health, float a_magicka) {
-  logger::debug("create drain values: S{} H{} M{}"sv, a_stamina, a_health, a_magicka);
-  stamina = a_stamina * -1.f;
-  health  = a_health * -1.f;
-  magicka = a_magicka * -1.f;
-}
-
-auto ResourceDrain::drain(RE::Actor& actor) -> void {
-  logger::debug("drain values: S{} H{} M{}"sv, stamina, health, magicka);
-  if (health != 0.f) {
-    spend_actor_value(actor, RE::ActorValue::kHealth, std::abs(health));
-  }
-  if (magicka != 0.f) {
-    spend_actor_value(actor, RE::ActorValue::kMagicka, std::abs(magicka));
-  }
-  if (stamina != 0.f) {
-    spend_actor_value(actor, RE::ActorValue::kStamina, std::abs(stamina));
-  }
-}
-
 auto weap_actor_mask_multiply(const FormMask& matrix1, const ActorMask& matrix2)
     -> std::unique_ptr<FormMask> {
   constexpr auto row = 1;
@@ -468,27 +448,11 @@ auto jump_spend(RE::Actor& actor, const Config& config) -> void {
   spend_actor_value(actor, RE::ActorValue::kStamina, -config.resource_manager().jump_cost());
 }
 
-auto get_weapon(const RE::Actor& actor, const bool is_left_hand, const Config& config)
-    -> RE::TESObjectWEAP& {
-  logger::debug("get weapon start"sv);
-  const auto weapon = actor.GetEquippedObject(is_left_hand);
-  if (!weapon) {
-    return *config.resource_manager().unarmed_weapon();
-  }
-
-  const auto as_weapon = weapon->As<RE::TESObjectWEAP>();
-
-  if (!as_weapon) {
-    return *config.resource_manager().unarmed_weapon();
-  }
-
-  return *as_weapon;
-}
-
 auto ranged_spend_handler(RE::Character& character, const Config& config) -> void {
-  const auto& weapon  = get_weapon(character, false, config);
-  const auto  state   = character.actorState1.meleeAttackState;
-  auto        is_draw = state == RE::ATTACK_STATE_ENUM::kBowDraw ||
+  const auto& weapon =
+      *Core::get_weapon(character, false, config.resource_manager().unarmed_weapon());
+  const auto state   = character.actorState1.meleeAttackState;
+  auto       is_draw = state == RE::ATTACK_STATE_ENUM::kBowDraw ||
                  state == RE::ATTACK_STATE_ENUM::kBowDrawn ||
                  state == RE::ATTACK_STATE_ENUM::kBowAttached;
 
@@ -566,7 +530,8 @@ auto update_actor(RE::Character& character, float, const Config& config) -> void
 
   if (config.resource_manager().weapon_spend_enable()) {
     logger::debug("Update actor in resource get weapon"sv);
-    const auto& attack_weapon = get_weapon(character, false, config);
+    const auto& attack_weapon =
+        *Core::get_weapon(character, false, config.resource_manager().unarmed_weapon());
 
     logger::debug("Update actor in resource get weapon costs"sv);
     const auto normal_attack_cost = get_attack_drain_cost(character, attack_weapon, false, config);
@@ -635,7 +600,8 @@ auto animation_handler(const RE::BSAnimationGraphEvent& event, const Config& con
         return;
       }
 
-      const auto& weapon = get_weapon(*actor, false, config);
+      const auto& weapon =
+          *Core::get_weapon(*actor, false, config.resource_manager().unarmed_weapon());
       logger::debug("get weapon end");
       melee_weapon_spend(*actor, weapon, is_power_attack, config);
       return;
@@ -645,7 +611,8 @@ auto animation_handler(const RE::BSAnimationGraphEvent& event, const Config& con
         return;
       }
 
-      const auto& weapon = get_weapon(*actor, true, config);
+      const auto& weapon =
+          *Core::get_weapon(*actor, true, config.resource_manager().unarmed_weapon());
       logger::debug("get weapon end"sv);
       melee_weapon_spend(*actor, weapon, is_power_attack, config);
       return;

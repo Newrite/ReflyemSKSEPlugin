@@ -9,13 +9,14 @@ private:
 
   struct MagicShieldConfig {
   public:
-    [[nodiscard]] auto enable() const -> bool { return enable_; }
-    [[nodiscard]] auto physical() const -> bool { return physical_; }
-    [[nodiscard]] auto magick() const -> bool { return magick_; }
-    [[nodiscard]] auto must_be_or_not_be() const -> bool { return must_be_or_not_be_; }
-    [[nodiscard]] auto mgef_keyword() const -> RE::BGSKeyword* { return mgef_keyword_; }
-    [[nodiscard]] auto av() const -> RE::ActorValue { return av_; }
-    [[nodiscard]] auto mgef_cost_keyword() const -> RE::BGSKeyword* { return mgef_cost_keyword_; }
+    [[nodiscard]] bool            enable() const { return enable_; }
+    [[nodiscard]] bool            physical() const { return physical_; }
+    [[nodiscard]] bool            magick() const { return magick_; }
+    [[nodiscard]] bool            must_be_or_not_be() const { return must_be_or_not_be_; }
+    [[nodiscard]] RE::BGSKeyword* mgef_keyword() const { return mgef_keyword_; }
+    [[nodiscard]] RE::ActorValue  av() const { return av_; }
+    [[nodiscard]] RE::BGSKeyword* mgef_cost_keyword() const { return mgef_cost_keyword_; }
+
     MagicShieldConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     MagicShieldConfig() = default;
 
@@ -31,14 +32,13 @@ private:
 
   struct PetrifiedBloodConfig {
   public:
-    [[nodiscard]] auto enable() const -> bool { return enable_; }
-    [[nodiscard]] auto physical() const -> bool { return physical_; }
-    [[nodiscard]] auto magick() const -> bool { return magick_; }
-    [[nodiscard]] auto must_be_or_not_be() const -> bool { return must_be_or_not_be_; }
-    [[nodiscard]] auto mgef_keyword() const -> RE::BGSKeyword* { return mgef_keyword_; }
-
-    [[nodiscard]] auto av() const -> RE::ActorValue { return av_; }
-    [[nodiscard]] auto blood_spell() const -> RE::SpellItem* { return blood_spell_; }
+    [[nodiscard]] bool            enable() const { return enable_; }
+    [[nodiscard]] bool            physical() const { return physical_; }
+    [[nodiscard]] bool            magick() const { return magick_; }
+    [[nodiscard]] bool            must_be_or_not_be() const { return must_be_or_not_be_; }
+    [[nodiscard]] RE::BGSKeyword* mgef_keyword() const { return mgef_keyword_; }
+    [[nodiscard]] RE::ActorValue  av() const { return av_; }
+    [[nodiscard]] RE::SpellItem*  blood_spell() const { return blood_spell_; }
 
     PetrifiedBloodConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     PetrifiedBloodConfig() = default;
@@ -54,13 +54,11 @@ private:
   };
 
   struct CheatDeathConfig {
-    [[nodiscard]] auto enable() const -> bool { return enable_; }
-    [[nodiscard]] auto physical() const -> bool { return physical_; }
-    [[nodiscard]] auto magick() const -> bool { return magick_; }
-
-    [[nodiscard]] auto mgef_percent_keyword() const -> RE::BGSKeyword* {
-      return mgef_percent_keyword_;
-    }
+  public:
+    [[nodiscard]] bool            enable() const { return enable_; }
+    [[nodiscard]] bool            physical() const { return physical_; }
+    [[nodiscard]] bool            magick() const { return magick_; }
+    [[nodiscard]] RE::BGSKeyword* mgef_percent_keyword() const { return mgef_percent_keyword_; }
 
     CheatDeathConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     CheatDeathConfig() = default;
@@ -73,25 +71,15 @@ private:
   };
 
   struct VampirismConfig {
-    [[nodiscard]] auto enable() const -> bool { return enable_; }
-    [[nodiscard]] auto av() const -> RE::ActorValue { return av_; }
-    [[nodiscard]] auto mgef_health_enable() const -> bool { return mgef_health_enable_; }
-
-    [[nodiscard]] auto mgef_health_keyword() const -> RE::BGSKeyword* {
-      return mgef_health_keyword_;
-    }
-
-    [[nodiscard]] auto mgef_stamina_enable() const -> bool { return mgef_stamina_enable_; }
-
-    [[nodiscard]] auto mgef_stamina_keyword() const -> RE::BGSKeyword* {
-      return mgef_stamina_keyword_;
-    }
-
-    [[nodiscard]] auto mgef_magicka_enable() const -> bool { return mgef_magicka_enable_; }
-
-    [[nodiscard]] auto mgef_magicka_keyword() const -> RE::BGSKeyword* {
-      return mgef_magicka_keyword_;
-    }
+  public:
+    [[nodiscard]] bool            enable() const { return enable_; }
+    [[nodiscard]] RE::ActorValue  av() const { return av_; }
+    [[nodiscard]] bool            mgef_health_enable() const { return mgef_health_enable_; }
+    [[nodiscard]] RE::BGSKeyword* mgef_health_keyword() const { return mgef_health_keyword_; }
+    [[nodiscard]] bool            mgef_stamina_enable() const { return mgef_stamina_enable_; }
+    [[nodiscard]] RE::BGSKeyword* mgef_stamina_keyword() const { return mgef_stamina_keyword_; }
+    [[nodiscard]] bool            mgef_magicka_enable() const { return mgef_magicka_enable_; }
+    [[nodiscard]] RE::BGSKeyword* mgef_magicka_keyword() const { return mgef_magicka_keyword_; }
 
     VampirismConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     VampirismConfig() = default;
@@ -116,27 +104,17 @@ private:
   };
 
   struct MagicVampirismConfig {
-    [[nodiscard]] auto enable() const -> bool { return enable_; }
-    [[nodiscard]] auto av() const -> RE::ActorValue { return av_; }
-    [[nodiscard]] auto must_be_or_not_be() const -> bool { return must_be_or_not_be_; }
-    [[nodiscard]] auto mgef_keyword() const -> RE::BGSKeyword* { return mgef_keyword_; }
-    [[nodiscard]] auto mgef_health_enable() const -> bool { return mgef_health_enable_; }
-
-    [[nodiscard]] auto mgef_health_keyword() const -> RE::BGSKeyword* {
-      return mgef_health_keyword_;
-    }
-
-    [[nodiscard]] auto mgef_stamina_enable() const -> bool { return mgef_stamina_enable_; }
-
-    [[nodiscard]] auto mgef_stamina_keyword() const -> RE::BGSKeyword* {
-      return mgef_stamina_keyword_;
-    }
-
-    [[nodiscard]] auto mgef_magicka_enable() const -> bool { return mgef_magicka_enable_; }
-
-    [[nodiscard]] auto mgef_magicka_keyword() const -> RE::BGSKeyword* {
-      return mgef_magicka_keyword_;
-    }
+  public:
+    [[nodiscard]] bool            enable() const { return enable_; }
+    [[nodiscard]] RE::ActorValue  av() const { return av_; }
+    [[nodiscard]] bool            must_be_or_not_be() const { return must_be_or_not_be_; }
+    [[nodiscard]] RE::BGSKeyword* mgef_keyword() const { return mgef_keyword_; }
+    [[nodiscard]] bool            mgef_health_enable() const { return mgef_health_enable_; }
+    [[nodiscard]] RE::BGSKeyword* mgef_health_keyword() const { return mgef_health_keyword_; }
+    [[nodiscard]] bool            mgef_stamina_enable() const { return mgef_stamina_enable_; }
+    [[nodiscard]] RE::BGSKeyword* mgef_stamina_keyword() const { return mgef_stamina_keyword_; }
+    [[nodiscard]] bool            mgef_magicka_enable() const { return mgef_magicka_enable_; }
+    [[nodiscard]] RE::BGSKeyword* mgef_magicka_keyword() const { return mgef_magicka_keyword_; }
 
     MagicVampirismConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     MagicVampirismConfig() = default;
@@ -164,11 +142,11 @@ private:
 
   struct SpeedCastingConfig {
   public:
-    [[nodiscard]] auto enable() const -> bool { return enable_; }
-    [[nodiscard]] auto global() const -> RE::TESGlobal* { return global_; }
-    [[nodiscard]] auto av() const -> RE::ActorValue { return av_; }
-    [[nodiscard]] auto high() const -> float { return high_; }
-    [[nodiscard]] auto low() const -> float { return low_; }
+    [[nodiscard]] bool           enable() const { return enable_; }
+    [[nodiscard]] RE::TESGlobal* global() const { return global_; }
+    [[nodiscard]] RE::ActorValue av() const { return av_; }
+    [[nodiscard]] float          high() const { return high_; }
+    [[nodiscard]] float          low() const { return low_; }
 
     SpeedCastingConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     SpeedCastingConfig() = default;
@@ -183,11 +161,11 @@ private:
 
   struct WeaponCritConfig {
   public:
-    [[nodiscard]] auto enable() const -> bool { return enable_; }
-    [[nodiscard]] auto chance_av() const -> RE::ActorValue { return chance_av_; }
-    [[nodiscard]] auto damage_av() const -> RE::ActorValue { return damage_av_; }
-    [[nodiscard]] auto high() const -> std::int32_t { return high_; }
-    [[nodiscard]] auto keyword_immun() const -> RE::BGSKeyword* { return keyword_immun_; }
+    [[nodiscard]] bool            enable() const { return enable_; }
+    [[nodiscard]] RE::ActorValue  chance_av() const { return chance_av_; }
+    [[nodiscard]] RE::ActorValue  damage_av() const { return damage_av_; }
+    [[nodiscard]] std::int32_t    high() const { return high_; }
+    [[nodiscard]] RE::BGSKeyword* keyword_immun() const { return keyword_immun_; }
 
     WeaponCritConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     WeaponCritConfig() = default;
@@ -202,13 +180,13 @@ private:
 
   struct MagickCritConfig {
   public:
-    [[nodiscard]] auto enable() const -> bool { return enable_; }
-    [[nodiscard]] auto chance_av() const -> RE::ActorValue { return chance_av_; }
-    [[nodiscard]] auto damage_av() const -> RE::ActorValue { return damage_av_; }
-    [[nodiscard]] auto high() const -> std::int32_t { return high_; }
-    [[nodiscard]] auto must_be_or_not_be() const -> bool { return must_be_or_not_be_; }
-    [[nodiscard]] auto mgef_keyword() const -> RE::BGSKeyword* { return mgef_keyword_; }
-    [[nodiscard]] auto keyword_immun() const -> RE::BGSKeyword* { return keyword_immun_; }
+    [[nodiscard]] bool            enable() const { return enable_; }
+    [[nodiscard]] RE::ActorValue  chance_av() const { return chance_av_; }
+    [[nodiscard]] RE::ActorValue  damage_av() const { return damage_av_; }
+    [[nodiscard]] std::int32_t    high() const { return high_; }
+    [[nodiscard]] bool            must_be_or_not_be() const { return must_be_or_not_be_; }
+    [[nodiscard]] RE::BGSKeyword* mgef_keyword() const { return mgef_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* keyword_immun() const { return keyword_immun_; }
 
     MagickCritConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     MagickCritConfig() = default;
@@ -225,12 +203,12 @@ private:
 
   struct CastOnCritConfig {
   public:
-    [[nodiscard]] auto enable() const -> bool { return enable_; }
-    [[nodiscard]] auto physical() const -> bool { return physical_; }
-    [[nodiscard]] auto magick() const -> bool { return magick_; }
-    [[nodiscard]] auto magick_cooldawn() const -> float { return magick_cooldawn_; }
-    [[nodiscard]] auto formlist_spells() const -> RE::BGSListForm* { return formlist_spells_; }
-    [[nodiscard]] auto formlist_needkw() const -> RE::BGSListForm* { return formlist_needkw_; }
+    [[nodiscard]] bool             enable() const { return enable_; }
+    [[nodiscard]] bool             physical() const { return physical_; }
+    [[nodiscard]] bool             magick() const { return magick_; }
+    [[nodiscard]] float            magick_cooldawn() const { return magick_cooldawn_; }
+    [[nodiscard]] RE::BGSListForm* formlist_spells() const { return formlist_spells_; }
+    [[nodiscard]] RE::BGSListForm* formlist_needkw() const { return formlist_needkw_; }
 
     CastOnCritConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     CastOnCritConfig() = default;
@@ -246,9 +224,9 @@ private:
 
   struct CastOnHitConfig {
   public:
-    [[nodiscard]] auto enable() const -> bool { return enable_; }
-    [[nodiscard]] auto formlist_spells() const -> RE::BGSListForm* { return formlist_spells_; }
-    [[nodiscard]] auto formlist_needkw() const -> RE::BGSListForm* { return formlist_needkw_; }
+    [[nodiscard]] bool             enable() const { return enable_; }
+    [[nodiscard]] RE::BGSListForm* formlist_spells() const { return formlist_spells_; }
+    [[nodiscard]] RE::BGSListForm* formlist_needkw() const { return formlist_needkw_; }
 
     CastOnHitConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     CastOnHitConfig() = default;
@@ -261,9 +239,9 @@ private:
 
   struct CastOnBlockConfig {
   public:
-    [[nodiscard]] auto enable() const -> bool { return enable_; }
-    [[nodiscard]] auto formlist_spells() const -> RE::BGSListForm* { return formlist_spells_; }
-    [[nodiscard]] auto formlist_needkw() const -> RE::BGSListForm* { return formlist_needkw_; }
+    [[nodiscard]] bool             enable() const { return enable_; }
+    [[nodiscard]] RE::BGSListForm* formlist_spells() const { return formlist_spells_; }
+    [[nodiscard]] RE::BGSListForm* formlist_needkw() const { return formlist_needkw_; }
 
     CastOnBlockConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     CastOnBlockConfig() = default;
@@ -275,68 +253,51 @@ private:
   };
 
   struct ResourceManagerConfig {
-    [[nodiscard]] auto enable() const -> bool { return enable_; }
-    [[nodiscard]] auto weapon_spend_enable() const -> bool { return weapon_spend_enable_; }
-    [[nodiscard]] auto bash_spend_enable() const -> bool { return bash_spend_enable_; }
-    [[nodiscard]] auto block_spend_enable() const -> bool { return block_spend_enable_; }
-    [[nodiscard]] auto regeneration_enable() const -> bool { return regeneration_enable_; }
-    [[nodiscard]] auto infamy_enable() const -> bool { return infamy_enable_; }
-    [[nodiscard]] auto regen_delay() const -> float { return regen_delay_; }
-    [[nodiscard]] auto weight_mult() const -> float { return weight_mult_; }
-    [[nodiscard]] auto damage_mult() const -> float { return damage_mult_; }
-    [[nodiscard]] auto armor_mult() const -> float { return armor_mult_; }
-    [[nodiscard]] auto global_mult() const -> float { return global_mult_; }
-    [[nodiscard]] auto power_attack_mult() const -> float { return power_attack_mult_; }
-    [[nodiscard]] auto jump_cost() const -> float { return jump_cost_; }
-    [[nodiscard]] auto spell_block_attack() const -> RE::SpellItem* { return spell_block_attack_; }
-
-    [[nodiscard]] auto spell_block_power_attack() const -> RE::SpellItem* {
+  public:
+    [[nodiscard]] bool           enable() const { return enable_; }
+    [[nodiscard]] bool           weapon_spend_enable() const { return weapon_spend_enable_; }
+    [[nodiscard]] bool           bash_spend_enable() const { return bash_spend_enable_; }
+    [[nodiscard]] bool           block_spend_enable() const { return block_spend_enable_; }
+    [[nodiscard]] bool           regeneration_enable() const { return regeneration_enable_; }
+    [[nodiscard]] bool           infamy_enable() const { return infamy_enable_; }
+    [[nodiscard]] float          regen_delay() const { return regen_delay_; }
+    [[nodiscard]] float          weight_mult() const { return weight_mult_; }
+    [[nodiscard]] float          damage_mult() const { return damage_mult_; }
+    [[nodiscard]] float          armor_mult() const { return armor_mult_; }
+    [[nodiscard]] float          global_mult() const { return global_mult_; }
+    [[nodiscard]] float          power_attack_mult() const { return power_attack_mult_; }
+    [[nodiscard]] float          jump_cost() const { return jump_cost_; }
+    [[nodiscard]] RE::SpellItem* spell_block_attack() const { return spell_block_attack_; }
+    [[nodiscard]] RE::SpellItem* spell_block_power_attack() const {
       return spell_block_power_attack_;
     }
-
-    [[nodiscard]] auto spell_block_bash() const -> RE::SpellItem* { return spell_block_bash_; }
-    [[nodiscard]] auto unarmed_weapon() const -> RE::TESObjectWEAP* { return unarmed_weapon_; }
-    [[nodiscard]] auto attack_cost_av() const -> RE::ActorValue { return attack_cost_av_; }
-    [[nodiscard]] auto attack_cost_high() const -> std::int32_t { return attack_cost_high_; }
-    [[nodiscard]] auto attack_cost_low() const -> std::int32_t { return attack_cost_low_; }
-
-    [[nodiscard]] auto power_attack_cost_av() const -> RE::ActorValue {
-      return power_attack_cost_av_;
-    }
-
-    [[nodiscard]] auto power_attack_cost_high() const -> std::int32_t {
-      return power_attack_cost_high_;
-    }
-
-    [[nodiscard]] auto power_attack_cost_low() const -> std::int32_t {
-      return power_attack_cost_low_;
-    }
-
-    [[nodiscard]] auto health_kw() const -> RE::BGSKeyword* { return health_kw_; }
-    [[nodiscard]] auto stamina_kw() const -> RE::BGSKeyword* { return stamina_kw_; }
-    [[nodiscard]] auto magicka_kw() const -> RE::BGSKeyword* { return magicka_kw_; }
-
-    [[nodiscard]] auto convert_stamina_health_kw() const -> RE::BGSKeyword* {
+    [[nodiscard]] RE::SpellItem*     spell_block_bash() const { return spell_block_bash_; }
+    [[nodiscard]] RE::TESObjectWEAP* unarmed_weapon() const { return unarmed_weapon_; }
+    [[nodiscard]] RE::ActorValue     attack_cost_av() const { return attack_cost_av_; }
+    [[nodiscard]] std::int32_t       attack_cost_high() const { return attack_cost_high_; }
+    [[nodiscard]] std::int32_t       attack_cost_low() const { return attack_cost_low_; }
+    [[nodiscard]] RE::ActorValue     power_attack_cost_av() const { return power_attack_cost_av_; }
+    [[nodiscard]] std::int32_t    power_attack_cost_high() const { return power_attack_cost_high_; }
+    [[nodiscard]] std::int32_t    power_attack_cost_low() const { return power_attack_cost_low_; }
+    [[nodiscard]] RE::BGSKeyword* health_kw() const { return health_kw_; }
+    [[nodiscard]] RE::BGSKeyword* stamina_kw() const { return stamina_kw_; }
+    [[nodiscard]] RE::BGSKeyword* magicka_kw() const { return magicka_kw_; }
+    [[nodiscard]] RE::BGSKeyword* convert_stamina_health_kw() const {
       return convert_stamina_health_kw_;
     }
-
-    [[nodiscard]] auto convert_stamina_magicka_kw() const -> RE::BGSKeyword* {
+    [[nodiscard]] RE::BGSKeyword* convert_stamina_magicka_kw() const {
       return convert_stamina_magicka_kw_;
     }
-
-    [[nodiscard]] auto convert_magicka_health_kw() const -> RE::BGSKeyword* {
+    [[nodiscard]] RE::BGSKeyword* convert_magicka_health_kw() const {
       return convert_magicka_health_kw_;
     }
-
-    [[nodiscard]] auto convert_magicka_stamina_kw() const -> RE::BGSKeyword* {
+    [[nodiscard]] RE::BGSKeyword* convert_magicka_stamina_kw() const {
       return convert_magicka_stamina_kw_;
     }
-
-    [[nodiscard]] auto convert_health_stamina_kw() const -> RE::BGSKeyword* {
+    [[nodiscard]] RE::BGSKeyword* convert_health_stamina_kw() const {
       return convert_health_stamina_kw_;
     }
-
-    [[nodiscard]] auto convert_health_magicka_kw() const -> RE::BGSKeyword* {
+    [[nodiscard]] RE::BGSKeyword* convert_health_magicka_kw() const {
       return convert_health_magicka_kw_;
     }
 
@@ -387,48 +348,39 @@ private:
   };
 
   struct TkDodgeConfig {
-    [[nodiscard]] auto enable() const -> bool { return enable_; }
-    [[nodiscard]] auto key() const -> std::uint32_t { return key_; }
-    [[nodiscard]] auto step() const -> std::int32_t { return step_; }
-    [[nodiscard]] auto iframe_duration() const -> float { return iframe_duration_; }
-
-    [[nodiscard]] auto iframe_duration_mgef_kw() const -> RE::BGSKeyword* {
+  public:
+    [[nodiscard]] bool            enable() const { return enable_; }
+    [[nodiscard]] std::uint32_t   key() const { return key_; }
+    [[nodiscard]] std::int32_t    step() const { return step_; }
+    [[nodiscard]] float           iframe_duration() const { return iframe_duration_; }
+    [[nodiscard]] RE::BGSKeyword* iframe_duration_mgef_kw() const {
       return iframe_duration_mgef_kw_;
     }
-
-    [[nodiscard]] auto gamepad_treshold() const -> float { return gamepad_treshold_; }
-    [[nodiscard]] auto sprint_tapping_dodge() const -> bool { return sprint_tapping_dodge_; }
-    [[nodiscard]] auto block_dodge_when_attack() const -> bool { return block_dodge_when_attack_; }
-
-    [[nodiscard]] auto block_dodge_when_attack_keyword() const -> RE::BGSKeyword* {
+    [[nodiscard]] float gamepad_treshold() const { return gamepad_treshold_; }
+    [[nodiscard]] bool  sprint_tapping_dodge() const { return sprint_tapping_dodge_; }
+    [[nodiscard]] bool  block_dodge_when_attack() const { return block_dodge_when_attack_; }
+    [[nodiscard]] RE::BGSKeyword* block_dodge_when_attack_keyword() const {
       return block_dodge_when_attack_keyword_;
     }
-
-    [[nodiscard]] auto block_dodge_when_power_attack() const -> bool {
+    [[nodiscard]] bool block_dodge_when_power_attack() const {
       return block_dodge_when_power_attack_;
     }
-
-    [[nodiscard]] auto block_dodge_when_power_attack_keyword() const -> RE::BGSKeyword* {
+    [[nodiscard]] RE::BGSKeyword* block_dodge_when_power_attack_keyword() const {
       return block_dodge_when_power_attack_keyword_;
     }
-
-    [[nodiscard]] auto block_dodge_when_casting() const -> bool {
-      return block_dodge_when_casting_;
-    }
-
-    [[nodiscard]] auto block_dodge_when_casting_keyword() const -> RE::BGSKeyword* {
+    [[nodiscard]] bool block_dodge_when_casting() const { return block_dodge_when_casting_; }
+    [[nodiscard]] RE::BGSKeyword* block_dodge_when_casting_keyword() const {
       return block_dodge_when_casting_keyword_;
     }
-
-    [[nodiscard]] auto key_up_delay() const -> float { return key_up_delay_; }
-    [[nodiscard]] auto max_cost() const -> float { return max_cost_; }
-    [[nodiscard]] auto min_cost() const -> float { return min_cost_; }
-    [[nodiscard]] auto flat_cost() const -> float { return flat_cost_; }
-    [[nodiscard]] auto cost_from_mgef_kw() const -> RE::BGSKeyword* { return cost_from_mgef_kw_; }
-    [[nodiscard]] auto equipped_weight_mult() const -> float { return equipped_weight_mult_; }
-    [[nodiscard]] auto health_kw() const -> RE::BGSKeyword* { return health_kw_; }
-    [[nodiscard]] auto stamina_kw() const -> RE::BGSKeyword* { return stamina_kw_; }
-    [[nodiscard]] auto magicka_kw() const -> RE::BGSKeyword* { return magicka_kw_; }
+    [[nodiscard]] float           key_up_delay() const { return key_up_delay_; }
+    [[nodiscard]] float           max_cost() const { return max_cost_; }
+    [[nodiscard]] float           min_cost() const { return min_cost_; }
+    [[nodiscard]] float           flat_cost() const { return flat_cost_; }
+    [[nodiscard]] RE::BGSKeyword* cost_from_mgef_kw() const { return cost_from_mgef_kw_; }
+    [[nodiscard]] float           equipped_weight_mult() const { return equipped_weight_mult_; }
+    [[nodiscard]] RE::BGSKeyword* health_kw() const { return health_kw_; }
+    [[nodiscard]] RE::BGSKeyword* stamina_kw() const { return stamina_kw_; }
+    [[nodiscard]] RE::BGSKeyword* magicka_kw() const { return magicka_kw_; }
 
     TkDodgeConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     TkDodgeConfig() = default;
@@ -459,13 +411,10 @@ private:
   };
 
   struct CasterAdditionsConfig {
-    [[nodiscard]] auto enable() const -> bool { return enable_; }
-
-    [[nodiscard]] auto spell_add_when_casting() const -> RE::SpellItem* {
-      return spell_add_when_casting_;
-    }
-
-    [[nodiscard]] auto stamina_cost() const -> bool { return stamina_cost_; }
+  public:
+    [[nodiscard]] bool           enable() const { return enable_; }
+    [[nodiscard]] RE::SpellItem* spell_add_when_casting() const { return spell_add_when_casting_; }
+    [[nodiscard]] bool           stamina_cost() const { return stamina_cost_; }
 
     CasterAdditionsConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     CasterAdditionsConfig() = default;
@@ -477,10 +426,12 @@ private:
   };
 
   struct MagicWeaponConfig {
-    [[nodiscard]] auto enable() const -> bool { return enable_; }
-    [[nodiscard]] auto spells() const -> RE::BGSListForm* { return spells_; }
-    [[nodiscard]] auto keywords() const -> RE::BGSListForm* { return keywords_; }
-    [[nodiscard]] auto globals() const -> RE::BGSListForm* { return globals_; }
+  public:
+    [[nodiscard]] bool             enable() const { return enable_; }
+    [[nodiscard]] RE::BGSListForm* spells() const { return spells_; }
+    [[nodiscard]] RE::BGSListForm* keywords() const { return keywords_; }
+    [[nodiscard]] RE::BGSListForm* globals() const { return globals_; }
+
     MagicWeaponConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     MagicWeaponConfig() = default;
 
@@ -492,42 +443,32 @@ private:
   };
 
   struct ResistTweaksConfig {
-    [[nodiscard]] auto enable_damage_resist_tweak() const -> bool {
-      return enable_damage_resist_tweak_;
-    }
-
-    [[nodiscard]] auto no_double_damage_resist_check() const -> bool {
-      return no_double_damage_resist_check_;
-    }
-
-    [[nodiscard]] auto enable_resist_penetration() const -> bool {
-      return enable_resist_penetration_;
-    }
-
-    [[nodiscard]] auto flat_penetration() const -> bool { return flat_penetration_; }
-    [[nodiscard]] auto penetration_av() const -> RE::ActorValue { return penetration_av_; }
-    [[nodiscard]] auto penetration_kw() const -> RE::BGSKeyword* { return penetration_kw_; }
-    [[nodiscard]] auto penetration_high() const -> std::int32_t { return penetration_high_; }
-
-    [[nodiscard]] auto enable() const -> bool { return enable_; }
-    [[nodiscard]] auto enable_check_resistance() const -> bool { return enable_check_resistance_; }
-
-    [[nodiscard]] auto no_double_resist_check_magick() const -> bool {
+  public:
+    [[nodiscard]] bool enable() const { return enable_; }
+    [[nodiscard]] bool enable_check_resistance() const { return enable_check_resistance_; }
+    [[nodiscard]] bool no_double_resist_check_magick() const {
       return no_double_resist_check_magick_;
     }
-
-    [[nodiscard]] auto no_double_resist_check_poison() const -> bool {
+    [[nodiscard]] bool no_double_resist_check_poison() const {
       return no_double_resist_check_poison_;
     }
-
-    [[nodiscard]] auto no_av_damage_resist_penetration() const -> bool {
+    [[nodiscard]] bool no_av_damage_resist_penetration() const {
       return no_av_damage_resist_penetration_;
     }
+    [[nodiscard]] bool enable_damage_resist_tweak() const { return enable_damage_resist_tweak_; }
+    [[nodiscard]] bool no_double_damage_resist_check() const {
+      return no_double_damage_resist_check_;
+    }
+    [[nodiscard]] bool enable_resist_penetration() const { return enable_resist_penetration_; }
+    [[nodiscard]] bool flat_penetration() const { return flat_penetration_; }
+    [[nodiscard]] RE::ActorValue  penetration_av() const { return penetration_av_; }
+    [[nodiscard]] RE::BGSKeyword* penetration_kw() const { return penetration_kw_; }
+    [[nodiscard]] std::int32_t    penetration_high() const { return penetration_high_; }
+    [[nodiscard]] bool            npc_max_resistance() const { return npc_max_resistance_; }
+    [[nodiscard]] float           resist_weight() const { return resist_weight_; }
+    [[nodiscard]] bool            ench_get_no_absorb() const { return ench_get_no_absorb_; }
+    [[nodiscard]] bool            ench_ignore_resistance() const { return ench_ignore_resistance_; }
 
-    [[nodiscard]] auto npc_max_resistance() const -> bool { return npc_max_resistance_; }
-    [[nodiscard]] auto resist_weight() const -> float { return resist_weight_; }
-    [[nodiscard]] auto ench_get_no_absorb() const -> bool { return ench_get_no_absorb_; }
-    [[nodiscard]] auto ench_ignore_resistance() const -> bool { return ench_ignore_resistance_; }
     ResistTweaksConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     ResistTweaksConfig() = default;
 
@@ -552,34 +493,24 @@ private:
 
   struct TimingBlockConfig {
   public:
-    [[nodiscard]] auto enable() const -> bool { return enable_; }
-    [[nodiscard]] auto parry_timing() const -> float { return parry_timing_; }
-    [[nodiscard]] auto block_timing() const -> float { return block_timing_; }
-    [[nodiscard]] auto parry_stagger_count() const -> int32_t { return parry_stagger_count_; }
-    [[nodiscard]] auto parry_stagger_count_timer() const -> float {
-      return parry_stagger_count_timer_;
-    }
-    [[nodiscard]] auto blank_activator() const -> RE::TESObjectACTI* { return blank_activator_; }
-    [[nodiscard]] auto spark() const -> RE::Explosion* { return spark_; }
-    [[nodiscard]] auto spark_flare() const -> RE::Explosion* { return spark_flare_; }
-    [[nodiscard]] auto parry_keyword() const -> RE::BGSKeyword* { return parry_keyword_; }
-    [[nodiscard]] auto parry_immun_keyword() const -> RE::BGSKeyword* {
-      return parry_immun_keyword_;
-    }
-    [[nodiscard]] auto parry_timing_keyword() const -> RE::BGSKeyword* {
-      return parry_timing_keyword_;
-    }
-    [[nodiscard]] auto parry_stagger_count_keyword() const -> RE::BGSKeyword* {
+    [[nodiscard]] bool            enable() const { return enable_; }
+    [[nodiscard]] RE::BGSKeyword* parry_keyword() const { return parry_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* parry_immun_keyword() const { return parry_immun_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* parry_timing_keyword() const { return parry_timing_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* parry_stagger_count_keyword() const {
       return parry_stagger_count_keyword_;
     }
-    [[nodiscard]] auto block_keyword() const -> RE::BGSKeyword* { return block_keyword_; }
-    [[nodiscard]] auto block_immun_keyword() const -> RE::BGSKeyword* {
-      return block_immun_keyword_;
-    }
-    [[nodiscard]] auto block_timing_keyword() const -> RE::BGSKeyword* {
-      return block_timing_keyword_;
-    }
-    [[nodiscard]] auto enable_sparks() const -> bool { return enable_sparks_; }
+    [[nodiscard]] int32_t parry_stagger_count() const { return parry_stagger_count_; }
+    [[nodiscard]] float   parry_stagger_count_timer() const { return parry_stagger_count_timer_; }
+    [[nodiscard]] float   parry_timing() const { return parry_timing_; }
+    [[nodiscard]] RE::BGSKeyword*    block_keyword() const { return block_keyword_; }
+    [[nodiscard]] RE::BGSKeyword*    block_immun_keyword() const { return block_immun_keyword_; }
+    [[nodiscard]] RE::BGSKeyword*    block_timing_keyword() const { return block_timing_keyword_; }
+    [[nodiscard]] float              block_timing() const { return block_timing_; }
+    [[nodiscard]] bool               enable_sparks() const { return enable_sparks_; }
+    [[nodiscard]] RE::TESObjectACTI* blank_activator() const { return blank_activator_; }
+    [[nodiscard]] RE::Explosion*     spark() const { return spark_; }
+    [[nodiscard]] RE::Explosion*     spark_flare() const { return spark_flare_; }
 
     TimingBlockConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     TimingBlockConfig() = default;
@@ -601,6 +532,33 @@ private:
     RE::TESObjectACTI* blank_activator_;
     RE::Explosion*     spark_;
     RE::Explosion*     spark_flare_;
+  };
+
+  struct EquipLoadConfig {
+  public:
+    [[nodiscard]] bool           enable() const { return enable_; }
+    [[nodiscard]] RE::SpellItem* low_equip_spell() const { return low_equip_spell_; }
+    [[nodiscard]] RE::SpellItem* med_equip_spell() const { return med_equip_spell_; }
+    [[nodiscard]] RE::SpellItem* hig_equip_spell() const { return hig_equip_spell_; }
+    [[nodiscard]] float          equip_weight_mult() const { return equip_weight_mult_; }
+    [[nodiscard]] float          weapon_weight_mult() const { return weapon_weight_mult_; }
+    [[nodiscard]] float          armor_weight_mult() const { return armor_weight_mult_; }
+    [[nodiscard]] float          low_percent() const { return low_percent_; }
+    [[nodiscard]] float          high_percent() const { return high_percent_; }
+
+    EquipLoadConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
+    EquipLoadConfig() = default;
+
+  private:
+    bool           enable_;
+    RE::SpellItem* low_equip_spell_;
+    RE::SpellItem* med_equip_spell_;
+    RE::SpellItem* hig_equip_spell_;
+    float          equip_weight_mult_;
+    float          weapon_weight_mult_;
+    float          armor_weight_mult_;
+    float          low_percent_;
+    float          high_percent_;
   };
 
   // general
@@ -658,46 +616,32 @@ private:
   // timing block
   TimingBlockConfig timing_block_{};
 
+  // equip load
+  EquipLoadConfig equip_load_{};
+
 public:
   [[nodiscard]] static auto get_singleton() noexcept -> const Config&;
 
   [[nodiscard]] auto mod_name() const -> const std::string_view& { return mod_name_; }
 
-  [[nodiscard]] auto magic_shield() const -> const MagicShieldConfig& { return magic_shield_; }
-
-  [[nodiscard]] auto petrified_blood() const -> const PetrifiedBloodConfig& {
-    return petrified_blood_;
-  }
-
-  [[nodiscard]] auto cheat_death() const -> const CheatDeathConfig& { return cheat_death_; }
-  [[nodiscard]] auto vampirism() const -> const VampirismConfig& { return vampirism_; }
-
-  [[nodiscard]] auto magic_vampirism() const -> const MagicVampirismConfig& {
-    return magic_vampirism_;
-  }
-
-  [[nodiscard]] auto speed_casting() const -> const SpeedCastingConfig& { return speed_casting_; }
-  [[nodiscard]] auto weapon_crit() const -> const WeaponCritConfig& { return weapon_crit_; }
-  [[nodiscard]] auto magick_crit() const -> const MagickCritConfig& { return magick_crit_; }
-  [[nodiscard]] auto cast_on_crit() const -> const CastOnCritConfig& { return cast_on_crit_; }
-  [[nodiscard]] auto cast_on_hit() const -> const CastOnHitConfig& { return cast_on_hit_; }
-  [[nodiscard]] auto cast_on_block() const -> const CastOnBlockConfig& { return cast_on_block_; }
-
-  [[nodiscard]] auto resource_manager() const -> const ResourceManagerConfig& {
-    return resource_manager_;
-  }
-
-  [[nodiscard]] auto tk_dodge() const -> const TkDodgeConfig& { return tk_dodge_; }
-
-  [[nodiscard]] auto caster_additions() const -> const CasterAdditionsConfig& {
-    return caster_additions_;
-  }
-
-  [[nodiscard]] auto magic_weapon() const -> const MagicWeaponConfig& { return magic_weapon_; }
-
-  [[nodiscard]] auto resist_tweaks() const -> const ResistTweaksConfig& { return resist_tweaks_; }
-
-  [[nodiscard]] auto timing_block() const -> const TimingBlockConfig& { return timing_block_; }
+  [[nodiscard]] const MagicShieldConfig&     magic_shield() const { return magic_shield_; }
+  [[nodiscard]] const PetrifiedBloodConfig&  petrified_blood() const { return petrified_blood_; }
+  [[nodiscard]] const CheatDeathConfig&      cheat_death() const { return cheat_death_; }
+  [[nodiscard]] const VampirismConfig&       vampirism() const { return vampirism_; }
+  [[nodiscard]] const MagicVampirismConfig&  magic_vampirism() const { return magic_vampirism_; }
+  [[nodiscard]] const SpeedCastingConfig&    speed_casting() const { return speed_casting_; }
+  [[nodiscard]] const WeaponCritConfig&      weapon_crit() const { return weapon_crit_; }
+  [[nodiscard]] const MagickCritConfig&      magick_crit() const { return magick_crit_; }
+  [[nodiscard]] const CastOnCritConfig&      cast_on_crit() const { return cast_on_crit_; }
+  [[nodiscard]] const CastOnHitConfig&       cast_on_hit() const { return cast_on_hit_; }
+  [[nodiscard]] const CastOnBlockConfig&     cast_on_block() const { return cast_on_block_; }
+  [[nodiscard]] const ResourceManagerConfig& resource_manager() const { return resource_manager_; }
+  [[nodiscard]] const TkDodgeConfig&         tk_dodge() const { return tk_dodge_; }
+  [[nodiscard]] const CasterAdditionsConfig& caster_additions() const { return caster_additions_; }
+  [[nodiscard]] const MagicWeaponConfig&     magic_weapon() const { return magic_weapon_; }
+  [[nodiscard]] const ResistTweaksConfig&    resist_tweaks() const { return resist_tweaks_; }
+  [[nodiscard]] const TimingBlockConfig&     timing_block() const { return timing_block_; }
+  [[nodiscard]] const EquipLoadConfig&       equip_load() const { return equip_load_; }
 };
 
 } // namespace Reflyem

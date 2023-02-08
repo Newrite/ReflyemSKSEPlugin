@@ -50,7 +50,7 @@ auto handle_cast(RE::Actor& caster, RE::Actor& target, RE::SpellItem& spell,
       effect->effectItem.magnitude = data.magnitude;
     }
   };
-  
+
   if (data.only_first_effect && !spell.effects.empty() && spell.effects[0]) {
     spell.effects[0]->effectItem.magnitude = data.magnitude;
     set_magnitude(spell.effects[0]);
