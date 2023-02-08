@@ -54,13 +54,13 @@ auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& confi
 
   if (is_critical(*aggressor, config.weapon_crit().chance_av())) {
 
-    crit(*aggressor, hit_data.totalDamage, config.weapon_crit().damage_av(),
-         config.weapon_crit().high());
-
     if (config.cast_on_crit().enable() && config.cast_on_crit().formlist_needkw() &&
         config.cast_on_crit().formlist_spells()) {
       cast_on_crit(*aggressor, *target, config);
     }
+
+    crit(*aggressor, hit_data.totalDamage, config.weapon_crit().damage_av(),
+         config.weapon_crit().high());
   }
 }
 
@@ -92,7 +92,7 @@ auto modify_actor_value(const RE::ValueModifierEffect* this_, RE::Actor* actor, 
     auto& actor_data   = actors_cache.get_or_add(form_id).get();
 
     if (actor_data.cast_on_crit_delay() <= 0.f) {
-      actor_data.set_cast_on_crit_delay(config.cast_on_crit().magick_cooldawn());
+      actor_data.cast_on_crit_delay(config.cast_on_crit().magick_cooldawn());
       return true;
     }
 
@@ -107,11 +107,11 @@ auto modify_actor_value(const RE::ValueModifierEffect* this_, RE::Actor* actor, 
 
     if (is_critical(*caster, config.magick_crit().chance_av())) {
 
-      crit(*caster, value, config.magick_crit().damage_av(), config.magick_crit().high());
-
       if (is_allow_cast_on_crit(caster->formID)) {
         cast_on_crit(*caster, *actor, config);
       }
+
+      crit(*caster, value, config.magick_crit().damage_av(), config.magick_crit().high());
     }
 
     value = -value;

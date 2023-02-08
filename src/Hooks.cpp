@@ -7,6 +7,7 @@
 #include "plugin/Crit.hpp"
 #include "plugin/MagicShield.hpp"
 #include "plugin/MagicWepon.hpp"
+#include "plugin/ParryBash.hpp"
 #include "plugin/PetrifiedBlood.hpp"
 #include "plugin/ResistTweaks.hpp"
 #include "plugin/ResourceManager.hpp"
@@ -28,39 +29,31 @@ auto update_actor(RE::Character& character, const float delta, const Reflyem::Co
   auto& actors_cache = Reflyem::Core::ActorsCache::get_singleton();
   auto& actor_data   = actors_cache.get_or_add(character.formID).get();
 
-  actor_data.set_last_delta_update(player_last_delta);
-  actor_data.handle_delta(player_last_delta);
-
-  const auto last_actor_tick50 =
-      actor_data.update(Reflyem::Core::ActorsCache::Data::Updates::k50Ms);
-  const auto last_actor_tick100 =
-      actor_data.update(Reflyem::Core::ActorsCache::Data::Updates::k100Ms);
-  const auto last_actor_tick1000 =
-      actor_data.update(Reflyem::Core::ActorsCache::Data::Updates::k1000Ms);
+  actor_data.last_delta_update(player_last_delta);
+  actor_data.update_handler(player_last_delta);
 
   if (character.IsBlocking()) {
-    constexpr auto block_start_delta = 1.f;
-    actor_data.set_timing_block_start_delta(block_start_delta);
-    actor_data.set_blocking_flag(true);
+    actor_data.timing_block_timer(1.f);
+    actor_data.timing_block_flag(true);
   } else {
-    actor_data.set_blocking_flag(false);
+    actor_data.timing_block_flag(false);
   }
 
   if (config.resource_manager().enable() && config.resource_manager().regeneration_enable()) {
     Reflyem::ResourceManager::on_update_actor_regeneration(character, actor_data);
   }
 
-  if (last_actor_tick50 <= 0.f) {
+  if (actor_data.update_50_timer() <= 0.f) {
 
     logger::debug("update actor map50 tick"sv);
-    actor_data.refresh_update(Reflyem::Core::ActorsCache::Data::Updates::k50Ms);
+    actor_data.update_50_timer_refresh();
   }
 
-  if (last_actor_tick100 <= 0.f) {
+  if (actor_data.update_100_timer() <= 0.f) {
 
     logger::debug("update actor map100 tick"sv);
 
-    actor_data.refresh_update(Reflyem::Core::ActorsCache::Data::Updates::k100Ms);
+    actor_data.update_100_timer_refresh();
 
     if (config.resource_manager().enable()) {
       Reflyem::ResourceManager::update_actor(character, delta, config);
@@ -74,24 +67,30 @@ auto update_actor(RE::Character& character, const float delta, const Reflyem::Co
     }
   }
 
-  if (last_actor_tick1000 <= 0.f) {
+  if (actor_data.update_1000_timer() <= 0.f) {
 
     logger::debug("update actor map1000 tick"sv);
 
-    actor_data.refresh_update(Reflyem::Core::ActorsCache::Data::Updates::k1000Ms);
-    actor_data.refresh_last_tick_count();
+    actor_data.update_1000_timer_refresh();
+    actor_data.last_tick_count_refresh();
 
     logger::debug("ActorData: st {} mp {} hp {}", actor_data.regen_stamina_delay(),
                   actor_data.regen_magicka_delay(), actor_data.regen_health_delay());
 
     if (config.petrified_blood().enable() && config.petrified_blood().magick()) {
-      Reflyem::PetrifiedBlood::character_update(character, delta, config);
+      Reflyem::PetrifiedBlood::character_update(character, delta, config, actor_data);
     }
+    
 
-    if (config.resource_manager().enable() && config.resource_manager().regeneration_enable()) {
-      Reflyem::Core::set_av_regen_delay(character.currentProcess, RE::ActorValue::kMagicka, 2.f);
-      Reflyem::Core::set_av_regen_delay(character.currentProcess, RE::ActorValue::kStamina, 2.f);
-      Reflyem::Core::set_av_regen_delay(character.currentProcess, RE::ActorValue::kHealth, 2.f);
+    if (config.resource_manager().enable()) {
+
+      Reflyem::ResourceManager::GMST::game_settings_handler(config);
+      
+      if (config.resource_manager().regeneration_enable()) {
+        Reflyem::Core::set_av_regen_delay(character.currentProcess, RE::ActorValue::kMagicka, 2.f);
+        Reflyem::Core::set_av_regen_delay(character.currentProcess, RE::ActorValue::kStamina, 2.f);
+        Reflyem::Core::set_av_regen_delay(character.currentProcess, RE::ActorValue::kHealth, 2.f);
+      }
     }
 
     if (config.speed_casting().enable() && character.IsPlayerRef()) {
@@ -146,6 +145,7 @@ auto OnAnimationEventNpc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEve
   if (config.tk_dodge().enable()) {
     Reflyem::TkDodge::animation_handler(*event, config);
   }
+  Reflyem::ParryBash::animation_handler(*event, config);
   return process_event_(this_, event, dispatcher);
 }
 
@@ -163,6 +163,7 @@ auto OnAnimationEventPc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEven
   if (config.tk_dodge().enable()) {
     Reflyem::TkDodge::animation_handler(*event, config);
   }
+  Reflyem::ParryBash::animation_handler(*event, config);
   return process_event_(this_, event, dispatcher);
 }
 

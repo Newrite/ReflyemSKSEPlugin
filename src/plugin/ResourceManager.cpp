@@ -1,4 +1,5 @@
 #include "plugin/ResourceManager.hpp"
+#include "plugin/AnimationEventHandler.hpp"
 
 // TODO: Переписать с хуков анимаций на прямые хуки в атаку
 namespace Reflyem::ResourceManager {
@@ -20,7 +21,7 @@ auto spend_actor_value(RE::Actor& actor, const RE::ActorValue av, float value) -
       if (stamina - value < 0.f) {
         delay *= 1.5f;
       }
-      actor_data.set_regen_stamina_delay(delay);
+      actor_data.regen_stamina_delay(delay);
       break;
     }
     case RE::ActorValue::kHealth: {
@@ -29,7 +30,7 @@ auto spend_actor_value(RE::Actor& actor, const RE::ActorValue av, float value) -
       if (health - value < 0.f) {
         delay *= 1.5f;
       }
-      actor_data.set_regen_health_delay(delay);
+      actor_data.regen_health_delay(delay);
       break;
     }
     case RE::ActorValue::kMagicka: {
@@ -38,7 +39,7 @@ auto spend_actor_value(RE::Actor& actor, const RE::ActorValue av, float value) -
       if (magicka - value < 0.f) {
         delay *= 1.5f;
       }
-      actor_data.set_regen_magicka_delay(delay);
+      actor_data.regen_magicka_delay(delay);
       break;
     }
     default:
@@ -90,7 +91,8 @@ auto regeneration_stamina(RE::Character& character, const Core::ActorsCache::Dat
     auto constexpr av            = RE::ActorValue::kStamina;
     auto constexpr regen_av      = RE::ActorValue::kStaminaRate;
     auto constexpr regen_av_mult = RE::ActorValue::kStaminaRateMult;
-    regeneration_actor_value(character, av, regen_av, regen_av_mult, actor_data.last_delta_update());
+    regeneration_actor_value(character, av, regen_av, regen_av_mult,
+                             actor_data.last_delta_update());
   }
 }
 
@@ -100,7 +102,8 @@ auto regeneration_health(RE::Character& character, const Core::ActorsCache::Data
     auto constexpr av            = RE::ActorValue::kHealth;
     auto constexpr regen_av      = RE::ActorValue::kHealRate;
     auto constexpr regen_av_mult = RE::ActorValue::kHealRateMult;
-    regeneration_actor_value(character, av, regen_av, regen_av_mult, actor_data.last_delta_update());
+    regeneration_actor_value(character, av, regen_av, regen_av_mult,
+                             actor_data.last_delta_update());
   }
 }
 
@@ -110,7 +113,8 @@ auto regeneration_magicka(RE::Character& character, const Core::ActorsCache::Dat
     auto constexpr av            = RE::ActorValue::kMagicka;
     auto constexpr regen_av      = RE::ActorValue::kMagickaRate;
     auto constexpr regen_av_mult = RE::ActorValue::kMagickaRateMult;
-    regeneration_actor_value(character, av, regen_av, regen_av_mult, actor_data.last_delta_update());
+    regeneration_actor_value(character, av, regen_av, regen_av_mult,
+                             actor_data.last_delta_update());
   }
 }
 
@@ -121,11 +125,11 @@ auto on_update_actor_regeneration(RE::Character& character, Core::ActorsCache::D
   regeneration_magicka(character, actor_data);
 
   if (Core::is_casting_actor(character)) {
-    actor_data.set_regen_magicka_delay(Config::get_singleton().resource_manager().regen_delay());
+    actor_data.regen_magicka_delay(Config::get_singleton().resource_manager().regen_delay());
   }
 
   if (character.IsSprinting()) {
-    actor_data.set_regen_stamina_delay(Config::get_singleton().resource_manager().regen_delay());
+    actor_data.regen_stamina_delay(Config::get_singleton().resource_manager().regen_delay());
   }
 }
 

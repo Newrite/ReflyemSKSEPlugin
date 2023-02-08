@@ -1,7 +1,9 @@
 #include "Core.hpp"
 #include "Hooks.hpp"
+#include "PrecisionAPI.hpp"
 #include "plugin/ActionEventHandler.hpp"
 #include "plugin/InputEventHandler.hpp"
+#include "plugin/ParryBash.hpp"
 
 auto init_logger() -> void {
   // ReSharper disable once CppLocalVariableMayBeConst
@@ -37,7 +39,18 @@ auto initialize_messaging() -> void {
         // multithreaded operations, or operations against
         // other plugins.
         case SKSE::MessagingInterface::kPostPostLoad: // Called after all kPostLoad message handlers
-        // have run.
+          // have run.
+          {
+            // ReSharper disable once CppTooWideScope
+            const auto precision_api =
+                // ReSharper disable once CppReinterpretCastFromVoidPtr
+                reinterpret_cast<PRECISION_API::IVPrecision4*>(PRECISION_API::RequestPluginAPI());
+            if (precision_api) {
+              precision_api->AddPreHitCallback(SKSE::GetPluginHandle(),
+                                               Reflyem::ParryBash::precision_pre_hit_callback);
+              logger::info("Enabled compatibility with Precision");
+            }
+          }
         case SKSE::MessagingInterface::kInputLoaded: // Called when all game data has been found.
           break;
         case SKSE::MessagingInterface::kDataLoaded: // All ESM/ESL/ESP plugins have loaded, main
@@ -87,6 +100,10 @@ SKSEPluginLoad(const SKSE::LoadInterface* a_skse) {
   // auto action_event_handler = reflyem::action_event_handler::get_singleton();
   // source->AddEventSink(action_event_handler);
 
+  const auto serialization = SKSE::GetSerializationInterface();
+  serialization->SetUniqueID('REFL');
+  serialization->SetSaveCallback(Reflyem::Core::ActorsCache::skse_save_callback);
+  serialization->SetLoadCallback(Reflyem::Core::ActorsCache::skse_load_callback);
   logger::info("{} loaded"sv, plugin->GetName());
 
   return true;

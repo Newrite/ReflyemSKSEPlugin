@@ -12,6 +12,8 @@ enum class AnimationEvent {
   kBashExit         = 4,
   kTkDodgeStart     = 5,
   kTkDodgeIFrameEnd = 6,
+  kPreHitFrame      = 7,
+  kHitFrame         = 8,
   kNone             = 99,
 };
 
@@ -22,6 +24,8 @@ constexpr inline auto BOW_DRAW_START    = "bowDrawStart"sv;
 constexpr inline auto BASH_EXIT         = "bashExit"sv;
 constexpr inline auto TKDR_DODGE_START  = "TKDR_DodgeStart"sv;
 constexpr inline auto TKDR_I_FRAME_END  = "TKDR_IFrameEnd"sv;
+constexpr inline auto PRE_HIT_FRAME     = "preHitFrame"sv;
+constexpr inline auto HIT_FRAME         = "HitFrame"sv;
 
 static std::map<std::string_view, AnimationEvent> animation_map{
     {WEAPON_SWING, AnimationEvent::kWeaponSwing},
@@ -30,7 +34,9 @@ static std::map<std::string_view, AnimationEvent> animation_map{
     {BOW_DRAW_START, AnimationEvent::kBowDrawStart},
     {BASH_EXIT, AnimationEvent::kBashExit},
     {TKDR_DODGE_START, AnimationEvent::kTkDodgeStart},
-    {TKDR_I_FRAME_END, AnimationEvent::kTkDodgeIFrameEnd}};
+    {TKDR_I_FRAME_END, AnimationEvent::kTkDodgeIFrameEnd},
+    {PRE_HIT_FRAME, AnimationEvent::kPreHitFrame},
+    {HIT_FRAME, AnimationEvent::kHitFrame}};
 
 auto try_find_animation(const std::string& key) -> AnimationEvent;
 

@@ -71,57 +71,61 @@ constexpr inline std::string_view iFrameDurationMGEFKeywordId    = "iFrameDurati
 constexpr inline std::string_view KeyUpDelay                     = "KeyUpDelay";
 constexpr inline std::string_view MaxCost                        = "MaxCost";
 constexpr inline std::string_view MinCost                        = "MinCost";
-constexpr inline std::string_view AccumulateEffectKeywordId      = "AccumulateEffectKeywordId";
 constexpr inline std::string_view Timer100KeywordId              = "Timer100KeywordId";
 constexpr inline std::string_view FlatCost                       = "FlatCost";
 constexpr inline std::string_view FlatCostMGEFKeywordId          = "FlatCostMGEFKeywordId";
 constexpr inline std::string_view BlockDodgeWhenAttack           = "BlockDodgeWhenAttack";
-constexpr inline std::string_view BlockDodgeWhenAttackPerkId     = "BlockDodgeWhenAttackPerkId";
+constexpr inline std::string_view BlockDodgeWhenAttackKeywordId  = "BlockDodgeWhenAttackKeywordId";
 constexpr inline std::string_view BlockDodgeWhenPowerAttack      = "BlockDodgeWhenPowerAttack";
-constexpr inline std::string_view BlockDodgeWhenPowerAttackPerkId =
-    "BlockDodgeWhenPowerAttackPerkId";
-constexpr inline std::string_view BlockDodgeWhenCasting       = "BlockDodgeWhenCasting";
-constexpr inline std::string_view BlockDodgeWhenCastingPerkId = "BlockDodgeWhenCastingPerkId";
-constexpr inline std::string_view SpellBlockAttackId          = "SpellBlockAttackId";
-constexpr inline std::string_view SpellBlockPowerAttackId     = "SpellBlockPowerAttackId";
-constexpr inline std::string_view SpellBlockBashId            = "SpellBlockBashId";
-constexpr inline std::string_view SpellAddWhileCastingId      = "SpellAddWhileCastingId";
-constexpr inline std::string_view EnableStaminaCost           = "EnableStaminaCost";
-constexpr inline std::string_view CasterAdditions             = "CasterAdditions";
-constexpr inline std::string_view FormListGlobalsId           = "FormListGlobalsId";
-constexpr inline std::string_view MagickCritCooldawn          = "MagickCritCooldawn";
-constexpr inline std::string_view MagicWeapon                 = "MagicWeapon";
-constexpr inline std::string_view KeywordId                   = "KeywordId";
-constexpr inline std::string_view MustBeOrNotBe               = "MustBeOrNotBe";
-constexpr inline std::string_view MagickCrit                  = "MagickCrit";
-constexpr inline std::string_view CastOnBlock                 = "CastOnBlock";
-constexpr inline std::string_view RegenDelay                  = "RegenDelay";
-constexpr inline std::string_view ResistTweaks                = "ResistTweaks";
-constexpr inline std::string_view EnableCheckResistance       = "EnableCheckResistance";
-constexpr inline std::string_view EnchGetNoAbsorb             = "EnchGetNoAbsorb";
-constexpr inline std::string_view EnchIgnoreResistance        = "EnchIgnoreResistance";
-constexpr inline std::string_view ResistWeight                = "ResistWeight";
-constexpr inline std::string_view NpcMaxResistance            = "NpcMaxResistance";
-constexpr inline std::string_view NoDoubleResistCheckMagick   = "NoDoubleResistCheckMagick";
-constexpr inline std::string_view NoDoubleResistCheckPoison   = "NoDoubleResistCheckPoison";
-constexpr inline std::string_view EnableDamageResistTweak     = "EnableDamageResistTweak";
-constexpr inline std::string_view NoDoubleDamageResistCheck   = "NoDoubleDamageResistCheck";
-constexpr inline std::string_view EnableResistPenetration     = "EnableResistPenetration";
-constexpr inline std::string_view FlatPenetration             = "FlatPenetration";
-constexpr inline std::string_view NoAvDamageResistPenetration = "NoAvDamageResistPenetration";
-constexpr inline std::string_view KeywordImmunId              = "KeywordImmunId";
-constexpr inline std::string_view TimingBlock                 = "TimingBlock";
-constexpr inline std::string_view BlockTiming                 = "BlockTiming";
-constexpr inline std::string_view ParryTiming                 = "ParryTiming";
-constexpr inline std::string_view BlankActivatorId            = "BlankActivatorId";
-constexpr inline std::string_view SparkId                     = "SparkId";
-constexpr inline std::string_view SparkFlareId                = "SparkFlareId";
-constexpr inline std::string_view ParryKeywordId              = "ParryKeywordId";
-constexpr inline std::string_view ParryImmunKeywordId         = "ParryImmunKeywordId";
-constexpr inline std::string_view ParryTimingKeywordId        = "ParryTimingKeywordId";
-constexpr inline std::string_view BlockKeywordId              = "BlockKeywordId";
-constexpr inline std::string_view BlockImmunKeywordId         = "BlockImmunKeywordId";
-constexpr inline std::string_view BlockTimingKeywordId        = "BlockTimingKeywordId";
+constexpr inline std::string_view BlockDodgeWhenPowerAttackKeywordId =
+    "BlockDodgeWhenPowerAttackKeywordId";
+constexpr inline std::string_view BlockDodgeWhenCasting          = "BlockDodgeWhenCasting";
+constexpr inline std::string_view BlockDodgeWhenCastingKeywordId = "BlockDodgeWhenCastingKeywordId";
+constexpr inline std::string_view SpellBlockAttackId             = "SpellBlockAttackId";
+constexpr inline std::string_view SpellBlockPowerAttackId        = "SpellBlockPowerAttackId";
+constexpr inline std::string_view SpellBlockBashId               = "SpellBlockBashId";
+constexpr inline std::string_view SpellAddWhileCastingId         = "SpellAddWhileCastingId";
+constexpr inline std::string_view EnableStaminaCost              = "EnableStaminaCost";
+constexpr inline std::string_view CasterAdditions                = "CasterAdditions";
+constexpr inline std::string_view FormListGlobalsId              = "FormListGlobalsId";
+constexpr inline std::string_view MagickCritCooldawn             = "MagickCritCooldawn";
+constexpr inline std::string_view MagicWeapon                    = "MagicWeapon";
+constexpr inline std::string_view KeywordId                      = "KeywordId";
+constexpr inline std::string_view MustBeOrNotBe                  = "MustBeOrNotBe";
+constexpr inline std::string_view MagickCrit                     = "MagickCrit";
+constexpr inline std::string_view CastOnBlock                    = "CastOnBlock";
+constexpr inline std::string_view RegenDelay                     = "RegenDelay";
+constexpr inline std::string_view ResistTweaks                   = "ResistTweaks";
+constexpr inline std::string_view EnableCheckResistance          = "EnableCheckResistance";
+constexpr inline std::string_view EnchGetNoAbsorb                = "EnchGetNoAbsorb";
+constexpr inline std::string_view EnchIgnoreResistance           = "EnchIgnoreResistance";
+constexpr inline std::string_view ResistWeight                   = "ResistWeight";
+constexpr inline std::string_view NpcMaxResistance               = "NpcMaxResistance";
+constexpr inline std::string_view NoDoubleResistCheckMagick      = "NoDoubleResistCheckMagick";
+constexpr inline std::string_view NoDoubleResistCheckPoison      = "NoDoubleResistCheckPoison";
+constexpr inline std::string_view EnableDamageResistTweak        = "EnableDamageResistTweak";
+constexpr inline std::string_view NoDoubleDamageResistCheck      = "NoDoubleDamageResistCheck";
+constexpr inline std::string_view EnableResistPenetration        = "EnableResistPenetration";
+constexpr inline std::string_view FlatPenetration                = "FlatPenetration";
+constexpr inline std::string_view NoAvDamageResistPenetration    = "NoAvDamageResistPenetration";
+constexpr inline std::string_view KeywordImmunId                 = "KeywordImmunId";
+constexpr inline std::string_view TimingBlock                    = "TimingBlock";
+constexpr inline std::string_view BlockTiming                    = "BlockTiming";
+constexpr inline std::string_view ParryTiming                    = "ParryTiming";
+constexpr inline std::string_view BlankActivatorId               = "BlankActivatorId";
+constexpr inline std::string_view SparkId                        = "SparkId";
+constexpr inline std::string_view SparkFlareId                   = "SparkFlareId";
+constexpr inline std::string_view EnableSparks                   = "EnableSparks";
+constexpr inline std::string_view ParryKeywordId                 = "ParryKeywordId";
+constexpr inline std::string_view ParryImmunKeywordId            = "ParryImmunKeywordId";
+constexpr inline std::string_view ParryTimingKeywordId           = "ParryTimingKeywordId";
+constexpr inline std::string_view BlockKeywordId                 = "BlockKeywordId";
+constexpr inline std::string_view BlockImmunKeywordId            = "BlockImmunKeywordId";
+constexpr inline std::string_view BlockTimingKeywordId           = "BlockTimingKeywordId";
+constexpr inline std::string_view ParryStaggerCount              = "ParryStaggerCount";
+constexpr inline std::string_view ParryStaggerCountKeywordId     = "ParryStaggerCountKeywordId";
+constexpr inline std::string_view ParryStaggerCountTimer         = "ParryStaggerCountTimer";
+constexpr inline std::string_view BlockTimer                     = "BlockTimer";
 
 Config::MagicShieldConfig::MagicShieldConfig(toml::table& tbl, RE::TESDataHandler& data_handler,
                                              const Config& config) {
@@ -159,11 +163,6 @@ Config::PetrifiedBloodConfig::PetrifiedBloodConfig(toml::table&        tbl,
     const auto blood_spell_form_id = tbl[PetrifiedBlood][SpellId].value<RE::FormID>();
     blood_spell_ =
         data_handler.LookupForm<RE::SpellItem>(blood_spell_form_id.value(), config.mod_name());
-
-    const auto effect_accumulate_keyword_form_id =
-        tbl[PetrifiedBlood][AccumulateEffectKeywordId].value<RE::FormID>();
-    mgef_accumulate_keyword_damage_ = data_handler.LookupForm<RE::BGSKeyword>(
-        effect_accumulate_keyword_form_id.value(), config.mod_name());
 
     magick_   = tbl[PetrifiedBlood][Magick].value_or(false);
     physical_ = tbl[PetrifiedBlood][Physical].value_or(false);
@@ -496,11 +495,11 @@ Config::TkDodgeConfig::TkDodgeConfig(toml::table& tbl, RE::TESDataHandler& data_
     const auto spend_magicka_keyword_form_id = tbl[TKDodge][KeywordMagickaId].value<RE::FormID>();
 
     const auto block_attack_perk_form_id =
-        tbl[TKDodge][BlockDodgeWhenAttackPerkId].value<RE::FormID>();
+        tbl[TKDodge][BlockDodgeWhenAttackKeywordId].value<RE::FormID>();
     const auto block_power_attack_perk_form_id =
-        tbl[TKDodge][BlockDodgeWhenPowerAttackPerkId].value<RE::FormID>();
+        tbl[TKDodge][BlockDodgeWhenPowerAttackKeywordId].value<RE::FormID>();
     const auto block_casting_perk_form_id =
-        tbl[TKDodge][BlockDodgeWhenCastingPerkId].value<RE::FormID>();
+        tbl[TKDodge][BlockDodgeWhenCastingKeywordId].value<RE::FormID>();
     const auto effect_keyword_iframe_form_id =
         tbl[TKDodge][iFrameDurationMGEFKeywordId].value<RE::FormID>();
     const auto effect_keyword_flat_cost_form_id =
@@ -513,12 +512,12 @@ Config::TkDodgeConfig::TkDodgeConfig(toml::table& tbl, RE::TESDataHandler& data_
     magicka_kw_ = data_handler.LookupForm<RE::BGSKeyword>(spend_magicka_keyword_form_id.value(),
                                                           config.mod_name());
 
-    block_dodge_when_attack_perk_ =
-        data_handler.LookupForm<RE::BGSPerk>(block_attack_perk_form_id.value(), config.mod_name());
-    block_dodge_when_power_attack_perk_ = data_handler.LookupForm<RE::BGSPerk>(
+    block_dodge_when_attack_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(
+        block_attack_perk_form_id.value(), config.mod_name());
+    block_dodge_when_power_attack_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(
         block_power_attack_perk_form_id.value(), config.mod_name());
-    block_dodge_when_casting_perk_ =
-        data_handler.LookupForm<RE::BGSPerk>(block_casting_perk_form_id.value(), config.mod_name());
+    block_dodge_when_casting_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(
+        block_casting_perk_form_id.value(), config.mod_name());
     iframe_duration_mgef_kw_ = data_handler.LookupForm<RE::BGSKeyword>(
         effect_keyword_iframe_form_id.value(), config.mod_name());
     cost_from_mgef_kw_ = data_handler.LookupForm<RE::BGSKeyword>(
@@ -595,19 +594,55 @@ Config::TimingBlockConfig::TimingBlockConfig(toml::table& tbl, RE::TESDataHandle
   enable_ = tbl[TimingBlock][Enable].value_or(false);
   if (enable_) {
 
-    block_timing_ = tbl[TimingBlock][BlockTiming].value_or(0.25f);
-    parry_timing_ = tbl[TimingBlock][ParryTiming].value_or(0.15f);
+    parry_timing_              = tbl[TimingBlock][ParryTiming].value_or(0.15f);
+    block_timing_              = tbl[TimingBlock][BlockTiming].value_or(0.25f);
+    enable_sparks_             = tbl[TimingBlock][EnableSparks].value_or(false);
+    parry_stagger_count_       = tbl[TimingBlock][ParryStaggerCount].value_or(3);
+    parry_stagger_count_timer_ = tbl[TimingBlock][ParryStaggerCountTimer].value_or(10.f);
 
     const auto blank_activator_form_id = tbl[TimingBlock][BlankActivatorId].value<RE::FormID>();
-    const auto spark_form_id           = tbl[TimingBlock][SparkId].value<RE::FormID>();
-    const auto spark_flare_form_id     = tbl[TimingBlock][SparkFlareId].value<RE::FormID>();
-    const auto parry_keyword_form_id = tbl[TimingBlock][ParryKeywordId].value<RE::FormID>();
-
     blank_activator_ = data_handler.LookupForm<RE::TESObjectACTI>(blank_activator_form_id.value(),
                                                                   config.mod_name());
+
+    const auto spark_form_id = tbl[TimingBlock][SparkId].value<RE::FormID>();
     spark_ = data_handler.LookupForm<RE::Explosion>(spark_form_id.value(), config.mod_name());
+
+    const auto spark_flare_form_id = tbl[TimingBlock][SparkFlareId].value<RE::FormID>();
     spark_flare_ =
         data_handler.LookupForm<RE::Explosion>(spark_flare_form_id.value(), config.mod_name());
+
+    const auto parry_keyword_form_id = tbl[TimingBlock][ParryKeywordId].value<RE::FormID>();
+    parry_keyword_ =
+        data_handler.LookupForm<RE::BGSKeyword>(parry_keyword_form_id.value(), config.mod_name());
+
+    const auto parry_immun_keyword_form_id =
+        tbl[TimingBlock][ParryImmunKeywordId].value<RE::FormID>();
+    parry_immun_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(
+        parry_immun_keyword_form_id.value(), config.mod_name());
+
+    const auto parry_timing_keyword_form_id =
+        tbl[TimingBlock][ParryTimingKeywordId].value<RE::FormID>();
+    parry_timing_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(
+        parry_timing_keyword_form_id.value(), config.mod_name());
+
+    const auto block_keyword_form_id = tbl[TimingBlock][BlockKeywordId].value<RE::FormID>();
+    block_keyword_ =
+        data_handler.LookupForm<RE::BGSKeyword>(block_keyword_form_id.value(), config.mod_name());
+
+    const auto block_immun_keyword_form_id =
+        tbl[TimingBlock][BlockImmunKeywordId].value<RE::FormID>();
+    block_immun_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(
+        block_immun_keyword_form_id.value(), config.mod_name());
+
+    const auto block_timing_keyword_form_id =
+        tbl[TimingBlock][BlockTimingKeywordId].value<RE::FormID>();
+    block_timing_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(
+        block_timing_keyword_form_id.value(), config.mod_name());
+
+    const auto parry_stagger_count_keyword_form_id =
+        tbl[TimingBlock][ParryStaggerCountKeywordId].value<RE::FormID>();
+    parry_stagger_count_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(
+        parry_stagger_count_keyword_form_id.value(), config.mod_name());
   }
 }
 

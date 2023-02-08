@@ -23,12 +23,6 @@ template <typename L, typename R> struct Either {
 
 struct ActorsCache {
   struct Data {
-    enum class Updates {
-      k50Ms   = 0,
-      k100Ms  = 1,
-      k1000Ms = 2,
-    };
-
   private:
     float regen_health_delay_{0.f};
     float regen_stamina_delay_{0.f};
@@ -38,14 +32,146 @@ struct ActorsCache {
 
     float cast_on_crit_delay_{0.f};
 
-    float timing_block_start_delta_{0.f};
-    bool  blocking_flag_{false};
+    float        timing_block_timer_{0.f};
+    bool         timing_block_flag_{false};
+    std::int32_t timing_parry_counter_{0};
+    float        timing_parry_counter_timer_{0.f};
 
-    float update005_{0.f};
-    float update01_{0.f};
-    float update1_{0.f};
+    float update_50_timer_{0.f};
+    float update_100_timer_{0.f};
+    float update_1000_timer_{0.f};
 
-    uint64_t last_tick_count_;
+    float bash_parry_timer_{0.f};
+
+    float petrified_blood_accumulator_{0.f};
+
+    uint64_t last_tick_count_{GetTickCount64()};
+
+    static constexpr auto mod(auto& value, const auto delta) -> void {
+      value += delta;
+      if (delta < 0) {
+        value = 0;
+      }
+    }
+
+    static constexpr auto set(auto& value, const auto set_value) -> void {
+      if (set_value >= 0) {
+        value = set_value;
+      }
+    }
+
+  public:
+    // mods
+    auto mod_timing_parry_counter(const int32_t count) -> void {
+      mod(timing_parry_counter_, count);
+    }
+    auto mod_timing_parry_counter_timer(const float delta) -> void {
+      timing_parry_counter_timer_ += delta;
+      if (delta < 0) {
+        timing_parry_counter(0);
+        timing_parry_counter_timer_ = 0;
+      }
+    }
+
+    auto mod_regen_health_delay(const float delta) -> void { mod(regen_health_delay_, delta); }
+
+    auto mod_regen_stamina_delay(const float delta) -> void { mod(regen_stamina_delay_, delta); }
+
+    auto mod_regen_magicka_delay(const float delta) -> void { mod(regen_magicka_delay_, delta); }
+
+    auto mod_cast_on_crit_delay(const float delta) -> void { mod(cast_on_crit_delay_, delta); }
+
+    auto mod_timing_block_timer(const float delta) -> void { mod(timing_block_timer_, delta); }
+
+    auto mod_update_50_timer(const float delta) -> void { mod(update_50_timer_, delta); }
+    auto mod_update_100_timer(const float delta) -> void { mod(update_100_timer_, delta); }
+    auto mod_update_1000_timer(const float delta) -> void { mod(update_1000_timer_, delta); }
+
+    auto mod_bash_parry_timer(const float delta) -> void { mod(bash_parry_timer_, delta); }
+
+    auto mod_petrified_blood_accumulator(const float delta) -> void {
+      mod(petrified_blood_accumulator_, delta);
+    }
+    // property
+    [[nodiscard]] std::int32_t timing_parry_counter() const { return timing_parry_counter_; }
+    void                       timing_parry_counter(const std::int32_t timing_parry_counter) {
+      set(timing_parry_counter_, timing_parry_counter);
+    }
+    [[nodiscard]] float timing_parry_counter_timer() const { return timing_parry_counter_timer_; }
+    void                timing_parry_counter_timer(const float timing_parry_counter_timer) {
+      set(timing_parry_counter_timer_, timing_parry_counter_timer);
+    }
+
+    [[nodiscard]] float regen_health_delay() const { return regen_health_delay_; }
+    void                regen_health_delay(const float regen_health_delay) {
+      set(regen_health_delay_, regen_health_delay);
+    }
+    [[nodiscard]] float regen_stamina_delay() const { return regen_stamina_delay_; }
+    void                regen_stamina_delay(const float regen_stamina_delay) {
+      set(regen_stamina_delay_, regen_stamina_delay);
+    }
+    [[nodiscard]] float regen_magicka_delay() const { return regen_magicka_delay_; }
+    void                regen_magicka_delay(const float regen_magicka_delay) {
+      set(regen_magicka_delay_, regen_magicka_delay);
+    }
+
+    [[nodiscard]] float last_delta_update() const { return last_delta_update_; }
+    void                last_delta_update(const float last_delta_update) {
+      set(last_delta_update_, last_delta_update);
+    }
+
+    [[nodiscard]] float cast_on_crit_delay() const { return cast_on_crit_delay_; }
+    void                cast_on_crit_delay(const float cast_on_crit_delay) {
+      set(cast_on_crit_delay_, cast_on_crit_delay);
+    }
+
+    [[nodiscard]] float timing_block_timer() const { return timing_block_timer_; }
+    void                timing_block_timer(const float timing_block_timer) {
+      if (!timing_block_flag_ && timing_block_timer_ <= 0.f) {
+        timing_block_timer_ = timing_block_timer;
+      }
+    }
+    [[nodiscard]] bool timing_block_flag() const { return timing_block_flag_; }
+    void               timing_block_flag(const bool timing_block_flag) {
+      if (timing_block_flag) {
+        timing_block_flag_ = true;
+      }
+      if (timing_block_timer() <= 0.f) {
+        timing_block_flag_ = timing_block_flag;
+      }
+    }
+
+    [[nodiscard]] float update_50_timer() const { return update_50_timer_; }
+    void                update_50_timer_refresh() { update_50_timer_ = 0.05f; }
+    [[nodiscard]] float update_100_timer() const { return update_100_timer_; }
+    void                update_100_timer_refresh() { update_100_timer_ = 0.1f; }
+    [[nodiscard]] float update_1000_timer() const { return update_1000_timer_; }
+    void                update_1000_timer_refresh() { update_1000_timer_ = 1.f; }
+    [[nodiscard]] float bash_parry_timer() const { return bash_parry_timer_; }
+    void                bash_parry_timer(const float bash_parry_timer) {
+      set(bash_parry_timer_, bash_parry_timer);
+    }
+    [[nodiscard]] float petrified_blood_accumulator() const { return petrified_blood_accumulator_; }
+    void                petrified_blood_accumulator(const float petrified_blood_accumulator) {
+      set(petrified_blood_accumulator_, petrified_blood_accumulator);
+    }
+    [[nodiscard]] uint64_t last_tick_count() const { return last_tick_count_; }
+    void                   last_tick_count_refresh() { last_tick_count_ = GetTickCount64(); }
+
+    // function
+    auto update_handler(const float delta) -> void {
+      const auto negative_delta = -std::abs(delta);
+      mod_bash_parry_timer(negative_delta);
+      mod_cast_on_crit_delay(negative_delta);
+      mod_regen_health_delay(negative_delta);
+      mod_regen_magicka_delay(negative_delta);
+      mod_regen_stamina_delay(negative_delta);
+      mod_timing_block_timer(negative_delta);
+      mod_update_50_timer(negative_delta);
+      mod_update_100_timer(negative_delta);
+      mod_update_1000_timer(negative_delta);
+      mod_timing_parry_counter_timer(negative_delta);
+    }
 
     // TODO: Тайминг блок реализовать
     // Поднимается щит, ставится делей на 1.0 и начинает убывать каждый фрейм, делей меньше 0 быть
@@ -53,168 +179,18 @@ struct ActorsCache {
     // меньше нужного значения, засчитывается тайминг блок \ парри флаг на из блокинг, который может
     // замутироваться только когда делй дойдет до 0 и позволит снова поставить его на 1 при поднятии
     // щита
-
-    auto mod_timing_block_start_delta(const float delta) -> float {
-      timing_block_start_delta_ -= std::abs(delta);
-      if (timing_block_start_delta_ < 0.f) {
-        timing_block_start_delta_ = 0.f;
-      }
-      return timing_block_start_delta_;
-    }
-
-    auto mod_health_delay(const float delta) -> float {
-      regen_health_delay_ -= delta;
-      if (regen_health_delay_ < 0.f) {
-        regen_health_delay_ = 0.f;
-      }
-      return regen_health_delay_;
-    }
-
-    auto mod_stamina_delay(const float delta) -> float {
-      regen_stamina_delay_ -= delta;
-      if (regen_stamina_delay_ < 0.f) {
-        regen_stamina_delay_ = 0.f;
-      }
-      return regen_stamina_delay_;
-    }
-
-    auto mod_magicka_delay(const float delta) -> float {
-      regen_magicka_delay_ -= delta;
-      if (regen_magicka_delay_ < 0.f) {
-        regen_magicka_delay_ = 0.f;
-      }
-      return regen_magicka_delay_;
-    }
-
-    auto mod_all_regens_delay(const float delta) -> void {
-      mod_magicka_delay(delta);
-      mod_health_delay(delta);
-      mod_stamina_delay(delta);
-    }
-
-    auto mod_cast_on_crit_delay(const float delay) -> void {
-      cast_on_crit_delay_ -= delay;
-      if (cast_on_crit_delay_ < 0.f) {
-        cast_on_crit_delay_ = 0.f;
-      }
-    }
-
-    auto mod_update_ticks(const float delta) -> void {
-      update005_ -= delta;
-      update01_ -= delta;
-      update1_ -= delta;
-    }
-
-  public:
-    explicit Data() : last_tick_count_(GetTickCount64()) {}
-
-    [[nodiscard]] auto blocking_flag() const -> bool { return blocking_flag_; }
-
-    auto set_blocking_flag(const bool flag) -> void {
-      if (flag) {
-        blocking_flag_ = true;
-      }
-      if (timing_block_start_delta_ <= 0.f) {
-        blocking_flag_ = flag;
-      }
-    }
-
-    auto set_timing_block_start_delta(const float delta) -> void {
-      if (!blocking_flag_ && timing_block_start_delta_ <= 0.f) {
-        timing_block_start_delta_ = delta;
-      }
-    }
-
-    [[nodiscard]] auto timing_block_start_delta() const -> float {
-      return timing_block_start_delta_;
-    }
-
-    [[nodiscard]] auto last_delta_update() const -> float { return last_delta_update_; }
-
-    auto set_last_delta_update(const float delta) -> void { last_delta_update_ = delta; }
-
-    [[nodiscard]] auto cast_on_crit_delay() const -> float { return cast_on_crit_delay_; }
-
-    auto set_cast_on_crit_delay(const float cast_on_crit_delay) -> void {
-      cast_on_crit_delay_ = cast_on_crit_delay;
-    }
-
-    [[nodiscard]] auto regen_health_delay() const -> float { return regen_health_delay_; }
-    [[nodiscard]] auto regen_stamina_delay() const -> float { return regen_stamina_delay_; }
-    [[nodiscard]] auto regen_magicka_delay() const -> float { return regen_magicka_delay_; }
-    [[nodiscard]] auto last_tick_count() const -> uint64_t { return last_tick_count_; }
-    auto               refresh_last_tick_count() -> void { last_tick_count_ = GetTickCount64(); }
-
-    [[nodiscard]] auto update(const Updates tick) const -> float {
-      switch (tick) {
-      case Updates::k50Ms: {
-        return update005_;
-      }
-      case Updates::k100Ms: {
-        return update01_;
-      }
-      case Updates::k1000Ms: {
-        return update1_;
-      }
-      }
-      return 1.f;
-    }
-
-    auto refresh_update(const Updates tick) -> void {
-      switch (tick) {
-      case Updates::k50Ms: {
-        update005_ = 0.05f;
-        return;
-      }
-      case Updates::k100Ms: {
-        update01_ = 0.1f;
-        return;
-      }
-      case Updates::k1000Ms: {
-        update1_ = 1.f;
-      }
-      }
-    }
-
-    auto set_regen_health_delay(const float delay) -> void {
-      regen_health_delay_ = delay;
-      if (regen_health_delay_ < 0.f) {
-        regen_health_delay_ = 0.f;
-      }
-    }
-
-    auto set_regen_stamina_delay(const float delay) -> void {
-      regen_stamina_delay_ = delay;
-      if (regen_stamina_delay_ < 0.f) {
-        regen_stamina_delay_ = 0.f;
-      }
-    }
-
-    auto set_regen_magicka_delay(const float delay) -> void {
-      regen_magicka_delay_ = delay;
-      if (regen_magicka_delay_ < 0.f) {
-        regen_magicka_delay_ = 0.f;
-      }
-    }
-
-    auto handle_delta(const float delta) -> void {
-      mod_update_ticks(delta);
-      mod_all_regens_delay(delta);
-      mod_cast_on_crit_delay(delta);
-      mod_timing_block_start_delta(delta);
-    }
   };
 
   using FormsMap = std::unordered_map<RE::FormID, Data>;
 
 private:
-  FormsMap                  cache_map_;
-  static constexpr uint64_t garbage_time = 5000;
+  FormsMap                  cache_map_{};
+  static constexpr uint64_t GARBAGE_TIME = 5000;
   std::mutex                mutex_;
+  static constexpr uint32_t LABEL = 'ACCA';
 
   [[nodiscard]] static auto is_garbage(const Data& data) -> bool {
-    const auto tick_now = GetTickCount64();
-    return (tick_now - data.last_tick_count()) >= garbage_time;
+    return (GetTickCount64() - data.last_tick_count()) >= GARBAGE_TIME;
   }
 
   auto garbage_collector() -> void {
@@ -225,9 +201,108 @@ private:
     }
   }
 
-  explicit ActorsCache() : cache_map_(FormsMap{}) {}
+  auto load(const SKSE::SerializationInterface& interface) -> void {
+
+    uint32_t type;
+    uint32_t version;
+    uint32_t length;
+
+    mutex_.lock();
+    cache_map_.clear();
+
+    logger::info("Start read actors cache"sv);
+
+    while (interface.GetNextRecordInfo(type, version, length)) {
+      switch (type) {
+      case LABEL: {
+        size_t size;
+
+        if (!interface.ReadRecordData(size)) {
+          logger::error("Fail load size"sv);
+          break;
+        }
+
+        for (size_t i = 0; i < size; ++i) {
+
+          RE::FormID form_id;
+          if (!interface.ReadRecordData(form_id)) {
+            logger::error("Fail read formid"sv);
+            break;
+          }
+
+          Data data;
+          if (!interface.ReadRecordData(data)) {
+            logger::error("Fail read formid"sv);
+            break;
+          }
+
+          logger::info("Success read record with FormId: {} Data last tick: {}"sv, form_id,
+                       data.last_tick_count());
+          cache_map_[form_id] = data;
+        }
+      }
+      default: {
+        logger::error("Unrecognized signature type: {}"sv, type);
+        break;
+      }
+      }
+    }
+
+    logger::info("Finish read actors cache"sv);
+    mutex_.unlock();
+  }
+
+  auto save(const SKSE::SerializationInterface& interface) -> void {
+
+    logger::info("Start write actors cache"sv);
+
+    if (!interface.OpenRecord(LABEL, 1)) {
+      logger::error("Error when try open record REFL on save"sv);
+      return;
+    }
+
+    mutex_.lock();
+    garbage_collector();
+    const size_t size = cache_map_.size();
+    if (!interface.WriteRecordData(&size, sizeof size)) {
+      logger::error("Failed to write size of map"sv);
+      mutex_.unlock();
+      return;
+    }
+
+    for (const auto& [form_id, data] : cache_map_) {
+      if (!interface.WriteRecordData(&form_id, sizeof form_id)) {
+        logger::error("Failed to write form id"sv);
+        mutex_.unlock();
+        return;
+      }
+      if (!interface.WriteRecordData(&data, sizeof data)) {
+        logger::error("Failed to write data"sv);
+        mutex_.unlock();
+        return;
+      }
+    }
+    logger::info("Finish write actors cache"sv);
+    mutex_.unlock();
+  }
 
 public:
+  static auto skse_save_callback(SKSE::SerializationInterface* interface) -> void {
+    if (!interface) {
+      logger::error("Null skse serialization interface error when save"sv);
+      return;
+    }
+    get_singleton().save(*interface);
+  }
+
+  static auto skse_load_callback(SKSE::SerializationInterface* interface) -> void {
+    if (!interface) {
+      logger::error("Null skse serialization interface error when load"sv);
+      return;
+    }
+    get_singleton().load(*interface);
+  }
+
   auto at_try(const RE::FormID key) -> std::optional<std::reference_wrapper<Data>> {
 
     const auto it = cache_map_.find(key);
@@ -244,7 +319,7 @@ public:
   [[nodiscard]] auto exist(const RE::FormID key) const -> bool { return cache_map_.contains(key); }
 
   auto get_or_add(const RE::FormID key) -> std::reference_wrapper<Data> {
-    if (this->exist(key)) {
+    if (exist(key)) {
       return at(key);
     }
     mutex_.lock();

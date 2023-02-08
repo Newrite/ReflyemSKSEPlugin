@@ -37,10 +37,6 @@ private:
     [[nodiscard]] auto must_be_or_not_be() const -> bool { return must_be_or_not_be_; }
     [[nodiscard]] auto mgef_keyword() const -> RE::BGSKeyword* { return mgef_keyword_; }
 
-    [[nodiscard]] auto mgef_accumulate_keyword_damage() const -> RE::BGSKeyword* {
-      return mgef_accumulate_keyword_damage_;
-    }
-
     [[nodiscard]] auto av() const -> RE::ActorValue { return av_; }
     [[nodiscard]] auto blood_spell() const -> RE::SpellItem* { return blood_spell_; }
 
@@ -53,7 +49,6 @@ private:
     bool            magick_;
     bool            must_be_or_not_be_;
     RE::BGSKeyword* mgef_keyword_;
-    RE::BGSKeyword* mgef_accumulate_keyword_damage_;
     RE::ActorValue  av_;
     RE::SpellItem*  blood_spell_;
   };
@@ -405,24 +400,24 @@ private:
     [[nodiscard]] auto sprint_tapping_dodge() const -> bool { return sprint_tapping_dodge_; }
     [[nodiscard]] auto block_dodge_when_attack() const -> bool { return block_dodge_when_attack_; }
 
-    [[nodiscard]] auto block_dodge_when_attack_perk() const -> RE::BGSPerk* {
-      return block_dodge_when_attack_perk_;
+    [[nodiscard]] auto block_dodge_when_attack_keyword() const -> RE::BGSKeyword* {
+      return block_dodge_when_attack_keyword_;
     }
 
     [[nodiscard]] auto block_dodge_when_power_attack() const -> bool {
       return block_dodge_when_power_attack_;
     }
 
-    [[nodiscard]] auto block_dodge_when_power_attack_perk() const -> RE::BGSPerk* {
-      return block_dodge_when_power_attack_perk_;
+    [[nodiscard]] auto block_dodge_when_power_attack_keyword() const -> RE::BGSKeyword* {
+      return block_dodge_when_power_attack_keyword_;
     }
 
     [[nodiscard]] auto block_dodge_when_casting() const -> bool {
       return block_dodge_when_casting_;
     }
 
-    [[nodiscard]] auto block_dodge_when_casting_perk() const -> RE::BGSPerk* {
-      return block_dodge_when_casting_perk_;
+    [[nodiscard]] auto block_dodge_when_casting_keyword() const -> RE::BGSKeyword* {
+      return block_dodge_when_casting_keyword_;
     }
 
     [[nodiscard]] auto key_up_delay() const -> float { return key_up_delay_; }
@@ -447,11 +442,11 @@ private:
     float           gamepad_treshold_;
     bool            sprint_tapping_dodge_;
     bool            block_dodge_when_attack_;
-    RE::BGSPerk*    block_dodge_when_attack_perk_;
+    RE::BGSKeyword* block_dodge_when_attack_keyword_;
     bool            block_dodge_when_power_attack_;
-    RE::BGSPerk*    block_dodge_when_power_attack_perk_;
+    RE::BGSKeyword* block_dodge_when_power_attack_keyword_;
     bool            block_dodge_when_casting_;
-    RE::BGSPerk*    block_dodge_when_casting_perk_;
+    RE::BGSKeyword* block_dodge_when_casting_keyword_;
     float           key_up_delay_;
     float           max_cost_;
     float           min_cost_;
@@ -560,6 +555,10 @@ private:
     [[nodiscard]] auto enable() const -> bool { return enable_; }
     [[nodiscard]] auto parry_timing() const -> float { return parry_timing_; }
     [[nodiscard]] auto block_timing() const -> float { return block_timing_; }
+    [[nodiscard]] auto parry_stagger_count() const -> int32_t { return parry_stagger_count_; }
+    [[nodiscard]] auto parry_stagger_count_timer() const -> float {
+      return parry_stagger_count_timer_;
+    }
     [[nodiscard]] auto blank_activator() const -> RE::TESObjectACTI* { return blank_activator_; }
     [[nodiscard]] auto spark() const -> RE::Explosion* { return spark_; }
     [[nodiscard]] auto spark_flare() const -> RE::Explosion* { return spark_flare_; }
@@ -569,6 +568,9 @@ private:
     }
     [[nodiscard]] auto parry_timing_keyword() const -> RE::BGSKeyword* {
       return parry_timing_keyword_;
+    }
+    [[nodiscard]] auto parry_stagger_count_keyword() const -> RE::BGSKeyword* {
+      return parry_stagger_count_keyword_;
     }
     [[nodiscard]] auto block_keyword() const -> RE::BGSKeyword* { return block_keyword_; }
     [[nodiscard]] auto block_immun_keyword() const -> RE::BGSKeyword* {
@@ -587,6 +589,9 @@ private:
     RE::BGSKeyword*    parry_keyword_;
     RE::BGSKeyword*    parry_immun_keyword_;
     RE::BGSKeyword*    parry_timing_keyword_;
+    RE::BGSKeyword*    parry_stagger_count_keyword_;
+    int32_t            parry_stagger_count_;
+    float              parry_stagger_count_timer_;
     float              parry_timing_;
     RE::BGSKeyword*    block_keyword_;
     RE::BGSKeyword*    block_immun_keyword_;

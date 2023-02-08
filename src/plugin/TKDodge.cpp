@@ -1,6 +1,7 @@
 #include "plugin/TKDodge.hpp"
 #include "Core.hpp"
 #include "plugin/ResourceManager.hpp"
+#include "plugin/AnimationEventHandler.hpp"
 
 namespace Reflyem::TkDodge {
 
@@ -79,20 +80,21 @@ auto is_allow_pc_control_for_dodge(RE::PlayerCharacter& player) -> bool {
   const auto& config = Config::get_singleton();
 
   auto is_attacking = config.tk_dodge().block_dodge_when_attack();
-  if (config.tk_dodge().block_dodge_when_attack_perk() &&
-      player.HasPerk(config.tk_dodge().block_dodge_when_attack_perk())) {
+  if (config.tk_dodge().block_dodge_when_attack_keyword() &&
+      Core::has_absolute_keyword(player, *config.tk_dodge().block_dodge_when_attack_keyword())) {
     is_attacking = !is_attacking;
   }
 
   auto is_power_attacking = config.tk_dodge().block_dodge_when_power_attack();
-  if (config.tk_dodge().block_dodge_when_power_attack_perk() &&
-      player.HasPerk(config.tk_dodge().block_dodge_when_power_attack_perk())) {
+  if (config.tk_dodge().block_dodge_when_power_attack_keyword() &&
+      Core::has_absolute_keyword(player,
+                                 *config.tk_dodge().block_dodge_when_power_attack_keyword())) {
     is_power_attacking = !is_power_attacking;
   }
 
   auto is_casting = config.tk_dodge().block_dodge_when_casting();
-  if (config.tk_dodge().block_dodge_when_casting_perk() &&
-      player.HasPerk(config.tk_dodge().block_dodge_when_casting_perk())) {
+  if (config.tk_dodge().block_dodge_when_casting_keyword() &&
+      Core::has_absolute_keyword(player, *config.tk_dodge().block_dodge_when_casting_keyword())) {
     is_casting = !is_casting;
   }
 
@@ -381,7 +383,7 @@ auto get_sprint_key(const RE::INPUT_DEVICE a_device) -> std::uint32_t {
 }
 
 auto animation_handler(const RE::BSAnimationGraphEvent& event, const Config& config) -> void {
-  
+
   if (!event.holder->IsPlayerRef()) {
     return;
   }
@@ -390,16 +392,16 @@ auto animation_handler(const RE::BSAnimationGraphEvent& event, const Config& con
 
     switch (AnimationEventHandler::try_find_animation(fmt::format("{}"sv, event.tag))) {
     case AnimationEventHandler::AnimationEvent::kTkDodgeStart: {
-      
+
       if (const auto drain_values = get_drain_value(*actor, config)) {
         drain_values->drain(*actor);
       }
-       
-      logger::debug(FMT_STRING("TK Dodge Start, Time {}!"), clock());
+
+      logger::debug("TK Dodge Start, Time {}!"sv, clock());
       return;
-    }        
+    }
     case AnimationEventHandler::AnimationEvent::kTkDodgeIFrameEnd: {
-      logger::debug(FMT_STRING("Invulnerable Frame End!, Time {}"), clock());
+      logger::debug("Invulnerable Frame End!, Time {}"sv, clock());
       return;
     }
     case AnimationEventHandler::AnimationEvent::kWeaponSwing:
@@ -408,6 +410,8 @@ auto animation_handler(const RE::BSAnimationGraphEvent& event, const Config& con
     case AnimationEventHandler::AnimationEvent::kBowDrawStart:
     case AnimationEventHandler::AnimationEvent::kBashExit:
     case AnimationEventHandler::AnimationEvent::kNone:;
+    case AnimationEventHandler::AnimationEvent::kPreHitFrame:
+    case AnimationEventHandler::AnimationEvent::kHitFrame:;
     }
   }
 }
@@ -507,8 +511,8 @@ auto process_event_input_handler(RE::InputEvent* const* event, RE::BSTEventSourc
         player_character->SetGraphVariableInt("iStep", config.tk_dodge().step()); // Set Step Dodge
         player_character->SetGraphVariableFloat(
             "TKDR_IframeDuration",
-            i_frame_duration);                                   // Set invulnerable frame duration
-        player_character->NotifyAnimationGraph(dodge_event);     // Send TK Dodge Event
+            i_frame_duration);                               // Set invulnerable frame duration
+        player_character->NotifyAnimationGraph(dodge_event); // Send TK Dodge Event
         return RE::BSEventNotifyControl::kContinue;
       }
       logger::debug("No Dodge Event Get!"sv);
