@@ -16,7 +16,6 @@ static inline REL::Relocation<uintptr_t> on_dual_modify_actor_value_second_inner
 static inline REL::Relocation<uintptr_t> on_attack_action{RELOCATION_ID(48139, 0)};
 static inline REL::Relocation<uintptr_t> on_actor_update_pc{RELOCATION_ID(261916, 0)};
 static inline REL::Relocation<uintptr_t> on_actor_update_npc{RELOCATION_ID(261397, 0)};
-static inline REL::Relocation<uintptr_t> on_check_resistance{RELOCATION_ID(37788, 0)};
 static inline REL::Relocation<uintptr_t> on_check_resistance_npc{RELOCATION_ID(261401, 0)};
 static inline REL::Relocation<uintptr_t> on_check_resistance_pc{RELOCATION_ID(261920, 0)};
 static inline REL::Relocation<uintptr_t> on_ench_ignores_resistance{RELOCATION_ID(228570, 0)};
@@ -50,7 +49,6 @@ static inline auto on_dual_modify_actor_value_second_inner_call = RELOCATION_OFF
 static inline auto on_attack_action                             = RELOCATION_OFFSET(0x4D7, 0);
 static inline auto on_actor_update_pc                           = RELOCATION_OFFSET(0xAD, 0);
 static inline auto on_actor_update_npc                          = RELOCATION_OFFSET(0xAD, 0);
-static inline auto on_check_resistance                          = RELOCATION_OFFSET(0x102, 0);
 static inline auto on_check_resistance_npc                      = RELOCATION_OFFSET(0x0A, 0);
 static inline auto on_check_resistance_pc                       = RELOCATION_OFFSET(0x0A, 0);
 static inline auto on_ench_ignores_resistance                   = RELOCATION_OFFSET(0x5B, 0);
@@ -280,21 +278,6 @@ private:
   static auto melee_collision(RE::Actor* attacker, RE::Actor* victim, RE::Projectile* projectile,
                               char aleft) -> void;
   static inline REL::Relocation<decltype(melee_collision)> melee_collision_;
-};
-
-struct OnCheckResistance {
-public:
-  static auto install_hook(SKSE::Trampoline& trampoline) -> void {
-    logger::info("start hook OnCheckResistance"sv);
-    check_resistance_ = trampoline.write_call<5>(
-        Adresses::on_check_resistance.address() + Offsets::on_check_resistance, check_resistance);
-    logger::info("OnCheckResistance hook install"sv);
-  }
-
-private:
-  static auto check_resistance(RE::MagicTarget* this_, RE::MagicItem* magic_item,
-                               RE::Effect* effect, RE::TESBoundObject* bound_object) -> float;
-  static inline REL::Relocation<decltype(check_resistance)> check_resistance_;
 };
 
 struct OnCheckResistanceNpc {

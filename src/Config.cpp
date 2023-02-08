@@ -115,6 +115,7 @@ constexpr inline std::string_view ParryTiming                    = "ParryTiming"
 constexpr inline std::string_view BlankActivatorId               = "BlankActivatorId";
 constexpr inline std::string_view SparkId                        = "SparkId";
 constexpr inline std::string_view SparkFlareId                   = "SparkFlareId";
+constexpr inline std::string_view SparkHaloId                    = "SparkHaloId";
 constexpr inline std::string_view EnableSparks                   = "EnableSparks";
 constexpr inline std::string_view ParryKeywordId                 = "ParryKeywordId";
 constexpr inline std::string_view ParryImmunKeywordId            = "ParryImmunKeywordId";
@@ -135,6 +136,12 @@ constexpr inline std::string_view WeaponWeightMult               = "WeaponWeight
 constexpr inline std::string_view LowPercent                     = "LowPercent";
 constexpr inline std::string_view HighPercent                    = "HighPercent";
 constexpr inline std::string_view EquipLoad                      = "EquipLoad";
+constexpr inline std::string_view ParrySoundId                   = "ParrySoundId";
+constexpr inline std::string_view BlockSoundId                   = "BlockSoundId";
+constexpr inline std::string_view PreHitFramePenalty             = "PreHitFramePenalty";
+constexpr inline std::string_view ParryBash                      = "ParryBash";
+constexpr inline std::string_view EnablePreHitFrame              = "EnablePreHitFrame";
+constexpr inline std::string_view EnableWeaponSwing              = "EnableWeaponSwing";
 
 Config::MagicShieldConfig::MagicShieldConfig(toml::table& tbl, RE::TESDataHandler& data_handler,
                                              const Config& config) {
@@ -652,6 +659,18 @@ Config::TimingBlockConfig::TimingBlockConfig(toml::table& tbl, RE::TESDataHandle
         tbl[TimingBlock][ParryStaggerCountKeywordId].value<RE::FormID>();
     parry_stagger_count_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(
         parry_stagger_count_keyword_form_id.value(), config.mod_name());
+
+    const auto spark_halo_form_id = tbl[TimingBlock][SparkHaloId].value<RE::FormID>();
+    spark_halo_ =
+        data_handler.LookupForm<RE::Explosion>(spark_halo_form_id.value(), config.mod_name());
+
+    const auto parry_sound_form_id = tbl[TimingBlock][ParrySoundId].value<RE::FormID>();
+    parry_sound_ = data_handler.LookupForm<RE::BGSSoundDescriptorForm>(parry_sound_form_id.value(),
+                                                                       config.mod_name());
+
+    const auto block_sound_form_id = tbl[TimingBlock][BlockSoundId].value<RE::FormID>();
+    block_sound_ = data_handler.LookupForm<RE::BGSSoundDescriptorForm>(block_sound_form_id.value(),
+                                                                       config.mod_name());
   }
 }
 
@@ -675,6 +694,35 @@ Config::EquipLoadConfig::EquipLoadConfig(toml::table& tbl, RE::TESDataHandler& d
         data_handler.LookupForm<RE::SpellItem>(med_equip_spell_form_id.value(), config.mod_name());
     hig_equip_spell_ =
         data_handler.LookupForm<RE::SpellItem>(hig_equip_spell_form_id.value(), config.mod_name());
+  }
+}
+
+Config::ParryBashConfig::ParryBashConfig(toml::table& tbl, RE::TESDataHandler& data_handler,
+                                         const Config& config) {
+  enable_ = tbl[ParryBash][Enable].value_or(false);
+  if (enable_) {
+    parry_timing_          = tbl[ParryBash][ParryTiming].value_or(0.18f);
+    pre_hit_frame_penalty_ = tbl[ParryBash][PreHitFramePenalty].value_or(0.05f);
+    enable_pre_hit_frame_  = tbl[ParryBash][EnablePreHitFrame].value_or(true);
+    enable_weapon_swing_   = tbl[ParryBash][EnableWeaponSwing].value_or(true);
+
+    const auto parry_keyword_form_id = tbl[ParryBash][ParryKeywordId].value<RE::FormID>();
+    parry_keyword_ =
+        data_handler.LookupForm<RE::BGSKeyword>(parry_keyword_form_id.value(), config.mod_name());
+
+    const auto parry_immun_keyword_form_id =
+        tbl[ParryBash][ParryImmunKeywordId].value<RE::FormID>();
+    parry_immun_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(
+        parry_immun_keyword_form_id.value(), config.mod_name());
+
+    const auto parry_timing_keyword_form_id =
+        tbl[ParryBash][ParryTimingKeywordId].value<RE::FormID>();
+    parry_timing_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(
+        parry_timing_keyword_form_id.value(), config.mod_name());
+
+    const auto parry_sound_form_id = tbl[ParryBash][ParrySoundId].value<RE::FormID>();
+    parry_sound_ = data_handler.LookupForm<RE::BGSSoundDescriptorForm>(parry_sound_form_id.value(),
+                                                                       config.mod_name());
   }
 }
 
@@ -702,6 +750,7 @@ Config::Config() {
   resist_tweaks_    = ResistTweaksConfig(tbl, *data_handler, *this);
   timing_block_     = TimingBlockConfig(tbl, *data_handler, *this);
   equip_load_       = EquipLoadConfig(tbl, *data_handler, *this);
+  parry_bash_       = ParryBashConfig(tbl, *data_handler, *this);
 
   logger::info("finish init config"sv);
 }

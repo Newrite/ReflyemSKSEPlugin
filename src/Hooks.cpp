@@ -32,11 +32,13 @@ auto update_actor(RE::Character& character, const float delta, const Reflyem::Co
   actor_data.last_delta_update(player_last_delta);
   actor_data.update_handler(player_last_delta);
 
-  if (character.IsBlocking()) {
-    actor_data.timing_block_timer(1.f);
-    actor_data.timing_block_flag(true);
-  } else {
-    actor_data.timing_block_flag(false);
+  if (config.timing_block().enable()) {
+    if (character.IsBlocking()) {
+      actor_data.timing_block_timer(1.f);
+      actor_data.timing_block_flag(true);
+    } else {
+      actor_data.timing_block_flag(false);
+    }
   }
 
   if (config.resource_manager().enable() && config.resource_manager().regeneration_enable()) {
@@ -379,26 +381,20 @@ auto OnWeaponHit::weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void {
 
 auto OnMeleeCollision::melee_collision(RE::Actor* attacker, RE::Actor* victim,
                                        RE::Projectile* projectile, char aleft) -> void {
-  logger::info("Melee collusion");
-  if (!attacker && !victim) {
-    if (attacker->GetAttackState() == RE::ATTACK_STATE_ENUM::kBash) {
-      logger::info("Bash state");
+
+  if (!attacker || !victim) {
+    return melee_collision_(attacker, victim, projectile, aleft);
+  }
+
+  const auto& config = Reflyem::Config::get_singleton();
+
+  if (config.parry_bash().enable()) {
+    if (Reflyem::ParryBash::on_melee_collision(*attacker, *victim, config)) {
       return;
     }
   }
-  return melee_collision_(attacker, victim, projectile, aleft);
-}
 
-auto OnCheckResistance::check_resistance(RE::MagicTarget* this_, RE::MagicItem* magic_item,
-                                         RE::Effect* effect, RE::TESBoundObject* bound_object)
-    -> float {
-  logger::info("Yeay it's check resistance"sv);
-  if (!this_ || !magic_item || !effect) {
-    logger::info("Null object resist"sv);
-    return check_resistance_(this_, magic_item, effect, bound_object);
-  }
-  logger::info("Not null resist check"sv);
-  return check_resistance_(this_, magic_item, effect, bound_object);
+  return melee_collision_(attacker, victim, projectile, aleft);
 }
 
 auto OnCheckResistanceNpc::check_resistance(RE::MagicTarget* this_, RE::MagicItem* magic_item,
@@ -482,7 +478,7 @@ auto OnActorValueOwnerNpc::set_actor_value(RE::ActorValueOwner* this_, RE::Actor
   if (!this_) {
     return set_actor_value_(this_, av, value);
   }
-  
+
   if (Reflyem::Config::get_singleton().equip_load().enable()) {
     return set_actor_value_(this_, av, Reflyem::EquipLoad::set_actor_value(*this_, av, value));
   }
@@ -499,7 +495,7 @@ auto OnActorValueOwnerNpc::mod_actor_value(RE::ActorValueOwner* this_, RE::Actor
   if (Reflyem::Config::get_singleton().equip_load().enable()) {
     return mod_actor_value_(this_, av, Reflyem::EquipLoad::mod_actor_value(*this_, av, value));
   }
-  
+
   return mod_actor_value_(this_, av, value);
 }
 
@@ -520,7 +516,7 @@ auto OnActorValueOwnerPc::set_actor_value(RE::ActorValueOwner* this_, RE::ActorV
   if (!this_) {
     return set_actor_value_(this_, av, value);
   }
-  
+
   if (Reflyem::Config::get_singleton().equip_load().enable()) {
     return set_actor_value_(this_, av, Reflyem::EquipLoad::set_actor_value(*this_, av, value));
   }
@@ -537,7 +533,7 @@ auto OnActorValueOwnerPc::mod_actor_value(RE::ActorValueOwner* this_, RE::ActorV
   if (Reflyem::Config::get_singleton().equip_load().enable()) {
     return mod_actor_value_(this_, av, Reflyem::EquipLoad::mod_actor_value(*this_, av, value));
   }
-  
+
   return mod_actor_value_(this_, av, value);
 }
 

@@ -493,45 +493,55 @@ private:
 
   struct TimingBlockConfig {
   public:
-    [[nodiscard]] bool            enable() const { return enable_; }
+    [[nodiscard]] bool    enable() const { return enable_; }
+    [[nodiscard]] int32_t parry_stagger_count() const { return parry_stagger_count_; }
+    [[nodiscard]] float   parry_stagger_count_timer() const { return parry_stagger_count_timer_; }
+    [[nodiscard]] float   parry_timing() const { return parry_timing_; }
+    [[nodiscard]] float   block_timing() const { return block_timing_; }
+    [[nodiscard]] bool    enable_sparks() const { return enable_sparks_; }
+
+    [[nodiscard]] RE::BGSSoundDescriptorForm* parry_sound() const { return parry_sound_; }
+    [[nodiscard]] RE::BGSSoundDescriptorForm* block_sound() const { return block_sound_; }
+
+    [[nodiscard]] RE::TESObjectACTI* blank_activator() const { return blank_activator_; }
+
     [[nodiscard]] RE::BGSKeyword* parry_keyword() const { return parry_keyword_; }
     [[nodiscard]] RE::BGSKeyword* parry_immun_keyword() const { return parry_immun_keyword_; }
     [[nodiscard]] RE::BGSKeyword* parry_timing_keyword() const { return parry_timing_keyword_; }
     [[nodiscard]] RE::BGSKeyword* parry_stagger_count_keyword() const {
       return parry_stagger_count_keyword_;
     }
-    [[nodiscard]] int32_t parry_stagger_count() const { return parry_stagger_count_; }
-    [[nodiscard]] float   parry_stagger_count_timer() const { return parry_stagger_count_timer_; }
-    [[nodiscard]] float   parry_timing() const { return parry_timing_; }
-    [[nodiscard]] RE::BGSKeyword*    block_keyword() const { return block_keyword_; }
-    [[nodiscard]] RE::BGSKeyword*    block_immun_keyword() const { return block_immun_keyword_; }
-    [[nodiscard]] RE::BGSKeyword*    block_timing_keyword() const { return block_timing_keyword_; }
-    [[nodiscard]] float              block_timing() const { return block_timing_; }
-    [[nodiscard]] bool               enable_sparks() const { return enable_sparks_; }
-    [[nodiscard]] RE::TESObjectACTI* blank_activator() const { return blank_activator_; }
-    [[nodiscard]] RE::Explosion*     spark() const { return spark_; }
-    [[nodiscard]] RE::Explosion*     spark_flare() const { return spark_flare_; }
+    [[nodiscard]] RE::BGSKeyword* block_keyword() const { return block_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* block_immun_keyword() const { return block_immun_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* block_timing_keyword() const { return block_timing_keyword_; }
+
+    [[nodiscard]] RE::Explosion* spark() const { return spark_; }
+    [[nodiscard]] RE::Explosion* spark_flare() const { return spark_flare_; }
+    [[nodiscard]] RE::Explosion* spark_halo() const { return spark_halo_; }
 
     TimingBlockConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     TimingBlockConfig() = default;
 
   private:
-    bool               enable_;
-    RE::BGSKeyword*    parry_keyword_;
-    RE::BGSKeyword*    parry_immun_keyword_;
-    RE::BGSKeyword*    parry_timing_keyword_;
-    RE::BGSKeyword*    parry_stagger_count_keyword_;
-    int32_t            parry_stagger_count_;
-    float              parry_stagger_count_timer_;
-    float              parry_timing_;
-    RE::BGSKeyword*    block_keyword_;
-    RE::BGSKeyword*    block_immun_keyword_;
-    RE::BGSKeyword*    block_timing_keyword_;
-    float              block_timing_;
-    bool               enable_sparks_;
-    RE::TESObjectACTI* blank_activator_;
-    RE::Explosion*     spark_;
-    RE::Explosion*     spark_flare_;
+    bool                        enable_;
+    RE::BGSKeyword*             parry_keyword_;
+    RE::BGSKeyword*             parry_immun_keyword_;
+    RE::BGSKeyword*             parry_timing_keyword_;
+    RE::BGSKeyword*             parry_stagger_count_keyword_;
+    RE::BGSSoundDescriptorForm* parry_sound_;
+    int32_t                     parry_stagger_count_;
+    float                       parry_stagger_count_timer_;
+    float                       parry_timing_;
+    RE::BGSKeyword*             block_keyword_;
+    RE::BGSKeyword*             block_immun_keyword_;
+    RE::BGSKeyword*             block_timing_keyword_;
+    RE::BGSSoundDescriptorForm* block_sound_;
+    float                       block_timing_;
+    bool                        enable_sparks_;
+    RE::TESObjectACTI*          blank_activator_;
+    RE::Explosion*              spark_;
+    RE::Explosion*              spark_flare_;
+    RE::Explosion*              spark_halo_;
   };
 
   struct EquipLoadConfig {
@@ -559,6 +569,35 @@ private:
     float          armor_weight_mult_;
     float          low_percent_;
     float          high_percent_;
+  };
+
+  struct ParryBashConfig {
+  public:
+    [[nodiscard]] bool            enable() const { return enable_; }
+    [[nodiscard]] bool            enable_pre_hit_frame() const { return enable_pre_hit_frame_; }
+    [[nodiscard]] bool            enable_weapon_swing() const { return enable_weapon_swing_; }
+    [[nodiscard]] float           parry_timing() const { return parry_timing_; }
+    [[nodiscard]] float           pre_hit_frame_penalty() const { return pre_hit_frame_penalty_; }
+    [[nodiscard]] RE::BGSKeyword* parry_keyword() const { return parry_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* parry_immun_keyword() const { return parry_immun_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* parry_timing_keyword() const { return parry_timing_keyword_; }
+    [[nodiscard]] RE::BGSSoundDescriptorForm* parry_sound() const { return parry_sound_; }
+
+    ParryBashConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
+    ParryBashConfig() = default;
+
+  private:
+    bool  enable_;
+    float parry_timing_;
+    float pre_hit_frame_penalty_;
+    bool  enable_pre_hit_frame_;
+    bool  enable_weapon_swing_;
+
+  private:
+    RE::BGSKeyword*             parry_keyword_;
+    RE::BGSKeyword*             parry_immun_keyword_;
+    RE::BGSKeyword*             parry_timing_keyword_;
+    RE::BGSSoundDescriptorForm* parry_sound_;
   };
 
   // general
@@ -619,6 +658,9 @@ private:
   // equip load
   EquipLoadConfig equip_load_{};
 
+  // parry bash
+  ParryBashConfig parry_bash_{};
+
 public:
   [[nodiscard]] static auto get_singleton() noexcept -> const Config&;
 
@@ -642,6 +684,7 @@ public:
   [[nodiscard]] const ResistTweaksConfig&    resist_tweaks() const { return resist_tweaks_; }
   [[nodiscard]] const TimingBlockConfig&     timing_block() const { return timing_block_; }
   [[nodiscard]] const EquipLoadConfig&       equip_load() const { return equip_load_; }
+  [[nodiscard]] const ParryBashConfig&       parry_bash() const { return parry_bash_; }
 };
 
 } // namespace Reflyem

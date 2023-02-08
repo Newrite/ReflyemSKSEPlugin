@@ -49,7 +49,7 @@ struct ActorsCache {
 
     static constexpr auto mod(auto& value, const auto delta) -> void {
       value += delta;
-      if (delta < 0) {
+      if (value < 0) {
         value = 0;
       }
     }
@@ -188,6 +188,8 @@ private:
   static constexpr uint64_t GARBAGE_TIME = 5000;
   std::mutex                mutex_;
   static constexpr uint32_t LABEL = 'ACCA';
+  // ReSharper disable once CppVariableCanBeMadeConstexpr
+  static const int32_t SERIALIZATION_VERSION = 1;
 
   [[nodiscard]] static auto is_garbage(const Data& data) -> bool {
     return (GetTickCount64() - data.last_tick_count()) >= GARBAGE_TIME;
@@ -215,6 +217,25 @@ private:
     while (interface.GetNextRecordInfo(type, version, length)) {
       switch (type) {
       case LABEL: {
+
+        int32_t serialization_version;
+
+        if (!interface.ReadRecordData(serialization_version)) {
+          logger::error("Fail load ser version, return"sv);
+          cache_map_.clear();
+          mutex_.unlock();
+          return;
+        }
+
+        if (serialization_version != SERIALIZATION_VERSION) {
+          logger::warn(
+              "Serialization version mismatched, clear cache and return, versions: {} | {}"sv,
+              serialization_version, SERIALIZATION_VERSION);
+          cache_map_.clear();
+          mutex_.unlock();
+          return;
+        }
+
         size_t size;
 
         if (!interface.ReadRecordData(size)) {
@@ -242,7 +263,7 @@ private:
         }
       }
       default: {
-        logger::error("Unrecognized signature type: {}"sv, type);
+        logger::warn("Unrecognized signature type: {}"sv, type);
         break;
       }
       }
@@ -263,6 +284,13 @@ private:
 
     mutex_.lock();
     garbage_collector();
+
+    if (!interface.WriteRecordData(&SERIALIZATION_VERSION, sizeof SERIALIZATION_VERSION)) {
+      logger::error("Failed to write SERIALIZATION_VERSION"sv);
+      mutex_.unlock();
+      return;
+    }
+
     const size_t size = cache_map_.size();
     if (!interface.WriteRecordData(&size, sizeof size)) {
       logger::error("Failed to write size of map"sv);
@@ -386,5 +414,7 @@ auto place_at_me(RE::TESObjectREFR* target, RE::TESForm* form, std::uint32_t cou
 
 auto get_weapon(const RE::Actor& actor, const bool is_left_hand, RE::TESObjectWEAP* fallback_weapon)
     -> RE::TESObjectWEAP*;
+
+auto play_sound(RE::BGSSoundDescriptorForm* sound, RE::Actor* actor) -> void;
 
 } // namespace Reflyem::Core

@@ -124,6 +124,7 @@ auto get_effects_by_keyword(RE::Actor& actor, const RE::BGSKeyword& keyword)
     -> std::vector<RE::ActiveEffect*> {
   auto                           active_effects = actor.GetActiveEffectList();
   std::vector<RE::ActiveEffect*> effects        = {};
+
   for (auto active_effect : *active_effects) {
     if (!active_effect || active_effect->flags.any(RE::ActiveEffect::Flag::kInactive) ||
         !active_effect->effect || !active_effect->effect->baseEffect) {
@@ -347,4 +348,15 @@ auto get_weapon(const RE::Actor& actor, const bool is_left_hand, RE::TESObjectWE
   return as_weapon;
 }
 
+auto play_sound(RE::BGSSoundDescriptorForm* sound, RE::Actor* actor) -> void {
+  logger::debug("Play sound"sv);
+  using FuncT = void (*)(RE::TESForm*, int32_t, RE::NiPoint3*, RE::NiNode*);
+  if (sound && actor) {
+    logger::debug("Sound allow, not null"sv);
+    auto                         actor_position = actor->GetPosition();
+    auto                         actor_node     = actor->GetFireNode();
+    const REL::Relocation<FuncT> func{RELOCATION_ID(32301, 0)};
+    return func(sound, 0, &actor_position, actor_node);
+  }
+}
 } // namespace Reflyem::Core
