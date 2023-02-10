@@ -222,6 +222,19 @@ auto cast(RE::SpellItem& spell, RE::Actor& target, RE::Actor& caster) -> void {
   }
 }
 
+auto cast_on_handle_formlists(RE::BGSListForm* keywords, RE::BGSListForm* spells, RE::Actor& caster,
+                              RE::Actor& target) -> void {
+  if (!keywords || !spells) {
+    return;
+  }
+
+  const auto length_kw = keywords->forms.size();
+  const auto length_sp = spells->forms.size();
+  for (std::uint32_t index = 0u; index < length_kw && index < length_sp; index++) {
+    cast_on_handle(keywords->forms[index], spells->forms[index], target, caster);
+  }
+}
+
 auto cast_on_handle(RE::TESForm* keyword, RE::TESForm* spell, RE::Actor& target, RE::Actor& caster)
     -> void {
   if (!spell) {

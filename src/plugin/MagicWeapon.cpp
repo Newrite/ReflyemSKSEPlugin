@@ -135,13 +135,27 @@ auto handle_cast_magic_weapon_spell(RE::Actor& caster, RE::Actor& target, float 
 
     if (global) {
 
-      if (!Core::has_absolute_keyword(caster, *keyword)) {
+      float value;
+      if (global->value < 0.f) {
+        if (hit_data.weapon && !hit_data.weapon->HasKeyword(keyword)) {
+          continue;
+        }
+        value = std::abs(global->value);
+      } else {
+        if (!Core::has_absolute_keyword(caster, *keyword)) {
+          continue;
+        }
+        value = global->value;
+      }
+
+      handle_cast(caster, target, *spell, eval_magnitude(*spell, eval_percent(value)));
+
+    } else {
+
+      if (!hit_data.weapon) {
         continue;
       }
 
-      handle_cast(caster, target, *spell, eval_magnitude(*spell, eval_percent(global->value)));
-
-    } else {
       // ReSharper disable once CppTooWideScopeInitStatement
       const auto weapon_ench = hit_data.weapon->formEnchanting;
       if (!weapon_ench && !weapon_ench->HasKeyword(keyword)) {

@@ -75,8 +75,7 @@ public:
   }
 };
 
-auto on_update_actor_regeneration(RE::Character& character, Core::ActorsCache::Data& actor_data)
-    -> void;
+auto regeneration(RE::Actor& actor, const RE::ActorValue av, const float delta) -> float;
 
 auto calc_mask_sum(const FormMask& f_mask) -> std::int32_t;
 

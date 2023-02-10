@@ -11,6 +11,20 @@ auto place_form_at_me(RE::TESObjectREFR* node, RE::TESForm* form) -> RE::TESObje
   return Core::place_at_me(node, form, 1, false, false);
 }
 
+auto cast_on_timing_block(RE::Actor& target, RE::Actor& caster, const Config& config) -> void {
+  if (config.cast_on_timing_block().enable()) {
+    Core::cast_on_handle_formlists(config.cast_on_timing_block().formlist_needkw(),
+                                   config.cast_on_timing_block().formlist_spells(), caster, target);
+  }
+}
+
+auto cast_on_block_parry(RE::Actor& target, RE::Actor& caster, const Config& config) -> void {
+  if (config.cast_on_block_parry().enable()) {
+    Core::cast_on_handle_formlists(config.cast_on_block_parry().formlist_needkw(),
+                                   config.cast_on_block_parry().formlist_spells(), caster, target);
+  }
+}
+
 auto spawn_sparks(RE::Actor& target, const Config& config, const bool weapon_block,
                   const bool parry) -> void {
 
@@ -95,7 +109,7 @@ auto parry_stagger_handler(RE::Actor& attacker, RE::Actor& target,
 
   if (actor_data.timing_parry_counter() >= need_parry_count) {
     actor_data.timing_parry_counter(0);
-    logger::info("Parry stagger");
+    logger::debug("Parry stagger");
     attacker.SetGraphVariableFloat("StaggerMagnitude", 5.f);
     attacker.NotifyAnimationGraph("staggerStart");
   }
@@ -125,6 +139,7 @@ auto on_weapon_hit(RE::Actor& target, RE::HitData& hit_data, const Config& confi
   auto& actor_data   = actors_cache.get_or_add(target.formID).get();
 
   if (is_allow_timing_parry(*aggressor, target, actor_data, config)) {
+    cast_on_block_parry(*aggressor, target, config);
     spawn_sparks(target, config, hit_data.flags.any(RE::HitData::Flag::kBlockWithWeapon), true);
     Core::play_sound(config.timing_block().parry_sound(), &target);
     actor_data.mod_timing_parry_counter(1);
@@ -135,6 +150,7 @@ auto on_weapon_hit(RE::Actor& target, RE::HitData& hit_data, const Config& confi
   }
 
   if (is_allow_timing_block(*aggressor, target, actor_data, config)) {
+    cast_on_timing_block(*aggressor, target, config);
     spawn_sparks(target, config, hit_data.flags.any(RE::HitData::Flag::kBlockWithWeapon), false);
     Core::play_sound(config.timing_block().block_sound(), &target);
     hit_data.totalDamage = 0.f;

@@ -8,56 +8,17 @@ using WeaponOrArmor = Core::Either<RE::TESObjectWEAP*, RE::TESObjectARMO*>;
 
 // ReSharper disable once CppParameterMayBeConst
 auto spend_actor_value(RE::Actor& actor, const RE::ActorValue av, float value) -> void {
-  if (const auto& config = Config::get_singleton();
-      config.resource_manager().regeneration_enable()) {
-
-    auto& actor_data = Core::ActorsCache::get_singleton().get_or_add(actor.formID).get();
-
-    switch (av) {
-    // NOLINT(clang-diagnostic-switch-enum)
-    case RE::ActorValue::kStamina: {
-      const auto stamina = actor.GetActorValue(RE::ActorValue::kStamina);
-      auto       delay   = Config::get_singleton().resource_manager().regen_delay();
-      if (stamina - value < 0.f) {
-        delay *= 1.5f;
-      }
-      actor_data.regen_stamina_delay(delay);
-      break;
-    }
-    case RE::ActorValue::kHealth: {
-      const auto health = actor.GetActorValue(RE::ActorValue::kHealth);
-      auto       delay  = Config::get_singleton().resource_manager().regen_delay();
-      if (health - value < 0.f) {
-        delay *= 1.5f;
-      }
-      actor_data.regen_health_delay(delay);
-      break;
-    }
-    case RE::ActorValue::kMagicka: {
-      const auto magicka = actor.GetActorValue(RE::ActorValue::kMagicka);
-      auto       delay   = Config::get_singleton().resource_manager().regen_delay();
-      if (magicka - value < 0.f) {
-        delay *= 1.5f;
-      }
-      actor_data.regen_magicka_delay(delay);
-      break;
-    }
-    default:
-      break;
-    }
-  } else {
-    Core::set_av_regen_delay(actor.currentProcess, av,
-                             Config::get_singleton().resource_manager().regen_delay());
-  }
+  Core::set_av_regen_delay(actor.currentProcess, av,
+                           Config::get_singleton().resource_manager().regen_delay());
 
   Core::damage_actor_value(actor, av, value);
 }
 
-// TODO Переписать попробовать на хук который хукается конкретно в функцию регенерации стата
-auto regeneration_actor_value(RE::Character& character, const RE::ActorValue av,
+// TODO Переписать попробовать на хук который хукается конкретно в функцию регенерации стата: DONE
+auto regeneration_actor_value(RE::Actor& actor, const RE::ActorValue av,
                               const RE::ActorValue regen_av, const RE::ActorValue regen_av_mult,
-                              const float delta) -> void {
-  auto mult = 1.f + (character.GetActorValue(regen_av_mult) / 100.f);
+                              const float delta) -> float {
+  auto mult = 1.f + (actor.GetActorValue(regen_av_mult) / 100.f);
   if (mult < 0.f) {
     mult = 1.f;
   }
@@ -66,12 +27,12 @@ auto regeneration_actor_value(RE::Character& character, const RE::ActorValue av,
     // if actor is bleeding out and regen_av health (like HealRate) is 0 in race
     // (by default in races in my modpack) they can't give up (becouse have 0 health regen)
     // so it hack fix this moment
-    if (character.IsPlayerRef() || av != RE::ActorValue::kHealth || !character.IsBleedingOut() ||
-        character.IsInCombat()) {
-      return character.GetActorValue(regen_av) * mult;
+    if (actor.IsPlayerRef() || av != RE::ActorValue::kHealth || !actor.IsBleedingOut() ||
+        actor.IsInCombat()) {
+      return actor.GetActorValue(regen_av) * mult;
     }
 
-    auto regen = character.GetActorValue(regen_av);
+    auto regen = actor.GetActorValue(regen_av);
     if (regen <= 0.f) {
       regen = 5.f;
     }
@@ -82,54 +43,45 @@ auto regeneration_actor_value(RE::Character& character, const RE::ActorValue av,
   const auto regeneration_value = flat_regen * delta;
   logger::debug("MultRegen {} RegenValue {} FlatRegenBase {}", mult, regeneration_value,
                 flat_regen);
-  character.RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, av, regeneration_value);
+
+  return regeneration_value;
 }
 
-auto regeneration_stamina(RE::Character& character, const Core::ActorsCache::Data& actor_data)
-    -> void {
-  if (actor_data.regen_stamina_delay() <= 0.f) {
-    auto constexpr av            = RE::ActorValue::kStamina;
-    auto constexpr regen_av      = RE::ActorValue::kStaminaRate;
-    auto constexpr regen_av_mult = RE::ActorValue::kStaminaRateMult;
-    regeneration_actor_value(character, av, regen_av, regen_av_mult,
-                             actor_data.last_delta_update());
-  }
+auto regeneration_stamina(RE::Actor& actor, const float delta) -> float {
+  auto constexpr av            = RE::ActorValue::kStamina;
+  auto constexpr regen_av      = RE::ActorValue::kStaminaRate;
+  auto constexpr regen_av_mult = RE::ActorValue::kStaminaRateMult;
+  return regeneration_actor_value(actor, av, regen_av, regen_av_mult, delta);
 }
 
-auto regeneration_health(RE::Character& character, const Core::ActorsCache::Data& actor_data)
-    -> void {
-  if (actor_data.regen_health_delay() <= 0.f) {
-    auto constexpr av            = RE::ActorValue::kHealth;
-    auto constexpr regen_av      = RE::ActorValue::kHealRate;
-    auto constexpr regen_av_mult = RE::ActorValue::kHealRateMult;
-    regeneration_actor_value(character, av, regen_av, regen_av_mult,
-                             actor_data.last_delta_update());
-  }
+auto regeneration_health(RE::Actor& actor, const float delta) -> float {
+  auto constexpr av            = RE::ActorValue::kHealth;
+  auto constexpr regen_av      = RE::ActorValue::kHealRate;
+  auto constexpr regen_av_mult = RE::ActorValue::kHealRateMult;
+  return regeneration_actor_value(actor, av, regen_av, regen_av_mult, delta);
 }
 
-auto regeneration_magicka(RE::Character& character, const Core::ActorsCache::Data& actor_data)
-    -> void {
-  if (actor_data.regen_magicka_delay() <= 0.f) {
-    auto constexpr av            = RE::ActorValue::kMagicka;
-    auto constexpr regen_av      = RE::ActorValue::kMagickaRate;
-    auto constexpr regen_av_mult = RE::ActorValue::kMagickaRateMult;
-    regeneration_actor_value(character, av, regen_av, regen_av_mult,
-                             actor_data.last_delta_update());
-  }
+auto regeneration_magicka(RE::Actor& actor, const float delta) -> float {
+  auto constexpr av            = RE::ActorValue::kMagicka;
+  auto constexpr regen_av      = RE::ActorValue::kMagickaRate;
+  auto constexpr regen_av_mult = RE::ActorValue::kMagickaRateMult;
+  return regeneration_actor_value(actor, av, regen_av, regen_av_mult, delta);
 }
 
-auto on_update_actor_regeneration(RE::Character& character, Core::ActorsCache::Data& actor_data)
-    -> void {
-  regeneration_health(character, actor_data);
-  regeneration_stamina(character, actor_data);
-  regeneration_magicka(character, actor_data);
-
-  if (Core::is_casting_actor(character)) {
-    actor_data.regen_magicka_delay(Config::get_singleton().resource_manager().regen_delay());
+auto regeneration(RE::Actor& actor, const RE::ActorValue av, const float delta) -> float {
+  switch (av) {
+  case RE::ActorValue::kHealth: {
+    return regeneration_health(actor, delta);
   }
-
-  if (character.IsSprinting()) {
-    actor_data.regen_stamina_delay(Config::get_singleton().resource_manager().regen_delay());
+  case RE::ActorValue::kStamina: {
+    return regeneration_stamina(actor, delta);
+  }
+  case RE::ActorValue::kMagicka: {
+    return regeneration_magicka(actor, delta);
+  }
+  default: {
+    return 0.0;
+  }
   }
 }
 

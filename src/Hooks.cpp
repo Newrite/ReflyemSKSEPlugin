@@ -41,10 +41,6 @@ auto update_actor(RE::Character& character, const float delta, const Reflyem::Co
     }
   }
 
-  if (config.resource_manager().enable() && config.resource_manager().regeneration_enable()) {
-    Reflyem::ResourceManager::on_update_actor_regeneration(character, actor_data);
-  }
-
   if (actor_data.update_50_timer() <= 0.f) {
 
     logger::debug("update actor map50 tick"sv);
@@ -80,9 +76,6 @@ auto update_actor(RE::Character& character, const float delta, const Reflyem::Co
     actor_data.update_1000_timer_refresh();
     actor_data.last_tick_count_refresh();
 
-    logger::debug("ActorData: st {} mp {} hp {}", actor_data.regen_stamina_delay(),
-                  actor_data.regen_magicka_delay(), actor_data.regen_health_delay());
-
     if (config.petrified_blood().enable() && config.petrified_blood().magick()) {
       Reflyem::PetrifiedBlood::character_update(character, delta, config, actor_data);
     }
@@ -90,12 +83,6 @@ auto update_actor(RE::Character& character, const float delta, const Reflyem::Co
     if (config.resource_manager().enable()) {
 
       Reflyem::ResourceManager::GMST::game_settings_handler(config);
-
-      if (config.resource_manager().regeneration_enable()) {
-        Reflyem::Core::set_av_regen_delay(character.currentProcess, RE::ActorValue::kMagicka, 2.f);
-        Reflyem::Core::set_av_regen_delay(character.currentProcess, RE::ActorValue::kStamina, 2.f);
-        Reflyem::Core::set_av_regen_delay(character.currentProcess, RE::ActorValue::kHealth, 2.f);
-      }
     }
 
     if (config.speed_casting().enable() && character.IsPlayerRef()) {
@@ -104,24 +91,24 @@ auto update_actor(RE::Character& character, const float delta, const Reflyem::Co
   }
 }
 
-auto OnPlayerCharacterUpdate::update(RE::PlayerCharacter* this_, float delta) -> void {
+auto OnCharacterUpdate::update_pc(RE::PlayerCharacter* this_, float delta) -> void {
   if (this_) {
 
     auto& config      = Reflyem::Config::get_singleton();
     player_last_delta = delta;
     update_actor(*this_, delta, config);
   }
-  return update_(this_, delta);
+  return update_pc_(this_, delta);
 }
 
-auto OnCharacterUpdate::update(RE::Character* this_, float delta) -> void {
+auto OnCharacterUpdate::update_npc(RE::Character* this_, float delta) -> void {
   if (this_) {
 
     auto& config = Reflyem::Config::get_singleton();
 
     update_actor(*this_, delta, config);
   }
-  return update_(this_, delta);
+  return update_npc_(this_, delta);
 }
 
 auto OnAttackData::process_attack(RE::ActorValueOwner* value_owner, RE::BGSAttackData* attack_data)
@@ -136,12 +123,12 @@ auto OnAttackAction::attack_action(const RE::TESActionData* action_data) -> bool
   return false;
 }
 
-auto OnAnimationEventNpc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   this_,
+auto OnAnimationEvent::process_event_pc(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   this_,
                                         RE::BSAnimationGraphEvent*                     event,
                                         RE::BSTEventSource<RE::BSAnimationGraphEvent>* dispatcher)
     -> void {
   if (!event || !event->holder) {
-    return process_event_(this_, event, dispatcher);
+    return process_event_pc_(this_, event, dispatcher);
   }
   auto& config = Reflyem::Config::get_singleton();
   if (config.resource_manager().enable()) {
@@ -151,15 +138,15 @@ auto OnAnimationEventNpc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEve
     Reflyem::TkDodge::animation_handler(*event, config);
   }
   Reflyem::ParryBash::animation_handler(*event, config);
-  return process_event_(this_, event, dispatcher);
+  return process_event_pc_(this_, event, dispatcher);
 }
 
-auto OnAnimationEventPc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   this_,
-                                       RE::BSAnimationGraphEvent*                     event,
-                                       RE::BSTEventSource<RE::BSAnimationGraphEvent>* dispatcher)
+auto OnAnimationEvent::process_event_npc(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   this_,
+                                         RE::BSAnimationGraphEvent*                     event,
+                                         RE::BSTEventSource<RE::BSAnimationGraphEvent>* dispatcher)
     -> void {
   if (!event || !event->holder) {
-    return process_event_(this_, event, dispatcher);
+    return process_event_npc_(this_, event, dispatcher);
   }
   auto& config = Reflyem::Config::get_singleton();
   if (config.resource_manager().enable()) {
@@ -169,7 +156,7 @@ auto OnAnimationEventPc::process_event(RE::BSTEventSink<RE::BSAnimationGraphEven
     Reflyem::TkDodge::animation_handler(*event, config);
   }
   Reflyem::ParryBash::animation_handler(*event, config);
-  return process_event_(this_, event, dispatcher);
+  return process_event_npc_(this_, event, dispatcher);
 }
 
 auto OnAdjustActiveEffect::adjust_active_effect(RE::ActiveEffect* this_, float power, bool unk)
@@ -222,9 +209,40 @@ auto OnModifyActorValue::modify_actor_value(RE::ValueModifierEffect* this_, RE::
   return;
 }
 
-auto OnPeakModifyActorValue::peak_modify_actor_value(RE::ValueModifierEffect* this_,
-                                                     RE::Actor* actor, float value,
-                                                     RE::ActorValue av) -> void {
+auto OnModifyActorValue::absorb_effect_modify_actor_value(RE::ValueModifierEffect* this_,
+                                                          RE::Actor* actor, float value,
+                                                          RE::ActorValue av) -> void {
+  if (!actor || !this_) {
+    absorb_effect_modify_actor_value_(this_, actor, value, av);
+    return;
+  }
+
+  auto& config = Reflyem::Config::get_singleton();
+
+  if (config.magick_crit().enable()) {
+    Reflyem::Crit::modify_actor_value(this_, actor, value, av, config);
+  }
+
+  if (config.cheat_death().enable() && config.cheat_death().magick()) {
+    Reflyem::CheatDeath::modify_actor_value(this_, actor, value, av, config);
+  }
+
+  if (config.petrified_blood().enable() && config.petrified_blood().magick()) {
+    Reflyem::PetrifiedBlood::modify_actor_value(this_, actor, value, av, config);
+  }
+
+  if (config.magic_shield().enable() && config.magic_shield().magick()) {
+    Reflyem::MagicShield::modify_actor_value(this_, actor, value, av, config);
+  }
+
+  Reflyem::Vampirism::modify_actor_value(this_, actor, value, av, config);
+
+  absorb_effect_modify_actor_value_(this_, actor, value, av);
+  return;
+}
+
+auto OnModifyActorValue::peak_modify_actor_value(RE::ValueModifierEffect* this_, RE::Actor* actor,
+                                                 float value, RE::ActorValue av) -> void {
   logger::debug("peak mod actor value"sv);
 
   if (!actor || !this_) {
@@ -256,9 +274,8 @@ auto OnPeakModifyActorValue::peak_modify_actor_value(RE::ValueModifierEffect* th
   return;
 }
 
-auto OnDualModifyActorValue::dual_modify_actor_value(RE::ValueModifierEffect* this_,
-                                                     RE::Actor* actor, float value,
-                                                     RE::ActorValue av) -> void {
+auto OnModifyActorValue::dual_modify_actor_value(RE::ValueModifierEffect* this_, RE::Actor* actor,
+                                                 float value, RE::ActorValue av) -> void {
   if (!actor || !this_) {
     dual_modify_actor_value_(this_, actor, value, av);
     return;
@@ -288,8 +305,9 @@ auto OnDualModifyActorValue::dual_modify_actor_value(RE::ValueModifierEffect* th
   return;
 }
 
-auto OnDualModifyActorValueSecondInnerCall::dual_modify_actor_value_second_inner_call(
-    RE::ValueModifierEffect* this_, RE::Actor* actor, float value, RE::ActorValue av) -> void {
+auto OnModifyActorValue::dual_modify_actor_value_second_inner_call(RE::ValueModifierEffect* this_,
+                                                                   RE::Actor* actor, float value,
+                                                                   RE::ActorValue av) -> void {
   if (!actor || !this_) {
     dual_modify_actor_value_second_inner_call_(this_, actor, value, av);
     return;
@@ -397,12 +415,30 @@ auto OnMeleeCollision::melee_collision(RE::Actor* attacker, RE::Actor* victim,
   return melee_collision_(attacker, victim, projectile, aleft);
 }
 
-auto OnCheckResistanceNpc::check_resistance(RE::MagicTarget* this_, RE::MagicItem* magic_item,
+auto OnCheckResistance::check_resistance_npc(RE::MagicTarget* this_, RE::MagicItem* magic_item,
+                                             RE::Effect* effect, RE::TESBoundObject* bound_object)
+    -> float {
+  if (!this_ || !magic_item || !effect) {
+    logger::debug("Original resistance call");
+    return check_resistance_npc_(this_, magic_item, effect, bound_object);
+  }
+
+  const auto& config = Reflyem::Config::get_singleton();
+
+  if (config.resist_tweaks().enable() && config.resist_tweaks().enable_check_resistance()) {
+    return Reflyem::ResistTweaks::check_resistance(*this_, *magic_item, *effect, bound_object,
+                                                   config);
+  }
+
+  return check_resistance_npc_(this_, magic_item, effect, bound_object);
+}
+
+auto OnCheckResistance::check_resistance_pc(RE::MagicTarget* this_, RE::MagicItem* magic_item,
                                             RE::Effect* effect, RE::TESBoundObject* bound_object)
     -> float {
   if (!this_ || !magic_item || !effect) {
     logger::debug("Original resistance call");
-    return check_resistance_(this_, magic_item, effect, bound_object);
+    return check_resistance_pc_(this_, magic_item, effect, bound_object);
   }
 
   const auto& config = Reflyem::Config::get_singleton();
@@ -412,25 +448,7 @@ auto OnCheckResistanceNpc::check_resistance(RE::MagicTarget* this_, RE::MagicIte
                                                    config);
   }
 
-  return check_resistance_(this_, magic_item, effect, bound_object);
-}
-
-auto OnCheckResistancePc::check_resistance(RE::MagicTarget* this_, RE::MagicItem* magic_item,
-                                           RE::Effect* effect, RE::TESBoundObject* bound_object)
-    -> float {
-  if (!this_ || !magic_item || !effect) {
-    logger::debug("Original resistance call");
-    return check_resistance_(this_, magic_item, effect, bound_object);
-  }
-
-  const auto& config = Reflyem::Config::get_singleton();
-
-  if (config.resist_tweaks().enable() && config.resist_tweaks().enable_check_resistance()) {
-    return Reflyem::ResistTweaks::check_resistance(*this_, *magic_item, *effect, bound_object,
-                                                   config);
-  }
-
-  return check_resistance_(this_, magic_item, effect, bound_object);
+  return check_resistance_pc_(this_, magic_item, effect, bound_object);
 }
 
 auto OnEnchIgnoresResistance::ignores_resistance(RE::MagicItem* this_) -> bool {
@@ -461,80 +479,124 @@ auto OnEnchGetNoAbsorb::get_no_absorb(RE::MagicItem* this_) -> bool {
   return get_no_absorb_(this_);
 }
 
-auto OnActorValueOwnerNpc::get_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av) -> float {
+auto OnActorValueOwner::get_actor_value_npc(RE::ActorValueOwner* this_, RE::ActorValue av)
+    -> float {
   if (!this_) {
-    return get_actor_value_(this_, av);
+    return get_actor_value_npc_(this_, av);
   }
 
   if (Reflyem::Config::get_singleton().equip_load().enable()) {
-    return Reflyem::EquipLoad::get_actor_value(*this_, av).value_or(get_actor_value_(this_, av));
+    return Reflyem::EquipLoad::get_actor_value(*this_, av)
+        .value_or(get_actor_value_npc_(this_, av));
   }
 
-  return get_actor_value_(this_, av);
+  return get_actor_value_npc_(this_, av);
 }
 
-auto OnActorValueOwnerNpc::set_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av,
+auto OnActorValueOwner::set_actor_value_npc(RE::ActorValueOwner* this_, RE::ActorValue av,
+                                            float value) -> void {
+  if (!this_) {
+    return set_actor_value_npc_(this_, av, value);
+  }
+
+  if (Reflyem::Config::get_singleton().equip_load().enable()) {
+    return set_actor_value_npc_(this_, av, Reflyem::EquipLoad::set_actor_value(*this_, av, value));
+  }
+
+  return set_actor_value_npc_(this_, av, value);
+}
+
+auto OnActorValueOwner::mod_actor_value_npc(RE::ActorValueOwner* this_, RE::ActorValue av,
+                                            float value) -> void {
+  if (!this_) {
+    return mod_actor_value_npc_(this_, av, value);
+  }
+
+  if (Reflyem::Config::get_singleton().equip_load().enable()) {
+    return mod_actor_value_npc_(this_, av, Reflyem::EquipLoad::mod_actor_value(*this_, av, value));
+  }
+
+  return mod_actor_value_npc_(this_, av, value);
+}
+
+auto OnActorValueOwner::get_actor_value_pc(RE::ActorValueOwner* this_, RE::ActorValue av) -> float {
+  if (!this_) {
+    return get_actor_value_pc_(this_, av);
+  }
+
+  if (Reflyem::Config::get_singleton().equip_load().enable()) {
+    return Reflyem::EquipLoad::get_actor_value(*this_, av).value_or(get_actor_value_pc_(this_, av));
+  }
+
+  return get_actor_value_pc_(this_, av);
+}
+
+auto OnActorValueOwner::set_actor_value_pc(RE::ActorValueOwner* this_, RE::ActorValue av,
                                            float value) -> void {
   if (!this_) {
-    return set_actor_value_(this_, av, value);
+    return set_actor_value_pc_(this_, av, value);
   }
 
   if (Reflyem::Config::get_singleton().equip_load().enable()) {
-    return set_actor_value_(this_, av, Reflyem::EquipLoad::set_actor_value(*this_, av, value));
+    return set_actor_value_pc_(this_, av, Reflyem::EquipLoad::set_actor_value(*this_, av, value));
   }
 
-  return set_actor_value_(this_, av, value);
+  return set_actor_value_pc_(this_, av, value);
 }
 
-auto OnActorValueOwnerNpc::mod_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av,
+auto OnActorValueOwner::mod_actor_value_pc(RE::ActorValueOwner* this_, RE::ActorValue av,
                                            float value) -> void {
   if (!this_) {
-    return mod_actor_value_(this_, av, value);
+    return mod_actor_value_pc_(this_, av, value);
   }
 
   if (Reflyem::Config::get_singleton().equip_load().enable()) {
-    return mod_actor_value_(this_, av, Reflyem::EquipLoad::mod_actor_value(*this_, av, value));
+    return mod_actor_value_pc_(this_, av, Reflyem::EquipLoad::mod_actor_value(*this_, av, value));
   }
 
-  return mod_actor_value_(this_, av, value);
+  return mod_actor_value_pc_(this_, av, value);
 }
 
-auto OnActorValueOwnerPc::get_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av) -> float {
-  if (!this_) {
-    return get_actor_value_(this_, av);
+auto OnHealthMagickaStaminaRegeneration::restore_health(RE::Actor* actor, RE::ActorValue av,
+                                                        float value) -> void {
+  if (!actor) {
+    return restore_health_(actor, av, value);
   }
 
-  if (Reflyem::Config::get_singleton().equip_load().enable()) {
-    return Reflyem::EquipLoad::get_actor_value(*this_, av).value_or(get_actor_value_(this_, av));
+  const auto& config = Reflyem::Config::get_singleton();
+  if (config.resource_manager().enable() && config.resource_manager().regeneration_enable()) {
+    value = Reflyem::ResourceManager::regeneration(*actor, av, player_last_delta);
   }
 
-  return get_actor_value_(this_, av);
+  return restore_health_(actor, av, value);
 }
 
-auto OnActorValueOwnerPc::set_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av,
-                                          float value) -> void {
-  if (!this_) {
-    return set_actor_value_(this_, av, value);
+auto OnHealthMagickaStaminaRegeneration::restore_magicka(RE::Actor* actor, RE::ActorValue av,
+                                                         float value) -> void {
+  if (!actor) {
+    return restore_magicka_(actor, av, value);
   }
 
-  if (Reflyem::Config::get_singleton().equip_load().enable()) {
-    return set_actor_value_(this_, av, Reflyem::EquipLoad::set_actor_value(*this_, av, value));
+  const auto& config = Reflyem::Config::get_singleton();
+  if (config.resource_manager().enable() && config.resource_manager().regeneration_enable()) {
+    value = Reflyem::ResourceManager::regeneration(*actor, av, player_last_delta);
   }
 
-  return set_actor_value_(this_, av, value);
+  return restore_magicka_(actor, av, value);
 }
 
-auto OnActorValueOwnerPc::mod_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av,
-                                          float value) -> void {
-  if (!this_) {
-    return mod_actor_value_(this_, av, value);
+auto OnHealthMagickaStaminaRegeneration::restore_stamina(RE::Actor* actor, RE::ActorValue av,
+                                                         float value) -> void {
+  if (!actor) {
+    return restore_stamina_(actor, av, value);
   }
 
-  if (Reflyem::Config::get_singleton().equip_load().enable()) {
-    return mod_actor_value_(this_, av, Reflyem::EquipLoad::mod_actor_value(*this_, av, value));
+  const auto& config = Reflyem::Config::get_singleton();
+  if (config.resource_manager().enable() && config.resource_manager().regeneration_enable()) {
+    value = Reflyem::ResourceManager::regeneration(*actor, av, player_last_delta);
   }
 
-  return mod_actor_value_(this_, av, value);
+  return restore_stamina_(actor, av, value);
 }
 
 auto install_hooks() -> void {
@@ -544,22 +606,16 @@ auto install_hooks() -> void {
   OnMeleeCollision::install_hook(trampoline);
   OnWeaponHit::install_hook(trampoline);
   // OnCheckResistance::install_hook(trampoline);
-  OnCheckResistanceNpc::install_hook();
-  OnCheckResistancePc::install_hook();
+  OnCheckResistance::install_hook();
   OnEnchIgnoresResistance::install_hook();
   OnEnchGetNoAbsorb::install_hook();
-  OnActorValueOwnerNpc::install_hook();
-  OnActorValueOwnerPc::install_hook();
+  OnActorValueOwner::install_hook();
   // OnMainUpdate::install_hook(trampoline);
   // OnAdjustActiveEffect::install_hook(trampoline);
-  OnAnimationEventNpc::install_hook();
-  OnAnimationEventPc::install_hook();
+  OnAnimationEvent::install_hook();
   OnCharacterUpdate::install_hook();
-  OnPlayerCharacterUpdate::install_hook();
-  OnModifyActorValue::install_hook();
-  OnDualModifyActorValue::install_hook();
-  OnPeakModifyActorValue::install_hook();
-  OnDualModifyActorValueSecondInnerCall::install_hook(trampoline);
+  OnModifyActorValue::install_hook(trampoline);
+  OnHealthMagickaStaminaRegeneration::install_hook(trampoline);
   // OnAttackAction::install_hook(trampoline);
   // OnAttackData::install_hook(trampoline);
   logger::info("finish install hooks"sv);

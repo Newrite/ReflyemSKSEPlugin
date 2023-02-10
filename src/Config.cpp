@@ -94,6 +94,9 @@ constexpr inline std::string_view KeywordId                      = "KeywordId";
 constexpr inline std::string_view MustBeOrNotBe                  = "MustBeOrNotBe";
 constexpr inline std::string_view MagickCrit                     = "MagickCrit";
 constexpr inline std::string_view CastOnBlock                    = "CastOnBlock";
+constexpr inline std::string_view CastOnTimingBlock              = "CastOnTimingBlock";
+constexpr inline std::string_view CastOnBlockParry               = "CastOnBlockParry";
+constexpr inline std::string_view CastOnParryBash                = "CastOnParryBash";
 constexpr inline std::string_view RegenDelay                     = "RegenDelay";
 constexpr inline std::string_view ResistTweaks                   = "ResistTweaks";
 constexpr inline std::string_view EnableCheckResistance          = "EnableCheckResistance";
@@ -390,7 +393,7 @@ Config::CastOnHitConfig::CastOnHitConfig(toml::table& tbl, RE::TESDataHandler& d
 
 Config::CastOnBlockConfig::CastOnBlockConfig(toml::table& tbl, RE::TESDataHandler& data_handler,
                                              const Config& config) {
-  logger::info("config init: cast on hit"sv);
+  logger::info("config init: CastOnBlock"sv);
   enable_ = tbl[CastOnBlock][Enable].value_or(false);
   if (enable_) {
     const auto form_keywords_form_id = tbl[CastOnBlock][FormListKeywordId].value<RE::FormID>();
@@ -402,19 +405,64 @@ Config::CastOnBlockConfig::CastOnBlockConfig(toml::table& tbl, RE::TESDataHandle
   }
 }
 
+Config::CastOnBlockParryConfig::CastOnBlockParryConfig(toml::table&        tbl,
+                                                       RE::TESDataHandler& data_handler,
+                                                       const Config&       config) {
+  logger::info("config init: CastOnBlockParry"sv);
+  enable_ = tbl[CastOnBlockParry][Enable].value_or(false);
+  if (enable_) {
+    const auto form_keywords_form_id = tbl[CastOnBlockParry][FormListKeywordId].value<RE::FormID>();
+    const auto form_spells_form_id   = tbl[CastOnBlockParry][FormListSpellsId].value<RE::FormID>();
+    formlist_needkw_ =
+        data_handler.LookupForm<RE::BGSListForm>(form_keywords_form_id.value(), config.mod_name());
+    formlist_spells_ =
+        data_handler.LookupForm<RE::BGSListForm>(form_spells_form_id.value(), config.mod_name());
+  }
+}
+
+Config::CastOnTimingBlockConfig::CastOnTimingBlockConfig(toml::table&        tbl,
+                                                         RE::TESDataHandler& data_handler,
+                                                         const Config&       config) {
+  logger::info("config init: CastOnTimingBlock"sv);
+  enable_ = tbl[CastOnTimingBlock][Enable].value_or(false);
+  if (enable_) {
+    const auto form_keywords_form_id =
+        tbl[CastOnTimingBlock][FormListKeywordId].value<RE::FormID>();
+    const auto form_spells_form_id = tbl[CastOnTimingBlock][FormListSpellsId].value<RE::FormID>();
+    formlist_needkw_ =
+        data_handler.LookupForm<RE::BGSListForm>(form_keywords_form_id.value(), config.mod_name());
+    formlist_spells_ =
+        data_handler.LookupForm<RE::BGSListForm>(form_spells_form_id.value(), config.mod_name());
+  }
+}
+
+Config::CastOnParryBashConfig::CastOnParryBashConfig(toml::table&        tbl,
+                                                     RE::TESDataHandler& data_handler,
+                                                     const Config&       config) {
+  logger::info("config init: CastOnParryBash"sv);
+  enable_ = tbl[CastOnParryBash][Enable].value_or(false);
+  if (enable_) {
+    const auto form_keywords_form_id = tbl[CastOnParryBash][FormListKeywordId].value<RE::FormID>();
+    const auto form_spells_form_id   = tbl[CastOnParryBash][FormListSpellsId].value<RE::FormID>();
+    formlist_needkw_ =
+        data_handler.LookupForm<RE::BGSListForm>(form_keywords_form_id.value(), config.mod_name());
+    formlist_spells_ =
+        data_handler.LookupForm<RE::BGSListForm>(form_spells_form_id.value(), config.mod_name());
+  }
+}
+
 Config::ResourceManagerConfig::ResourceManagerConfig(toml::table&        tbl,
                                                      RE::TESDataHandler& data_handler,
                                                      const Config&       config) {
   logger::info("config init: resource manager"sv);
-  enable_ = tbl[ResourceManager][Enable].value_or(false);
+  enable_      = tbl[ResourceManager][Enable].value_or(false);
+  regen_delay_ = tbl[ResourceManager][RegenDelay].value_or(2.5f);
   if (enable_) {
     infamy_enable_       = tbl[ResourceManager][EnableInfamy].value_or(false);
     regeneration_enable_ = tbl[ResourceManager][EnableRegeneration].value_or(false);
     weapon_spend_enable_ = tbl[ResourceManager][EnableWeaponSpend].value_or(false);
     block_spend_enable_  = tbl[ResourceManager][EnableBlock].value_or(false);
     bash_spend_enable_   = tbl[ResourceManager][EnableBashSpend].value_or(false);
-
-    regen_delay_ = tbl[ResourceManager][RegenDelay].value_or(2.5f);
 
     auto spell_for_block_attack = tbl[ResourceManager][SpellBlockAttackId].value<RE::FormID>();
     auto spell_for_block_power_attack =
@@ -731,26 +779,29 @@ Config::Config() {
   auto       tbl          = toml::parse_file(PathToConfig);
   const auto data_handler = RE::TESDataHandler::GetSingleton();
 
-  mod_name_         = tbl[Reflyem][ModName].value_or("Skyrim.esm"sv);
-  magic_shield_     = MagicShieldConfig(tbl, *data_handler, *this);
-  petrified_blood_  = PetrifiedBloodConfig(tbl, *data_handler, *this);
-  cheat_death_      = CheatDeathConfig(tbl, *data_handler, *this);
-  vampirism_        = VampirismConfig(tbl, *data_handler, *this);
-  magic_vampirism_  = MagicVampirismConfig(tbl, *data_handler, *this);
-  speed_casting_    = SpeedCastingConfig(tbl, *data_handler, *this);
-  weapon_crit_      = WeaponCritConfig(tbl, *data_handler, *this);
-  magick_crit_      = MagickCritConfig(tbl, *data_handler, *this);
-  cast_on_crit_     = CastOnCritConfig(tbl, *data_handler, *this);
-  cast_on_hit_      = CastOnHitConfig(tbl, *data_handler, *this);
-  cast_on_block_    = CastOnBlockConfig(tbl, *data_handler, *this);
-  resource_manager_ = ResourceManagerConfig(tbl, *data_handler, *this);
-  tk_dodge_         = TkDodgeConfig(tbl, *data_handler, *this);
-  caster_additions_ = CasterAdditionsConfig(tbl, *data_handler, *this);
-  magic_weapon_     = MagicWeaponConfig(tbl, *data_handler, *this);
-  resist_tweaks_    = ResistTweaksConfig(tbl, *data_handler, *this);
-  timing_block_     = TimingBlockConfig(tbl, *data_handler, *this);
-  equip_load_       = EquipLoadConfig(tbl, *data_handler, *this);
-  parry_bash_       = ParryBashConfig(tbl, *data_handler, *this);
+  mod_name_             = tbl[Reflyem][ModName].value_or("Skyrim.esm"sv);
+  magic_shield_         = MagicShieldConfig(tbl, *data_handler, *this);
+  petrified_blood_      = PetrifiedBloodConfig(tbl, *data_handler, *this);
+  cheat_death_          = CheatDeathConfig(tbl, *data_handler, *this);
+  vampirism_            = VampirismConfig(tbl, *data_handler, *this);
+  magic_vampirism_      = MagicVampirismConfig(tbl, *data_handler, *this);
+  speed_casting_        = SpeedCastingConfig(tbl, *data_handler, *this);
+  weapon_crit_          = WeaponCritConfig(tbl, *data_handler, *this);
+  magick_crit_          = MagickCritConfig(tbl, *data_handler, *this);
+  cast_on_crit_         = CastOnCritConfig(tbl, *data_handler, *this);
+  cast_on_hit_          = CastOnHitConfig(tbl, *data_handler, *this);
+  cast_on_block_        = CastOnBlockConfig(tbl, *data_handler, *this);
+  cast_on_block_parry_  = CastOnBlockParryConfig(tbl, *data_handler, *this);
+  cast_on_timing_block_ = CastOnTimingBlockConfig(tbl, *data_handler, *this);
+  cast_on_parry_bash_   = CastOnParryBashConfig(tbl, *data_handler, *this);
+  resource_manager_     = ResourceManagerConfig(tbl, *data_handler, *this);
+  tk_dodge_             = TkDodgeConfig(tbl, *data_handler, *this);
+  caster_additions_     = CasterAdditionsConfig(tbl, *data_handler, *this);
+  magic_weapon_         = MagicWeaponConfig(tbl, *data_handler, *this);
+  resist_tweaks_        = ResistTweaksConfig(tbl, *data_handler, *this);
+  timing_block_         = TimingBlockConfig(tbl, *data_handler, *this);
+  equip_load_           = EquipLoadConfig(tbl, *data_handler, *this);
+  parry_bash_           = ParryBashConfig(tbl, *data_handler, *this);
 
   logger::info("finish init config"sv);
 }

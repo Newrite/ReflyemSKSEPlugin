@@ -2,6 +2,9 @@
 
 namespace Adresses {
 static inline REL::Relocation<uintptr_t> on_weapon_hit{RELOCATION_ID(37673, 0)};
+static inline REL::Relocation<uintptr_t> on_regeneration_health{RELOCATION_ID(37509, 0)};
+static inline REL::Relocation<uintptr_t> on_regeneration_stamina{RELOCATION_ID(37510, 0)};
+static inline REL::Relocation<uintptr_t> on_regeneration_magicka{RELOCATION_ID(37511, 0)};
 static inline REL::Relocation<uintptr_t> on_melee_collision{RELOCATION_ID(37650, 0)};
 static inline REL::Relocation<uintptr_t> on_main_update{RELOCATION_ID(35551, 0)};
 static inline REL::Relocation<uintptr_t> on_adjust_active_effect{RELOCATION_ID(33763, 0)};
@@ -9,6 +12,8 @@ static inline REL::Relocation<uintptr_t> on_animation_event_npc{RELOCATION_ID(26
 static inline REL::Relocation<uintptr_t> on_animation_event_pc{RELOCATION_ID(261918, 0)};
 static inline REL::Relocation<uintptr_t> on_attack_data{RELOCATION_ID(38047, 0)};
 static inline REL::Relocation<uintptr_t> on_modify_actor_value{RELOCATION_ID(258043, 0)};
+static inline REL::Relocation<uintptr_t> on_absorb_effect_modify_actor_value{
+    RELOCATION_ID(257544, 0)};
 static inline REL::Relocation<uintptr_t> on_peak_modify_actor_value{RELOCATION_ID(257874, 0)};
 static inline REL::Relocation<uintptr_t> on_dual_modify_actor_value{RELOCATION_ID(257681, 0)};
 static inline REL::Relocation<uintptr_t> on_dual_modify_actor_value_second_inner_call{RELOCATION_ID(
@@ -36,6 +41,9 @@ static inline REL::Relocation<uintptr_t> on_value_owner_mod_actor_value_pc{
 
 namespace Offsets {
 static inline auto on_weapon_hit                                = RELOCATION_OFFSET(0x3C0, 0);
+static inline auto on_regeneration_health                       = RELOCATION_OFFSET(0x68, 0);
+static inline auto on_regeneration_stamina                      = RELOCATION_OFFSET(0x176, 0);
+static inline auto on_regeneration_magicka                      = RELOCATION_OFFSET(0x68, 0);
 static inline auto on_melee_collision                           = RELOCATION_OFFSET(0x38B, 0);
 static inline auto on_main_update                               = RELOCATION_OFFSET(0x11f, 0);
 static inline auto on_adjust_active_effect                      = RELOCATION_OFFSET(0x4A3, 0);
@@ -43,6 +51,7 @@ static inline auto on_animation_event_npc                       = RELOCATION_OFF
 static inline auto on_animation_event_pc                        = RELOCATION_OFFSET(0x1, 0);
 static inline auto on_attack_data                               = RELOCATION_OFFSET(0xbb, 0);
 static inline auto on_modify_actor_value                        = RELOCATION_OFFSET(0x20, 0);
+static inline auto on_absorb_effect_modify_actor_value          = RELOCATION_OFFSET(0x20, 0);
 static inline auto on_dual_modify_actor_value                   = RELOCATION_OFFSET(0x20, 0);
 static inline auto on_peak_modify_actor_value                   = RELOCATION_OFFSET(0x20, 0);
 static inline auto on_dual_modify_actor_value_second_inner_call = RELOCATION_OFFSET(0x5a, 0);
@@ -63,32 +72,22 @@ static inline auto on_value_owner_mod_actor_value_pc            = RELOCATION_OFF
 
 namespace Hooks {
 
-struct OnPlayerCharacterUpdate {
-public:
-  static auto install_hook() -> void {
-    logger::info("start hook OnPlayerCharacterUpdate"sv);
-    update_ = Adresses::on_actor_update_pc.write_vfunc(Offsets::on_actor_update_pc, update);
-    logger::info("finish hook OnPlayerCharacterUpdate"sv);
-  }
-
-private:
-  static auto update(RE::PlayerCharacter* this_, float delta) -> void;
-
-  static inline REL::Relocation<decltype(update)> update_;
-};
-
 struct OnCharacterUpdate {
 public:
   static auto install_hook() -> void {
     logger::info("start hook OnCharacterUpdate"sv);
-    update_ = Adresses::on_actor_update_npc.write_vfunc(Offsets::on_actor_update_npc, update);
+    update_npc_ =
+        Adresses::on_actor_update_npc.write_vfunc(Offsets::on_actor_update_npc, update_npc);
+    update_pc_ = Adresses::on_actor_update_pc.write_vfunc(Offsets::on_actor_update_pc, update_pc);
     logger::info("finish hook OnCharacterUpdate"sv);
   }
 
 private:
-  static auto update(RE::Character* this_, float delta) -> void;
+  static auto update_npc(RE::Character* this_, float delta) -> void;
+  static auto update_pc(RE::PlayerCharacter* this_, float delta) -> void;
 
-  static inline REL::Relocation<decltype(update)> update_;
+  static inline REL::Relocation<decltype(update_npc)> update_npc_;
+  static inline REL::Relocation<decltype(update_pc)>  update_pc_;
 };
 
 struct OnAttackData {
@@ -122,104 +121,66 @@ private:
 
 struct OnModifyActorValue {
 public:
-  static auto install_hook() -> void {
+  static auto install_hook(SKSE::Trampoline& trampoline) -> void {
     logger::info("start hook OnModifyActorValue"sv);
     modify_actor_value_ = Adresses::on_modify_actor_value.write_vfunc(
         Offsets::on_modify_actor_value, modify_actor_value);
+    absorb_effect_modify_actor_value_ = Adresses::on_absorb_effect_modify_actor_value.write_vfunc(
+        Offsets::on_absorb_effect_modify_actor_value, modify_actor_value);
+    peak_modify_actor_value_ = Adresses::on_peak_modify_actor_value.write_vfunc(
+        Offsets::on_peak_modify_actor_value, peak_modify_actor_value);
+    dual_modify_actor_value_ = Adresses::on_dual_modify_actor_value.write_vfunc(
+        Offsets::on_dual_modify_actor_value, dual_modify_actor_value);
+    dual_modify_actor_value_second_inner_call_ =
+        trampoline.write_call<5>(Adresses::on_dual_modify_actor_value_second_inner_call.address() +
+                                     Offsets::on_dual_modify_actor_value_second_inner_call,
+                                 dual_modify_actor_value_second_inner_call);
     logger::info("finish hook OnModifyActorValue"sv);
   }
 
 private:
   static auto modify_actor_value(RE::ValueModifierEffect* this_, RE::Actor* actor, float value,
                                  RE::ActorValue av) -> void;
-
-  static inline REL::Relocation<decltype(modify_actor_value)> modify_actor_value_;
-};
-
-struct OnPeakModifyActorValue {
-public:
-  static auto install_hook() -> void {
-    logger::info("start hook OnPeakModifyActorValue"sv);
-    peak_modify_actor_value_ = Adresses::on_peak_modify_actor_value.write_vfunc(
-        Offsets::on_peak_modify_actor_value, peak_modify_actor_value);
-    logger::info("finish hook OnPeakModifyActorValue"sv);
-  }
-
-private:
+  static auto absorb_effect_modify_actor_value(RE::ValueModifierEffect* this_, RE::Actor* actor,
+                                               float value, RE::ActorValue av) -> void;
   static auto peak_modify_actor_value(RE::ValueModifierEffect* this_, RE::Actor* actor, float value,
                                       RE::ActorValue av) -> void;
-
-  static inline REL::Relocation<decltype(peak_modify_actor_value)> peak_modify_actor_value_;
-};
-
-struct OnDualModifyActorValue {
-public:
-  static auto install_hook() -> void {
-    logger::info("start hook OnDualModifyActorValue"sv);
-    dual_modify_actor_value_ = Adresses::on_dual_modify_actor_value.write_vfunc(
-        Offsets::on_dual_modify_actor_value, dual_modify_actor_value);
-    logger::info("finish hook OnDualModifyActorValue"sv);
-  }
-
-private:
   static auto dual_modify_actor_value(RE::ValueModifierEffect* this_, RE::Actor* actor, float value,
                                       RE::ActorValue av) -> void;
-
-  static inline REL::Relocation<decltype(dual_modify_actor_value)> dual_modify_actor_value_;
-};
-
-struct OnDualModifyActorValueSecondInnerCall {
-public:
-  static auto install_hook(SKSE::Trampoline& trampoline) -> void {
-    logger::info("start hook OnDualModifyActorValueSecondInnerCall"sv);
-    dual_modify_actor_value_second_inner_call_ =
-        trampoline.write_call<5>(Adresses::on_dual_modify_actor_value_second_inner_call.address() +
-                                     Offsets::on_dual_modify_actor_value_second_inner_call,
-                                 dual_modify_actor_value_second_inner_call);
-    logger::info("finish hook OnDualModifyActorValueSecondInnerCall"sv);
-  }
-
-private:
   static auto dual_modify_actor_value_second_inner_call(RE::ValueModifierEffect* this_,
                                                         RE::Actor* actor, float value,
                                                         RE::ActorValue av) -> void;
 
+  static inline REL::Relocation<decltype(modify_actor_value)> modify_actor_value_;
+  static inline REL::Relocation<decltype(absorb_effect_modify_actor_value)>
+      absorb_effect_modify_actor_value_;
+  static inline REL::Relocation<decltype(peak_modify_actor_value)> peak_modify_actor_value_;
+  static inline REL::Relocation<decltype(dual_modify_actor_value)> dual_modify_actor_value_;
   static inline REL::Relocation<decltype(dual_modify_actor_value_second_inner_call)>
       dual_modify_actor_value_second_inner_call_;
 };
 
-struct OnAnimationEventPc {
+struct OnAnimationEvent {
 public:
   static auto install_hook() -> void {
-    logger::info("start hook on_animation_event_pc"sv);
+    logger::info("start hook on_animation_event"sv);
     REL::Relocation<uintptr_t> hook{RELOCATION_ID(261918, 0)};
-    process_event_ = hook.write_vfunc(Offsets::on_animation_event_pc, process_event);
-    logger::info("finish hook on_animation_event_pc"sv);
+    process_event_pc_  = hook.write_vfunc(Offsets::on_animation_event_pc, process_event_pc);
+    process_event_npc_ = Adresses::on_animation_event_npc.write_vfunc(
+        Offsets::on_animation_event_npc, process_event_npc);
+    logger::info("finish hook on_animation_event"sv);
   }
 
 private:
-  static auto process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   this_,
-                            RE::BSAnimationGraphEvent*                     event,
-                            RE::BSTEventSource<RE::BSAnimationGraphEvent>* dispatcher) -> void;
+  static auto process_event_pc(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   this_,
+                               RE::BSAnimationGraphEvent*                     event,
+                               RE::BSTEventSource<RE::BSAnimationGraphEvent>* dispatcher) -> void;
+  static auto process_event_npc(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   this_,
+                                RE::BSAnimationGraphEvent*                     event,
+                                RE::BSTEventSource<RE::BSAnimationGraphEvent>* dispatcher) -> void;
 
-  static inline REL::Relocation<decltype(process_event)> process_event_;
-};
-
-struct OnAnimationEventNpc {
-public:
-  static auto install_hook() -> void {
-    logger::info("start hook on_animation_event_npc"sv);
-    process_event_ =
-        Adresses::on_animation_event_npc.write_vfunc(Offsets::on_animation_event_pc, process_event);
-    logger::info("finish hook on_animation_event_npc"sv);
-  }
-
-private:
-  static auto process_event(RE::BSTEventSink<RE::BSAnimationGraphEvent>*   this_,
-                            RE::BSAnimationGraphEvent*                     event,
-                            RE::BSTEventSource<RE::BSAnimationGraphEvent>* dispatcher) -> void;
-
-  static inline REL::Relocation<decltype(process_event)> process_event_;
+  static inline REL::Relocation<decltype(process_event_pc)>  process_event_pc_;
+  static inline REL::Relocation<decltype(process_event_npc)> process_event_npc_;
 };
 
 struct OnAdjustActiveEffect {
@@ -280,36 +241,51 @@ private:
   static inline REL::Relocation<decltype(melee_collision)> melee_collision_;
 };
 
-struct OnCheckResistanceNpc {
+struct OnHealthMagickaStaminaRegeneration {
 public:
-  static auto install_hook() -> void {
-    logger::info("start hook OnCheckResistanceNPC"sv);
-    check_resistance_ = Adresses::on_check_resistance_npc.write_vfunc(
-        Offsets::on_check_resistance_npc, check_resistance);
-    logger::info("finish hook OnCheckResistanceNPC"sv);
+  static auto install_hook(SKSE::Trampoline& trampoline) -> void {
+    logger::info("Start install"sv);
+    restore_stamina_ = trampoline.write_call<5>(Adresses::on_regeneration_stamina.address() +
+                                                    Offsets::on_regeneration_stamina,
+                                                restore_stamina);
+    restore_health_  = trampoline.write_call<5>(Adresses::on_regeneration_health.address() +
+                                                   Offsets::on_regeneration_health,
+                                               restore_health);
+    restore_magicka_ = trampoline.write_call<5>(Adresses::on_regeneration_magicka.address() +
+                                                    Offsets::on_regeneration_magicka,
+                                                restore_magicka);
+    logger::info("Finish install"sv);
   }
 
 private:
-  static auto check_resistance(RE::MagicTarget* this_, RE::MagicItem* magic_item,
-                               RE::Effect* effect, RE::TESBoundObject* bound_object) -> float;
+  static auto restore_stamina(RE::Actor* actor, RE::ActorValue av, float value) -> void;
+  static auto restore_health(RE::Actor* actor, RE::ActorValue av, float value) -> void;
+  static auto restore_magicka(RE::Actor* actor, RE::ActorValue av, float value) -> void;
 
-  static inline REL::Relocation<decltype(check_resistance)> check_resistance_;
+  static inline REL::Relocation<decltype(restore_stamina)> restore_stamina_;
+  static inline REL::Relocation<decltype(restore_health)>  restore_health_;
+  static inline REL::Relocation<decltype(restore_magicka)> restore_magicka_;
 };
 
-struct OnCheckResistancePc {
+struct OnCheckResistance {
 public:
   static auto install_hook() -> void {
-    logger::info("start hook OnCheckResistancePc"sv);
-    check_resistance_ = Adresses::on_check_resistance_pc.write_vfunc(
-        Offsets::on_check_resistance_pc, check_resistance);
-    logger::info("finish hook OnCheckResistancePc"sv);
+    logger::info("start hook OnCheckResistance"sv);
+    check_resistance_npc_ = Adresses::on_check_resistance_npc.write_vfunc(
+        Offsets::on_check_resistance_npc, check_resistance_npc);
+    check_resistance_pc_ = Adresses::on_check_resistance_pc.write_vfunc(
+        Offsets::on_check_resistance_pc, check_resistance_pc);
+    logger::info("finish hook OnCheckResistance"sv);
   }
 
 private:
-  static auto check_resistance(RE::MagicTarget* this_, RE::MagicItem* magic_item,
-                               RE::Effect* effect, RE::TESBoundObject* bound_object) -> float;
+  static auto check_resistance_npc(RE::MagicTarget* this_, RE::MagicItem* magic_item,
+                                   RE::Effect* effect, RE::TESBoundObject* bound_object) -> float;
+  static auto check_resistance_pc(RE::MagicTarget* this_, RE::MagicItem* magic_item,
+                                  RE::Effect* effect, RE::TESBoundObject* bound_object) -> float;
 
-  static inline REL::Relocation<decltype(check_resistance)> check_resistance_;
+  static inline REL::Relocation<decltype(check_resistance_npc)> check_resistance_npc_;
+  static inline REL::Relocation<decltype(check_resistance_pc)>  check_resistance_pc_;
 };
 
 struct OnEnchIgnoresResistance {
@@ -342,50 +318,45 @@ private:
   static inline REL::Relocation<decltype(get_no_absorb)> get_no_absorb_;
 };
 
-struct OnActorValueOwnerNpc {
+struct OnActorValueOwner {
 public:
   static auto install_hook() -> void {
-    logger::info("start hook OnActorValueOwnerNpc"sv);
-    get_actor_value_ = Adresses::on_value_owner_get_actor_value_npc.write_vfunc(
-        Offsets::on_value_owner_get_actor_value_npc, get_actor_value);
-    set_actor_value_ = Adresses::on_value_owner_set_actor_value_npc.write_vfunc(
-        Offsets::on_value_owner_set_actor_value_npc, set_actor_value);
-    mod_actor_value_ = Adresses::on_value_owner_mod_actor_value_npc.write_vfunc(
-        Offsets::on_value_owner_mod_actor_value_npc, mod_actor_value);
-    logger::info("finish hook OnActorValueOwnerNpc"sv);
+    logger::info("start hook OnActorValueOwner"sv);
+    get_actor_value_npc_ = Adresses::on_value_owner_get_actor_value_npc.write_vfunc(
+        Offsets::on_value_owner_get_actor_value_npc, get_actor_value_npc);
+    set_actor_value_npc_ = Adresses::on_value_owner_set_actor_value_npc.write_vfunc(
+        Offsets::on_value_owner_set_actor_value_npc, set_actor_value_npc);
+    mod_actor_value_npc_ = Adresses::on_value_owner_mod_actor_value_npc.write_vfunc(
+        Offsets::on_value_owner_mod_actor_value_npc, mod_actor_value_npc);
+    get_actor_value_pc_ = Adresses::on_value_owner_get_actor_value_pc.write_vfunc(
+        Offsets::on_value_owner_get_actor_value_pc, get_actor_value_pc);
+    set_actor_value_pc_ = Adresses::on_value_owner_set_actor_value_pc.write_vfunc(
+        Offsets::on_value_owner_set_actor_value_pc, set_actor_value_pc);
+    mod_actor_value_pc_ = Adresses::on_value_owner_mod_actor_value_pc.write_vfunc(
+        Offsets::on_value_owner_mod_actor_value_pc, mod_actor_value_pc);
+    logger::info("finish hook OnActorValueOwner"sv);
   }
 
 private:
-  static auto get_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av) -> float;
-  static auto set_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av, float value) -> void;
-  static auto mod_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av, float value) -> void;
+  static auto get_actor_value_npc(RE::ActorValueOwner* this_, RE::ActorValue av) -> float;
+  static auto set_actor_value_npc(RE::ActorValueOwner* this_, RE::ActorValue av, float value)
+      -> void;
+  static auto mod_actor_value_npc(RE::ActorValueOwner* this_, RE::ActorValue av, float value)
+      -> void;
 
-  static inline REL::Relocation<decltype(get_actor_value)> get_actor_value_;
-  static inline REL::Relocation<decltype(set_actor_value)> set_actor_value_;
-  static inline REL::Relocation<decltype(mod_actor_value)> mod_actor_value_;
-};
+  static auto get_actor_value_pc(RE::ActorValueOwner* this_, RE::ActorValue av) -> float;
+  static auto set_actor_value_pc(RE::ActorValueOwner* this_, RE::ActorValue av, float value)
+      -> void;
+  static auto mod_actor_value_pc(RE::ActorValueOwner* this_, RE::ActorValue av, float value)
+      -> void;
 
-struct OnActorValueOwnerPc {
-public:
-  static auto install_hook() -> void {
-    logger::info("start hook OnActorValueOwnerPc"sv);
-    get_actor_value_ = Adresses::on_value_owner_get_actor_value_pc.write_vfunc(
-        Offsets::on_value_owner_get_actor_value_pc, get_actor_value);
-    set_actor_value_ = Adresses::on_value_owner_set_actor_value_pc.write_vfunc(
-        Offsets::on_value_owner_set_actor_value_pc, set_actor_value);
-    mod_actor_value_ = Adresses::on_value_owner_mod_actor_value_pc.write_vfunc(
-        Offsets::on_value_owner_mod_actor_value_pc, mod_actor_value);
-    logger::info("finish hook OnActorValueOwnerPc"sv);
-  }
+  static inline REL::Relocation<decltype(get_actor_value_npc)> get_actor_value_npc_;
+  static inline REL::Relocation<decltype(set_actor_value_npc)> set_actor_value_npc_;
+  static inline REL::Relocation<decltype(mod_actor_value_npc)> mod_actor_value_npc_;
 
-private:
-  static auto get_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av) -> float;
-  static auto set_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av, float value) -> void;
-  static auto mod_actor_value(RE::ActorValueOwner* this_, RE::ActorValue av, float value) -> void;
-
-  static inline REL::Relocation<decltype(get_actor_value)> get_actor_value_;
-  static inline REL::Relocation<decltype(set_actor_value)> set_actor_value_;
-  static inline REL::Relocation<decltype(mod_actor_value)> mod_actor_value_;
+  static inline REL::Relocation<decltype(get_actor_value_pc)> get_actor_value_pc_;
+  static inline REL::Relocation<decltype(set_actor_value_pc)> set_actor_value_pc_;
+  static inline REL::Relocation<decltype(mod_actor_value_pc)> mod_actor_value_pc_;
 };
 
 auto install_hooks() -> void;

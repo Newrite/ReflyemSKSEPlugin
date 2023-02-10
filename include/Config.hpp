@@ -252,6 +252,53 @@ private:
     RE::BGSListForm* formlist_needkw_;
   };
 
+  struct CastOnBlockParryConfig {
+  public:
+    [[nodiscard]] bool             enable() const { return enable_; }
+    [[nodiscard]] RE::BGSListForm* formlist_spells() const { return formlist_spells_; }
+    [[nodiscard]] RE::BGSListForm* formlist_needkw() const { return formlist_needkw_; }
+
+    CastOnBlockParryConfig(toml::table& tbl, RE::TESDataHandler& data_handler,
+                           const Config& config);
+    CastOnBlockParryConfig() = default;
+
+  private:
+    bool             enable_;
+    RE::BGSListForm* formlist_spells_;
+    RE::BGSListForm* formlist_needkw_;
+  };
+
+  struct CastOnTimingBlockConfig {
+  public:
+    [[nodiscard]] bool             enable() const { return enable_; }
+    [[nodiscard]] RE::BGSListForm* formlist_spells() const { return formlist_spells_; }
+    [[nodiscard]] RE::BGSListForm* formlist_needkw() const { return formlist_needkw_; }
+
+    CastOnTimingBlockConfig(toml::table& tbl, RE::TESDataHandler& data_handler,
+                            const Config& config);
+    CastOnTimingBlockConfig() = default;
+
+  private:
+    bool             enable_;
+    RE::BGSListForm* formlist_spells_;
+    RE::BGSListForm* formlist_needkw_;
+  };
+
+  struct CastOnParryBashConfig {
+  public:
+    [[nodiscard]] bool             enable() const { return enable_; }
+    [[nodiscard]] RE::BGSListForm* formlist_spells() const { return formlist_spells_; }
+    [[nodiscard]] RE::BGSListForm* formlist_needkw() const { return formlist_needkw_; }
+
+    CastOnParryBashConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
+    CastOnParryBashConfig() = default;
+
+  private:
+    bool             enable_;
+    RE::BGSListForm* formlist_spells_;
+    RE::BGSListForm* formlist_needkw_;
+  };
+
   struct ResourceManagerConfig {
   public:
     [[nodiscard]] bool           enable() const { return enable_; }
@@ -637,6 +684,15 @@ private:
   // cast on block
   CastOnBlockConfig cast_on_block_{};
 
+  // cast on block parry
+  CastOnBlockParryConfig cast_on_block_parry_{};
+
+  // cast on timing block
+  CastOnTimingBlockConfig cast_on_timing_block_{};
+
+  // cast on parry bash
+  CastOnParryBashConfig cast_on_parry_bash_{};
+
   // resource manager
   ResourceManagerConfig resource_manager_{};
 
@@ -666,17 +722,26 @@ public:
 
   [[nodiscard]] auto mod_name() const -> const std::string_view& { return mod_name_; }
 
-  [[nodiscard]] const MagicShieldConfig&     magic_shield() const { return magic_shield_; }
-  [[nodiscard]] const PetrifiedBloodConfig&  petrified_blood() const { return petrified_blood_; }
-  [[nodiscard]] const CheatDeathConfig&      cheat_death() const { return cheat_death_; }
-  [[nodiscard]] const VampirismConfig&       vampirism() const { return vampirism_; }
-  [[nodiscard]] const MagicVampirismConfig&  magic_vampirism() const { return magic_vampirism_; }
-  [[nodiscard]] const SpeedCastingConfig&    speed_casting() const { return speed_casting_; }
-  [[nodiscard]] const WeaponCritConfig&      weapon_crit() const { return weapon_crit_; }
-  [[nodiscard]] const MagickCritConfig&      magick_crit() const { return magick_crit_; }
-  [[nodiscard]] const CastOnCritConfig&      cast_on_crit() const { return cast_on_crit_; }
-  [[nodiscard]] const CastOnHitConfig&       cast_on_hit() const { return cast_on_hit_; }
-  [[nodiscard]] const CastOnBlockConfig&     cast_on_block() const { return cast_on_block_; }
+  [[nodiscard]] const MagicShieldConfig&      magic_shield() const { return magic_shield_; }
+  [[nodiscard]] const PetrifiedBloodConfig&   petrified_blood() const { return petrified_blood_; }
+  [[nodiscard]] const CheatDeathConfig&       cheat_death() const { return cheat_death_; }
+  [[nodiscard]] const VampirismConfig&        vampirism() const { return vampirism_; }
+  [[nodiscard]] const MagicVampirismConfig&   magic_vampirism() const { return magic_vampirism_; }
+  [[nodiscard]] const SpeedCastingConfig&     speed_casting() const { return speed_casting_; }
+  [[nodiscard]] const WeaponCritConfig&       weapon_crit() const { return weapon_crit_; }
+  [[nodiscard]] const MagickCritConfig&       magick_crit() const { return magick_crit_; }
+  [[nodiscard]] const CastOnCritConfig&       cast_on_crit() const { return cast_on_crit_; }
+  [[nodiscard]] const CastOnHitConfig&        cast_on_hit() const { return cast_on_hit_; }
+  [[nodiscard]] const CastOnBlockConfig&      cast_on_block() const { return cast_on_block_; }
+  [[nodiscard]] const CastOnBlockParryConfig& cast_on_block_parry() const {
+    return cast_on_block_parry_;
+  }
+  [[nodiscard]] const CastOnTimingBlockConfig& cast_on_timing_block() const {
+    return cast_on_timing_block_;
+  }
+  [[nodiscard]] const CastOnParryBashConfig& cast_on_parry_bash() const {
+    return cast_on_parry_bash_;
+  }
   [[nodiscard]] const ResourceManagerConfig& resource_manager() const { return resource_manager_; }
   [[nodiscard]] const TkDodgeConfig&         tk_dodge() const { return tk_dodge_; }
   [[nodiscard]] const CasterAdditionsConfig& caster_additions() const { return caster_additions_; }

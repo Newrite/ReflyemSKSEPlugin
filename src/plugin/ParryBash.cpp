@@ -44,7 +44,15 @@ auto is_allow_parry_bash(RE::Actor* attacker, RE::Actor* target, const Config& c
   return true;
 }
 
+auto cast_on_parry_bash(RE::Actor& target, RE::Actor& caster, const Config& config) -> void {
+  if (config.cast_on_parry_bash().enable()) {
+    Core::cast_on_handle_formlists(config.cast_on_parry_bash().formlist_needkw(),
+                                   config.cast_on_parry_bash().formlist_spells(), caster, target);
+  }
+}
+
 auto parry_bash_handler(RE::Actor& target, RE::Actor& attacker, const Config& config) -> void {
+  cast_on_parry_bash(target, attacker, config);
   Core::play_sound(config.parry_bash().parry_sound(), &attacker);
   target.SetGraphVariableFloat("StaggerMagnitude", 5.f);
   target.NotifyAnimationGraph("staggerStart");

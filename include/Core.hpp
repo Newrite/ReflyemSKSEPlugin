@@ -24,10 +24,6 @@ template <typename L, typename R> struct Either {
 struct ActorsCache {
   struct Data {
   private:
-    float regen_health_delay_{0.f};
-    float regen_stamina_delay_{0.f};
-    float regen_magicka_delay_{0.f};
-
     float last_delta_update_{0.f};
 
     float cast_on_crit_delay_{0.f};
@@ -73,12 +69,6 @@ struct ActorsCache {
       }
     }
 
-    auto mod_regen_health_delay(const float delta) -> void { mod(regen_health_delay_, delta); }
-
-    auto mod_regen_stamina_delay(const float delta) -> void { mod(regen_stamina_delay_, delta); }
-
-    auto mod_regen_magicka_delay(const float delta) -> void { mod(regen_magicka_delay_, delta); }
-
     auto mod_cast_on_crit_delay(const float delta) -> void { mod(cast_on_crit_delay_, delta); }
 
     auto mod_timing_block_timer(const float delta) -> void { mod(timing_block_timer_, delta); }
@@ -100,19 +90,6 @@ struct ActorsCache {
     [[nodiscard]] float timing_parry_counter_timer() const { return timing_parry_counter_timer_; }
     void                timing_parry_counter_timer(const float timing_parry_counter_timer) {
       set(timing_parry_counter_timer_, timing_parry_counter_timer);
-    }
-
-    [[nodiscard]] float regen_health_delay() const { return regen_health_delay_; }
-    void                regen_health_delay(const float regen_health_delay) {
-      set(regen_health_delay_, regen_health_delay);
-    }
-    [[nodiscard]] float regen_stamina_delay() const { return regen_stamina_delay_; }
-    void                regen_stamina_delay(const float regen_stamina_delay) {
-      set(regen_stamina_delay_, regen_stamina_delay);
-    }
-    [[nodiscard]] float regen_magicka_delay() const { return regen_magicka_delay_; }
-    void                regen_magicka_delay(const float regen_magicka_delay) {
-      set(regen_magicka_delay_, regen_magicka_delay);
     }
 
     [[nodiscard]] float last_delta_update() const { return last_delta_update_; }
@@ -163,22 +140,12 @@ struct ActorsCache {
       const auto negative_delta = -std::abs(delta);
       mod_bash_parry_timer(negative_delta);
       mod_cast_on_crit_delay(negative_delta);
-      mod_regen_health_delay(negative_delta);
-      mod_regen_magicka_delay(negative_delta);
-      mod_regen_stamina_delay(negative_delta);
       mod_timing_block_timer(negative_delta);
       mod_update_50_timer(negative_delta);
       mod_update_100_timer(negative_delta);
       mod_update_1000_timer(negative_delta);
       mod_timing_parry_counter_timer(negative_delta);
     }
-
-    // TODO: Тайминг блок реализовать
-    // Поднимается щит, ставится делей на 1.0 и начинает убывать каждый фрейм, делей меньше 0 быть
-    // не может Последующие удары которые заблокированы, смотрят дельту с 1.0 - делей, если она
-    // меньше нужного значения, засчитывается тайминг блок \ парри флаг на из блокинг, который может
-    // замутироваться только когда делй дойдет до 0 и позволит снова поставить его на 1 при поднятии
-    // щита
   };
 
   using FormsMap = std::unordered_map<RE::FormID, Data>;
@@ -189,7 +156,7 @@ private:
   std::mutex                mutex_;
   static constexpr uint32_t LABEL = 'ACCA';
   // ReSharper disable once CppVariableCanBeMadeConstexpr
-  static const int32_t SERIALIZATION_VERSION = 1;
+  static const int32_t SERIALIZATION_VERSION = 2;
 
   [[nodiscard]] static auto is_garbage(const Data& data) -> bool {
     return (GetTickCount64() - data.last_tick_count()) >= GARBAGE_TIME;
@@ -396,6 +363,9 @@ auto get_second_av(const RE::ActiveEffect& active_effect) -> RE::ActorValue;
 auto getting_damage_mult(RE::Actor& actor) -> float;
 
 auto cast(RE::SpellItem& spell, RE::Actor& target, RE::Actor& caster) -> void;
+
+auto cast_on_handle_formlists(RE::BGSListForm* keywords, RE::BGSListForm* spells, RE::Actor& caster,
+                              RE::Actor& target) -> void;
 
 auto cast_on_handle(RE::TESForm* keyword, RE::TESForm* spell, RE::Actor& target, RE::Actor& caster)
     -> void;
