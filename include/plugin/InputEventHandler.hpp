@@ -1,15 +1,17 @@
 #pragma once
 
-namespace Reflyem {
+namespace Reflyem
+{
 
-class InputEventHandler final : public RE::BSTEventSink<RE::InputEvent*> {
-public:
-  auto ProcessEvent(RE::InputEvent* const* event, RE::BSTEventSource<RE::InputEvent*>* event_source)
-      -> RE::BSEventNotifyControl override;
+struct InputEventHandler final : RE::BSTEventSink<RE::InputEvent*>
+{
+  private:
+  [[nodiscard]] static auto get_singleton() noexcept -> InputEventHandler*;
 
+  public:
   static auto Register() -> void;
 
-private:
-  static auto get_singleton() -> InputEventHandler*;
+  auto ProcessEvent(RE::InputEvent* const* event, RE::BSTEventSource<RE::InputEvent*>* event_source)
+      -> RE::BSEventNotifyControl override;
 };
 } // namespace Reflyem

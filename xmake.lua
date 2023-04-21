@@ -33,7 +33,6 @@ add_requires("commonlibsse-ng", { configs = { skyrim_vr = false, skyrim_ae = fal
 
 -- includes
 includes("res/package.lua")
-add_includedirs("external")
 
 -- targets
 target("Reflyem")
@@ -51,6 +50,7 @@ target("Reflyem")
     add_files("/src/**.cpp")
     -- add_files("src/**.ixx", "src/plugin/**.ixx")
     add_headerfiles("/include/**.hpp")
+    add_headerfiles("/include/pch.h")
     set_pcxxheader("/include/pch.h")
     add_includedirs("/include")
 

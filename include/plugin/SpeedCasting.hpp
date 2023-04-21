@@ -2,7 +2,8 @@
 
 #include "Config.hpp"
 
-namespace Reflyem::SpeedCasting {
+namespace Reflyem::SpeedCasting
+{
 auto on_update_actor(RE::Character& character, float, const Config& config) -> void;
 }
 
