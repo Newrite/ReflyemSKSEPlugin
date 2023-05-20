@@ -26,8 +26,8 @@ auto on_weapon_hit(RE::Actor* target, const RE::HitData& hit_data, const Config&
       Core::cast_on_handle(
           config.cast_on_block().formlist_needkw()->forms[index],
           config.cast_on_block().formlist_spells()->forms[index],
-          *target,
-          *aggressor);
+          *aggressor,
+          *target);
     }
 }
 } // namespace Reflyem::CastOnBlock

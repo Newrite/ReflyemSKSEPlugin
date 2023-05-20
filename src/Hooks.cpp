@@ -26,6 +26,7 @@ static float player_last_delta = 0.f;
 auto update_actor(RE::Character& character, const float delta, const Reflyem::Config& config)
     -> void
 {
+  
   logger::debug("update actor"sv);
 
   auto& actors_cache = Reflyem::Core::ActorsCache::get_singleton();
@@ -245,7 +246,7 @@ auto OnAnimationEvent::process_event_pc(
       Reflyem::ResourceManager::animation_handler(*event, config);
     }
   if (config.tk_dodge().enable()) { Reflyem::TkDodge::animation_handler(*event, config); }
-  Reflyem::ParryBash::animation_handler(*event, config);
+  if (config.parry_bash().enable()) { Reflyem::ParryBash::animation_handler(*event, config); }
   return process_event_pc_(this_, event, dispatcher);
 }
 

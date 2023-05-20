@@ -1,4 +1,5 @@
 #pragma once
+#include "VersionHelpers.h"
 
 namespace Reflyem::Core
 {
@@ -204,6 +205,10 @@ public:
 
   auto garbage_collector() -> void
   {
+    if (!IsWindows8OrGreater())
+    {
+      return;
+    }
     for (const auto& [form_id, data] : cache_map_)
       {
         if (is_garbage(data)) { cache_map_.erase(form_id); }
@@ -212,11 +217,11 @@ public:
 
   auto load(const SKSE::SerializationInterface& interface) -> void
   {
+    const auto lock = std::lock_guard{mutex_};
     uint32_t type;
     uint32_t version;
     uint32_t length;
 
-    mutex_.lock();
     cache_map_.clear();
 
     logger::info("Start read actors cache"sv);
@@ -232,7 +237,6 @@ public:
                 {
                   logger::error("Fail load ser version, return"sv);
                   cache_map_.clear();
-                  mutex_.unlock();
                   return;
                 }
 
@@ -244,7 +248,6 @@ public:
                       serialization_version,
                       SERIALIZATION_VERSION);
                   cache_map_.clear();
-                  mutex_.unlock();
                   return;
                 }
 
@@ -287,11 +290,11 @@ public:
       }
 
     logger::info("Finish read actors cache"sv);
-    mutex_.unlock();
   }
 
   auto save(const SKSE::SerializationInterface& interface) -> void
   {
+    const auto lock = std::lock_guard{mutex_};
     logger::info("Start write actors cache"sv);
 
     if (!interface.OpenRecord(LABEL, 1))
@@ -299,14 +302,11 @@ public:
         logger::error("Error when try open record REFL on save"sv);
         return;
       }
-
-    mutex_.lock();
     garbage_collector();
 
     if (!interface.WriteRecordData(&SERIALIZATION_VERSION, sizeof SERIALIZATION_VERSION))
       {
         logger::error("Failed to write SERIALIZATION_VERSION"sv);
-        mutex_.unlock();
         return;
       }
 
@@ -314,7 +314,6 @@ public:
     if (!interface.WriteRecordData(&size, sizeof size))
       {
         logger::error("Failed to write size of map"sv);
-        mutex_.unlock();
         return;
       }
 
@@ -323,18 +322,15 @@ public:
         if (!interface.WriteRecordData(&form_id, sizeof form_id))
           {
             logger::error("Failed to write form id"sv);
-            mutex_.unlock();
             return;
           }
         if (!interface.WriteRecordData(&data, sizeof data))
           {
             logger::error("Failed to write data"sv);
-            mutex_.unlock();
             return;
           }
       }
     logger::info("Finish write actors cache"sv);
-    mutex_.unlock();
   }
 
   public:
@@ -373,12 +369,16 @@ public:
 
   auto get_or_add(const RE::FormID key) -> std::reference_wrapper<Data>
   {
-    if (exist(key)) { return at(key); }
-    mutex_.lock();
+    const auto lock = std::lock_guard{mutex_};
+    if (exist(key))
+      {
+        const auto data = at(key);
+        return data;
+      }
     garbage_collector();
     cache_map_[key] = Data();
-    mutex_.unlock();
-    return at(key);
+    const auto data = at(key);
+    return data;
   }
 
   static auto get_singleton() noexcept -> ActorsCache&

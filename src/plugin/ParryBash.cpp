@@ -69,7 +69,6 @@ auto cast_on_parry_bash(RE::Actor& target, RE::Actor& caster, const Config& conf
 auto parry_bash_handler(RE::Actor& target, RE::Actor& attacker, const Config& config) -> void
 {
   cast_on_parry_bash(target, attacker, config);
-  RE::HitData hit;
   Core::play_sound(config.parry_bash().parry_sound(), &attacker);
   target.SetGraphVariableFloat("StaggerMagnitude", 5.f);
   target.NotifyAnimationGraph("staggerStart");

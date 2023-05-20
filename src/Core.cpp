@@ -131,6 +131,7 @@ auto get_effects_by_keyword(RE::Actor& actor, const RE::BGSKeyword& keyword)
 {
   auto active_effects = actor.GetActiveEffectList();
   std::vector<RE::ActiveEffect*> effects = {};
+  if (!active_effects) { return effects; }
 
   for (auto active_effect : *active_effects)
     {
@@ -203,6 +204,7 @@ auto getting_damage_mult(RE::Actor& actor) -> float
 auto actor_has_active_mgef_with_keyword(RE::Actor& actor, const RE::BGSKeyword& keyword) -> bool
 {
   auto active_effects = actor.GetActiveEffectList();
+  if (!active_effects) { return false; }
   logger::debug("Start search mgef wigh keyword"sv);
   for (const auto active_effect : *active_effects)
     {
@@ -249,8 +251,10 @@ auto cast_on_handle_formlists(
 
   const auto length_kw = keywords->forms.size();
   const auto length_sp = spells->forms.size();
+  logger::debug("LKW LSP: {} {}", length_kw, length_sp);
   for (std::uint32_t index = 0u; index < length_kw && index < length_sp; index++)
     {
+      logger::debug("LKW LSP index: {}", index);
       cast_on_handle(keywords->forms[index], spells->forms[index], target, caster);
     }
 }
@@ -264,6 +268,8 @@ auto cast_on_handle(RE::TESForm* keyword, RE::TESForm* spell, RE::Actor& target,
 
   RE::BGSKeyword* keyword_ptr = nullptr;
 
+  logger::debug("Cast_On_Handle before cast to keyword and spell");
+
   if (keyword) { keyword_ptr = keyword->As<RE::BGSKeyword>(); }
   const auto spell_ptr = spell->As<RE::SpellItem>();
 
@@ -271,8 +277,10 @@ auto cast_on_handle(RE::TESForm* keyword, RE::TESForm* spell, RE::Actor& target,
 
   if (!keyword_ptr) { allow_cast = true; }
 
+  logger::debug("Cast_On_Handle before call has_absolute_keyword");
   if (!allow_cast && !has_absolute_keyword(caster, *keyword_ptr)) { return; }
 
+  logger::debug("Cast_On_Handle before call cast");
   cast(*spell_ptr, target, caster);
 }
 
@@ -293,12 +301,16 @@ auto is_power_attacking(RE::Actor& actor) -> bool
 
 auto worn_has_keyword(RE::Actor* actor, RE::BGSKeyword* keyword) -> bool
 {
-  if (!actor || keyword) { return false; }
-  auto inv = actor->GetInventoryChanges();
-  if (!inv) { return false; }
-  using FuncT = bool (*)(RE::InventoryChanges*, RE::BGSKeyword*);
-  const REL::Relocation<FuncT> func{RELOCATION_ID(15808, 0)};
-  return func(inv, keyword);
+  if (actor && keyword)
+    {
+      auto inv = actor->GetInventoryChanges();
+      if (!inv) { return false; }
+      using FuncT = bool (*)(RE::InventoryChanges*, RE::BGSKeyword*);
+      const REL::Relocation<FuncT> func{RELOCATION_ID(15808, 0)};
+      logger::debug("Call worn_has_keyword");
+      return func(inv, keyword);
+    }
+  return false;
 }
 
 auto do_combat_spell_apply(RE::Actor* actor, RE::SpellItem* spell, RE::TESObjectREFR* target)
@@ -313,8 +325,12 @@ auto do_combat_spell_apply(RE::Actor* actor, RE::SpellItem* spell, RE::TESObject
 
 auto has_absolute_keyword(RE::Actor& actor, RE::BGSKeyword& keyword) -> bool
 {
-  return actor.HasKeyword(&keyword) || actor_has_active_mgef_with_keyword(actor, keyword) ||
-         worn_has_keyword(&actor, &keyword);
+  logger::debug("Before check keywords in has_absolute_keyword");
+  const auto result = actor.HasKeyword(&keyword) ||
+                      actor_has_active_mgef_with_keyword(actor, keyword) ||
+                      worn_has_keyword(&actor, &keyword);
+  logger::debug("After check keywords in has_absolute_keyword, result: {}", result);
+  return result;
 }
 
 auto is_casting_actor(RE::Character& character) -> bool

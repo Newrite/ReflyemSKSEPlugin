@@ -25,9 +25,9 @@ auto eval_percent(const float value) -> float
 {
   if (value > 100.f) { return 1.f; }
 
-  if (value < 0.f) { return 0.f; }
+  if (value <= 0.f) { return 0.f; }
 
-  return 1.f - (value / 100.f);
+  return value / 100.f;
 };
 
 auto percent_from_enchantment(RE::EnchantmentItem& weapon_ench, const RE::BGSKeyword& keyword)
@@ -49,6 +49,7 @@ auto handle_cast(
     RE::SpellItem& spell,
     const MagnitudeData& data) -> void
 {
+  logger::debug("Start handle cast");
   const auto set_magnitude = [data](RE::Effect* effect) -> void
   {
     if (effect->baseEffect && effect->baseEffect->data.primaryAV != RE::ActorValue::kHealth)
@@ -70,6 +71,7 @@ auto handle_cast(
           if (effect) { set_magnitude(effect); }
         }
     }
+  logger::debug("handle cast: call cast");
   Core::cast(spell, target, caster);
 }
 
@@ -87,6 +89,11 @@ auto handle_cast_magic_weapon_spell(
 
   const auto spells_size = spells->forms.size();
 
+  logger::debug(
+      "SPSIZE {} GSIZE {} KSIZE {}",
+      spells_size,
+      globals->forms.size(),
+      keywords->forms.size());
   if (spells_size != globals->forms.size() || spells_size != keywords->forms.size()) { return; }
 
   const auto total_damage = real_damage;
@@ -94,6 +101,7 @@ auto handle_cast_magic_weapon_spell(
 
   const auto eval_magnitude = [&](const RE::SpellItem& spell, const float percent) -> MagnitudeData
   {
+    logger::debug("Start eval magnitude");
     auto magnitude = total_damage * percent;
 
     if (real_damage >= magnitude) { real_damage = real_damage - magnitude; }
@@ -127,9 +135,12 @@ auto handle_cast_magic_weapon_spell(
         Core::getting_damage_mult(target)};
   };
 
+  logger::debug("Start cycle");
   for (uint32_t index = 0; index < spells_size; index++)
     {
       if (real_damage <= 0.f || hit_data.totalDamage <= 0.f) { return; }
+
+      logger::debug("Current index: {}", index);
 
       const auto spell = spells->forms[index]->As<RE::SpellItem>();
       const auto global = globals->forms[index]->As<RE::TESGlobal>();
@@ -139,32 +150,43 @@ auto handle_cast_magic_weapon_spell(
 
       if (spell->data.delivery != RE::MagicSystem::Delivery::kTouch) { continue; }
 
-      if (global)
+      if (global && global->value != 0.f)
         {
+          logger::debug("In global, global is {}", global->value);
           float value;
           if (global->value < 0.f)
             {
+              logger::debug("Global check weapon keyword");
               if (hit_data.weapon && !hit_data.weapon->HasKeyword(keyword)) { continue; }
               value = std::abs(global->value);
+              logger::debug("Value is: {}", value);
             }
           else
             {
+              logger::debug("Global check has_absolute_keyword");
               if (!Core::has_absolute_keyword(caster, *keyword)) { continue; }
               value = global->value;
+              logger::debug("Value is: {}", value);
             }
 
+          logger::debug("Call handle cast");
           handle_cast(caster, target, *spell, eval_magnitude(*spell, eval_percent(value)));
         }
       else
         {
+          logger::debug("In ench");
           if (!hit_data.weapon) { continue; }
 
+          logger::debug("In ench, call get ench");
           // ReSharper disable once CppTooWideScopeInitStatement
           const auto weapon_ench = hit_data.weapon->formEnchanting;
-          if (!weapon_ench && !weapon_ench->HasKeyword(keyword)) { continue; }
+          logger::debug("In ench, check null and keyword on ench");
+          if (!weapon_ench || !weapon_ench->HasKeyword(keyword)) { continue; }
 
+          logger::debug("Get percent from enchantment");
           const auto percent = percent_from_enchantment(*weapon_ench, *keyword);
           if (!percent.has_value()) { continue; }
+          logger::debug("Percent from enchantment: {}, start handle cast", percent.value());
           handle_cast(caster, target, *spell, eval_magnitude(*spell, percent.value()));
         }
     }
@@ -172,6 +194,8 @@ auto handle_cast_magic_weapon_spell(
 
 auto on_weapon_hit(RE::Actor& target, RE::HitData& hit_data) -> void
 {
+  if (!hit_data.weapon) { return; }
+
   const auto ni_aggressor = hit_data.aggressor.get();
   if (!ni_aggressor) { return; }
   const auto aggressor = ni_aggressor.get();
@@ -181,8 +205,8 @@ auto on_weapon_hit(RE::Actor& target, RE::HitData& hit_data) -> void
   RE::BGSEntryPoint::HandleEntryPoint(
       RE::BGSEntryPoint::ENTRY_POINT::kModIncomingDamage,
       &target,
-      hit_data.weapon,
       aggressor,
+      hit_data.weapon,
       std::addressof(damage_resist));
 
   const auto real_damage = hit_data.physicalDamage * damage_resist;

@@ -39,6 +39,7 @@ auto KillEventHandler::ProcessEvent(
 
           if (config.cast_on_kill().enable())
             {
+            logger::debug("Cast on kill enabled, call kill_handler");
               CastOnKill::kill_handler(*killer, *victim, config);
             }
         }

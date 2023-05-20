@@ -9,7 +9,7 @@ auto is_critical(RE::Actor& aggressor, const RE::ActorValue crit_chance_av) -> b
   const auto crit_chance = static_cast<int>(aggressor.GetActorValue(crit_chance_av));
 
   if (crit_chance <= 0) { return false; }
-  if (crit_chance > 100) { return true; }
+  if (crit_chance >= 100) { return true; }
   if (const auto random = Core::get_random_int(); crit_chance > random) { return true; }
   return false;
 }

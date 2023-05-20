@@ -105,7 +105,7 @@ auto check_resistance(
       return 1.f;
     }
 
-  const auto resist_av = effect.baseEffect->data.resistVariable;
+  auto resist_av = effect.baseEffect->data.resistVariable;
 
   // ReSharper disable once CppCStyleCast  // NOLINT(clang-diagnostic-cast-align)
   const auto actor = (RE::Actor*)((char*)&this_ - 0x98);
@@ -142,6 +142,10 @@ auto check_resistance(
     if (config.resist_tweaks().no_double_resist_check_magick() &&
         second_resist_av == RE::ActorValue::kResistMagic)
       {
+      if (true && resist_av == RE::ActorValue::kNone)
+      {
+        resist_av = RE::ActorValue::kResistMagic;
+      }
         return 1.f;
       }
 

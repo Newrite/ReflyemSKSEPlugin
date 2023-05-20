@@ -200,7 +200,7 @@ Config::PetrifiedBloodConfig::PetrifiedBloodConfig(
   enable_ = tbl[PetrifiedBlood][Enable].value_or(false);
   if (enable_)
     {
-      av_ = static_cast<RE::ActorValue>(tbl[PetrifiedBlood][Enable].value_or(120));
+      av_ = static_cast<RE::ActorValue>(tbl[PetrifiedBlood][ActorValueIndex].value_or(120));
 
       const auto blood_spell_form_id = tbl[PetrifiedBlood][SpellId].value<RE::FormID>();
       blood_spell_ =
