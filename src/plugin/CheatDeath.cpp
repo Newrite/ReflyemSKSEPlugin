@@ -18,7 +18,7 @@ auto cheat_death(RE::Actor& target, float& damage_value, const Config& config) -
   const auto damage_mult = Core::getting_damage_mult(target);
 
   if (const auto health_threshold =
-          target.GetActorValue(RE::ActorValue::kHealth) * (cheat_death_percent / 100.f);
+          Core::get_actor_value_max(&target, RE::ActorValue::kHealth) * (cheat_death_percent / 100.f);
       (damage_value * damage_mult) >= health_threshold)
     {
       damage_value = health_threshold / damage_mult;

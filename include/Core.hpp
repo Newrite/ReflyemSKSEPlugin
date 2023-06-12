@@ -1,8 +1,15 @@
 #pragma once
-#include "VersionHelpers.h"
+#include <VersionHelpers.h>
 
 namespace Reflyem::Core
 {
+
+enum ActorValueMain
+{
+  kHealth,
+  kMagick,
+  kStamina
+};
 
 template <typename L, typename R>
 struct Either final
@@ -205,17 +212,14 @@ public:
 
   auto garbage_collector() -> void
   {
-    if (!IsWindows8OrGreater())
-    {
-      return;
-    }
+    if (!IsWindows8OrGreater()) { return; }
     for (const auto& [form_id, data] : cache_map_)
       {
         if (is_garbage(data)) { cache_map_.erase(form_id); }
       }
   }
 
-  auto load(const SKSE::SerializationInterface& interface) -> void
+  auto load(const SKSE::SerializationInterface& a_interface) -> void
   {
     const auto lock = std::lock_guard{mutex_};
     uint32_t type;
@@ -226,14 +230,14 @@ public:
 
     logger::info("Start read actors cache"sv);
 
-    while (interface.GetNextRecordInfo(type, version, length))
+    while (a_interface.GetNextRecordInfo(type, version, length))
       {
         switch (type)
           {
             case LABEL: {
               int32_t serialization_version;
 
-              if (!interface.ReadRecordData(serialization_version))
+              if (!a_interface.ReadRecordData(serialization_version))
                 {
                   logger::error("Fail load ser version, return"sv);
                   cache_map_.clear();
@@ -253,7 +257,7 @@ public:
 
               size_t size;
 
-              if (!interface.ReadRecordData(size))
+              if (!a_interface.ReadRecordData(size))
                 {
                   logger::error("Fail load size"sv);
                   break;
@@ -262,14 +266,14 @@ public:
               for (size_t i = 0; i < size; ++i)
                 {
                   RE::FormID form_id;
-                  if (!interface.ReadRecordData(form_id))
+                  if (!a_interface.ReadRecordData(form_id))
                     {
                       logger::error("Fail read formid"sv);
                       break;
                     }
 
                   Data data;
-                  if (!interface.ReadRecordData(data))
+                  if (!a_interface.ReadRecordData(data))
                     {
                       logger::error("Fail read formid"sv);
                       break;
@@ -292,26 +296,26 @@ public:
     logger::info("Finish read actors cache"sv);
   }
 
-  auto save(const SKSE::SerializationInterface& interface) -> void
+  auto save(const SKSE::SerializationInterface& a_interface) -> void
   {
     const auto lock = std::lock_guard{mutex_};
     logger::info("Start write actors cache"sv);
 
-    if (!interface.OpenRecord(LABEL, 1))
+    if (!a_interface.OpenRecord(LABEL, 1))
       {
         logger::error("Error when try open record REFL on save"sv);
         return;
       }
     garbage_collector();
 
-    if (!interface.WriteRecordData(&SERIALIZATION_VERSION, sizeof SERIALIZATION_VERSION))
+    if (!a_interface.WriteRecordData(&SERIALIZATION_VERSION, sizeof SERIALIZATION_VERSION))
       {
         logger::error("Failed to write SERIALIZATION_VERSION"sv);
         return;
       }
 
     const size_t size = cache_map_.size();
-    if (!interface.WriteRecordData(&size, sizeof size))
+    if (!a_interface.WriteRecordData(&size, sizeof size))
       {
         logger::error("Failed to write size of map"sv);
         return;
@@ -319,12 +323,12 @@ public:
 
     for (const auto& [form_id, data] : cache_map_)
       {
-        if (!interface.WriteRecordData(&form_id, sizeof form_id))
+        if (!a_interface.WriteRecordData(&form_id, sizeof form_id))
           {
             logger::error("Failed to write form id"sv);
             return;
           }
-        if (!interface.WriteRecordData(&data, sizeof data))
+        if (!a_interface.WriteRecordData(&data, sizeof data))
           {
             logger::error("Failed to write data"sv);
             return;
@@ -334,24 +338,24 @@ public:
   }
 
   public:
-  static auto skse_save_callback(SKSE::SerializationInterface* interface) -> void
+  static auto skse_save_callback(SKSE::SerializationInterface* a_interface) -> void
   {
-    if (!interface)
+    if (!a_interface)
       {
         logger::error("Null skse serialization interface error when save"sv);
         return;
       }
-    get_singleton().save(*interface);
+    get_singleton().save(*a_interface);
   }
 
-  static auto skse_load_callback(SKSE::SerializationInterface* interface) -> void
+  static auto skse_load_callback(SKSE::SerializationInterface* a_interface) -> void
   {
-    if (!interface)
+    if (!a_interface)
       {
         logger::error("Null skse serialization interface error when load"sv);
         return;
       }
-    get_singleton().load(*interface);
+    get_singleton().load(*a_interface);
   }
 
   auto at_try(const RE::FormID key) -> std::optional<std::reference_wrapper<Data>>
@@ -398,6 +402,10 @@ auto bound_data_comparer(
     const int16_t comparer_value) -> bool;
 
 auto get_random_int() -> int;
+
+auto actor_from_ni_pointer(const RE::NiPointer<RE::TESObjectREFR>* ni_actor) -> RE::Actor*;
+
+auto is_player_ally(RE::Actor* actor) -> bool;
 
 auto damage_actor_value(RE::Actor& actor, RE::ActorValue av, float value) -> void;
 
@@ -466,6 +474,10 @@ auto apply_all_combat_spells_from_attack(
     RE::TESObjectWEAP* weapon,
     bool is_left,
     RE::Actor* target) -> void;
+
+auto get_poison(RE::InventoryEntryData* _this) -> RE::AlchemyItem*;
+
+auto get_actor_value_max(RE::Actor* actor, const RE::ActorValue av) -> float;
 
 auto get_weapon(const RE::Actor& actor, const bool is_left_hand, RE::TESObjectWEAP* fallback_weapon)
     -> RE::TESObjectWEAP*;

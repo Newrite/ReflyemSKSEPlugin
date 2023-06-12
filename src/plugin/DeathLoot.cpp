@@ -1,62 +1,107 @@
-﻿namespace Reflyem::DeathLoot
+﻿#include "Config.hpp"
+#include "Core.hpp"
+namespace Reflyem::DeathLoot
 {
+static const char* hide_tag = "hide_tag";
 
 [[nodiscard]] auto is_playable(const RE::TESForm* form) noexcept -> bool
 {
-  return (form->GetFormFlags() & RE::TESForm::RecordFlags::kPlayable) != 0;
+  return true;
+  // return (form->GetFormFlags() & RE::TESForm::RecordFlags::kPlayable) != 0;
 }
 
 auto is_loot(const std::unique_ptr<RE::InventoryEntryData>& data) -> bool
 {
   if (!is_playable(data->object)) { return false; }
 
-  if (data->IsEnchanted() || data->IsQuestObject()) { return true; }
+  if (data->IsEnchanted() || data->IsQuestObject())
+    {
+      logger::info("Enchanted {} or Quested {}"sv, data->IsEnchanted(), data->IsQuestObject());
+      return true;
+    }
 
   const auto form_type = data->object->formType.get();
 
   if (form_type == RE::TESObjectWEAP::FORMTYPE || form_type == RE::TESObjectARMO::FORMTYPE)
     {
+      logger::info("Weapon or Armo: {}"sv, form_type);
       return false;
     }
 
   return true;
 }
 
-auto process_death(const RE::TESDeathEvent* event, RE::BSTEventSource<RE::TESDeathEvent>*) -> void
+auto is_tagged_extra_text_display_data(const RE::ExtraTextDisplayData* data) -> bool
 {
-  if (event->dead)
+  if (data && data->displayName == hide_tag)
     {
-      logger::info("Dying is dead"sv);
-      return;
+      logger::info("DisplayData {} == {}"sv, data->displayName.c_str(), hide_tag);
+      return true;
+    }
+  logger::info("Display data null or not equal"sv);
+  return false;
+}
+
+auto is_tagged(RE::InventoryEntryData* item) -> bool
+{
+  if (!item || !item->extraLists) { return false; }
+  logger::info("Check is tag for {}"sv, item->object->GetName());
+  const auto end = item->extraLists->end();
+  for (auto it = item->extraLists->begin(); it != end; ++it)
+    {
+      const auto& list = *it;
+      if (is_tagged_extra_text_display_data(list->GetExtraTextDisplayData()))
+        {
+          logger::info("Item {} is tagged"sv, item->object->GetName());
+          return true;
+        }
     }
 
-  let actor_from_pointer = [](const RE::NiPointer<RE::TESObjectREFR>* ni_actor) -> RE::Actor*
+  return false;
+}
+
+auto add_tag(RE::InventoryEntryData* item) -> void
+{
+  // if (is_tagged(item)) { return; }
+
+  if (!item)
   {
-    if (!ni_actor) { return nullptr; }
-    let refr = ni_actor->get();
-    if (!refr) { return nullptr; }
+    logger::info("Null item in add tag"sv);
+  }
+  if (!item->extraLists)
+  {
+    logger::info("Null extra lists for item {}"sv, item->object->GetName());
+    item->extraLists = new RE::BSSimpleList<RE::ExtraDataList*>();
+    item->extraLists->push_front(new RE::ExtraDataList());
+  }
+  logger::info("Check add tag for {}"sv, item->object->GetName());
+  
+  const auto end = item->extraLists->end();
+  for (auto it = item->extraLists->begin(); it != end; ++it)
+    {
+      const auto& list = *it;
+      const auto extra_data = list->GetExtraTextDisplayData();
 
-    return refr->As<RE::Actor>();
-  };
+      if (extra_data)
+        {
+          logger::info("Item {} displayName change to tag"sv, item->object->GetName());
+          extra_data->SetName(hide_tag);
+          return;
+        }
 
-  let dead_actor = actor_from_pointer(&event->actorDying);
+      logger::info("Item {} tag added"sv, item->object->GetName());
+      list->Add(new RE::ExtraTextDisplayData(hide_tag));
+      return;
+    }
+}
 
-  let killer_actor = actor_from_pointer(&event->actorKiller);
+auto process_death(const RE::TESDeathEvent* event, RE::BSTEventSource<RE::TESDeathEvent>*) -> void
+{
+  letr config = Config::get_singleton();
 
-  // let is_player_ally = [](RE::Actor* actor) -> bool
-  // {
-  //   if (!actor) { return false; }
-  //   let player = RE::PlayerCharacter::GetSingleton();
-  //   if (!player) { return false; }
-  //   return actor->IsPlayerTeammate() || !actor->IsHostileToActor(player);
-  // };
+  let dead_actor = Core::actor_from_ni_pointer(&event->actorDying);
 
-  // let can_process = [&]() -> bool
-  // {
-  //   if (killer_actor && killer_actor->IsPlayerRef()) { return true; }
-  //   if (dead_actor && is_player_ally(dead_actor)) { return false; }
-  //   return false;
-  // }();
+  let killer_actor = Core::actor_from_ni_pointer(&event->actorKiller);
 
   if (!dead_actor)
     {
@@ -64,41 +109,63 @@ auto process_death(const RE::TESDeathEvent* event, RE::BSTEventSource<RE::TESDea
       return;
     }
 
-  if (!killer_actor)
-    {
-      logger::info("Killer actor is null"sv);
-      return;
-    }
+  let can_process = [&]() -> bool
+  {
+    if (killer_actor && (killer_actor->IsPlayerRef() || Core::is_player_ally(killer_actor)))
+      {
+        return true;
+      }
+    return false;
+  }();
 
   let gold = RE::TESForm::LookupByID<RE::TESObjectMISC>(0xf);
 
   auto gold_count = 0;
 
+  logger::info("CanProcess: {}"sv, can_process);
+
   for (auto& [object, pair] : dead_actor->GetInventory())
     {
-      if (!object || !pair.second || !pair.second->object)
+      const auto count = pair.first;
+      const auto& entry_data = pair.second;
+
+      if (!object || !entry_data || !entry_data->object)
         {
           logger::info("Object null"sv);
           continue;
         }
 
-      if (object->formID != gold->formID) { gold_count += object->GetGoldValue() * pair.first; }
+      const auto is_loot_item = is_loot(entry_data);
 
-      logger::info("Check loot: {}"sv, pair.second->GetDisplayName());
-      if (is_loot(pair.second))
+      logger::info("Check loot: {} result: {}"sv, entry_data->GetDisplayName(), is_loot_item);
+      if (is_loot_item)
         {
-          logger::info("This is loot: {}"sv, pair.second->GetDisplayName());
-          dead_actor->RemoveItem(
-              pair.second->object,
-              pair.first,
-              RE::ITEM_REMOVE_REASON::kStoreInContainer,
-              nullptr,
-              killer_actor);
+          logger::info("This is loot: {}"sv, entry_data->GetDisplayName());
+          if (config.death_loot().auto_loot() && can_process)
+            {
+              dead_actor->RemoveItem(
+                  entry_data->object,
+                  count,
+                  RE::ITEM_REMOVE_REASON::kStoreInContainer,
+                  nullptr,
+                  killer_actor);
+            }
+          continue;
+        }
+      if (!object->IsGold() && is_playable(entry_data->object) && !is_tagged(entry_data.get()))
+        {
+          gold_count += static_cast<int>(
+              static_cast<float>(object->GetGoldValue()) * config.death_loot().gold_value_mult() *
+              static_cast<float>(count));
+          add_tag(entry_data.get());
         }
     }
 
   logger::info("gold count: {}"sv, gold_count);
-  if (gold_count > 0) { killer_actor->AddObjectToContainer(gold, nullptr, gold_count, nullptr); }
+  if (gold_count > 0 && can_process)
+    {
+      killer_actor->AddObjectToContainer(gold, nullptr, gold_count, nullptr);
+    }
 }
 
 } // namespace Reflyem::DeathLoot

@@ -156,12 +156,20 @@ auto is_allow_dodge(RE::PlayerCharacter& player, const DrainValues& drain_values
 
 auto get_key_hold_duration(const std::uint32_t a_index, float& result) -> bool
 {
-  const auto input_mgr = RE::BSInputDeviceManager::GetSingleton();
 
-  if (input_mgr && input_mgr->GetKeyboard()->IsPressed(a_index) &&
-      input_mgr->GetKeyboard()->deviceButtons.find(a_index)->second)
+  const auto is_pressed_reimplement = [](const std::uint32_t key_code, std::uint8_t cur_state[256]) -> bool
+  {
+    return (key_code < sizeof(cur_state)) && ((cur_state[key_code] & 0x80) != 0);
+  };
+  
+  const auto input_mgr = RE::BSInputDeviceManager::GetSingleton();
+  if (!input_mgr) { return false; }
+  const auto keyboard = input_mgr->GetKeyboard();
+  if (!keyboard) { return false; }
+  const auto is_pressed = is_pressed_reimplement(a_index, keyboard->curState);
+  if (is_pressed && keyboard->deviceButtons.find(a_index)->second)
     {
-      result = input_mgr->GetKeyboard()->deviceButtons.find(a_index)->second->heldDownSecs;
+      result = keyboard->deviceButtons.find(a_index)->second->heldDownSecs;
       return true;
     }
 
@@ -214,19 +222,22 @@ auto get_game_pad_direction_value() -> MovementDirections
       // ReSharper disable once CppCStyleCast
       if (const auto game_pad = (RE::BSWin32GamepadDevice*)(input_mgr->GetGamepad()))
         {
-          logger::debug("Current LX is {}, Current LY is {}"sv, game_pad->curLX, game_pad->curLY);
+          logger::debug(
+              "Current LX is {}, Current LY is {}"sv,
+              game_pad->currentLX,
+              game_pad->currentLY);
 
-          const float dir_xy[2] = {game_pad->curLX, game_pad->curLY};
+          const float dir_xy[2] = {game_pad->currentLX, game_pad->currentLY};
           static constexpr float dir_base[2] = {0, 1.0f};
 
-          float power = sqrt(std::powf(game_pad->curLX, 2) + std::powf(game_pad->curLY, 2));
+          float power = sqrt(std::powf(game_pad->currentLX, 2) + std::powf(game_pad->currentLY, 2));
           logger::debug("Current Power is {}"sv, power);
 
           float theta = (dir_xy[0] * dir_base[0] + dir_xy[1] * dir_base[1]) /
                         sqrt(dir_xy[0] * dir_xy[0] + dir_xy[1] * dir_xy[1]) /
                         sqrt(dir_base[0] * dir_base[0] + dir_base[1] * dir_base[1]);
 
-          theta = game_pad->curLX >= 0.f ? std::acos(theta) : -std::acos(theta);
+          theta = game_pad->currentLX >= 0.f ? std::acos(theta) : -std::acos(theta);
           logger::debug("theta is {}"sv, theta);
 
           auto dir = normal_absolute_angle(theta);
@@ -365,7 +376,7 @@ auto animation_handler(const RE::BSAnimationGraphEvent& event, const Config& con
 
   if (const auto actor = const_cast<RE::Actor*>(event.holder->As<RE::Actor>()); actor)
     {
-      switch (AnimationEventHandler::try_find_animation(fmt::format("{}"sv, event.tag)))
+      switch (AnimationEventHandler::try_find_animation(event.tag.c_str()))
         {
           case AnimationEventHandler::AnimationEvent::kTkDodgeStart: {
             if (const auto drain_values = get_drain_value(*actor, config))

@@ -1,10 +1,12 @@
 #include "Hooks.hpp"
 #include "Core.hpp"
+#include "plugin/AnimationEventHandler.hpp"
 #include "plugin/CastOnBlock.hpp"
 #include "plugin/CastOnHit.hpp"
 #include "plugin/CasterAdditions.hpp"
 #include "plugin/CheatDeath.hpp"
 #include "plugin/Crit.hpp"
+#include "plugin/DeathLoot.hpp"
 #include "plugin/EquipLoad.hpp"
 #include "plugin/ItemLimit.hpp"
 #include "plugin/MagicShield.hpp"
@@ -14,6 +16,7 @@
 #include "plugin/ResistTweaks.hpp"
 #include "plugin/ResourceManager.hpp"
 #include "plugin/SpeedCasting.hpp"
+#include "plugin/StaminaShield.hpp"
 #include "plugin/TKDodge.hpp"
 #include "plugin/TimingBlock.hpp"
 #include "plugin/Vampirism.hpp"
@@ -26,7 +29,6 @@ static float player_last_delta = 0.f;
 auto update_actor(RE::Character& character, const float delta, const Reflyem::Config& config)
     -> void
 {
-  
   logger::debug("update actor"sv);
 
   auto& actors_cache = Reflyem::Core::ActorsCache::get_singleton();
@@ -101,6 +103,42 @@ auto update_actor(RE::Character& character, const float delta, const Reflyem::Co
           Reflyem::ItemLimit::update_actor(character, delta, config);
         }
     }
+}
+
+auto on_modify_actor_value(
+    RE::ValueModifierEffect* this_,
+    RE::Actor* actor,
+    float& value,
+    RE::ActorValue av) -> void
+{
+  auto& config = Reflyem::Config::get_singleton();
+
+  if (config.magick_crit().enable())
+    {
+      Reflyem::Crit::modify_actor_value(this_, actor, value, av, config);
+    }
+
+  if (config.cheat_death().enable() && config.cheat_death().magick())
+    {
+      Reflyem::CheatDeath::modify_actor_value(this_, actor, value, av, config);
+    }
+
+  if (config.petrified_blood().enable() && config.petrified_blood().magick())
+    {
+      Reflyem::PetrifiedBlood::modify_actor_value(this_, actor, value, av, config);
+    }
+
+  if (config.stamina_shield().enable() && config.stamina_shield().magick())
+  {
+    Reflyem::StaminaShield::modify_actor_value(this_, actor, value, av, config);
+  }
+
+  if (config.magic_shield().enable() && config.magic_shield().magick())
+    {
+      Reflyem::MagicShield::modify_actor_value(this_, actor, value, av, config);
+    }
+
+  Reflyem::Vampirism::modify_actor_value(this_, actor, value, av, config);
 }
 
 auto OnCharacterUpdate::update_pc(RE::PlayerCharacter* this_, float delta) -> void
@@ -197,6 +235,19 @@ auto OnAttackData::process_attack(RE::ActorValueOwner* value_owner, RE::BGSAttac
   process_attack_(value_owner, attack_data);
   return;
 }
+auto OnInventoryOpen::is_displayed_item(RE::InventoryEntryData* item) -> bool
+{
+  logger::debug("In open inv hook"sv);
+  if (!item) { return is_displayed_item_(item); }
+
+  const auto& config = Reflyem::Config::get_singleton();
+  if (config.death_loot().enable())
+    {
+      return is_displayed_item_(item) && !Reflyem::DeathLoot::is_tagged(item);
+    }
+
+  return is_displayed_item_(item);
+}
 
 auto OnAttackAction::attack_action(const RE::TESActionData* action_data) -> bool
 {
@@ -245,6 +296,54 @@ auto OnAnimationEvent::process_event_pc(
     {
       Reflyem::ResourceManager::animation_handler(*event, config);
     }
+  // if (Reflyem::AnimationEventHandler::try_find_animation(event->tag.c_str()) ==
+  // Reflyem::AnimationEventHandler::AnimationEvent::kWeaponSwing)
+  // {
+  //   logger::info("WeaponSwing"sv);
+  //   const auto data_handler = RE::TESDataHandler::GetSingleton();
+  //   constexpr auto mod_name = "[RfaD] Pickpocket Rebalance.esp"sv;
+  //   constexpr RE::FormID arrow_id = 0x45FA22;
+  //   constexpr RE::FormID dagger_id = 0x45FA21;
+  //   const auto arrow = data_handler->LookupForm<RE::TESAmmo>(arrow_id, mod_name);
+  //   const auto dagger = data_handler->LookupForm<RE::TESObjectWEAP>(dagger_id, mod_name);
+  //   const auto actor = const_cast<RE::Actor*>(event->holder->As<RE::Actor>());
+  //   const auto current_process = actor->currentProcess;
+  //   const auto weap = actor->GetEquippedEntryData(false);
+  //   logger::info("Start equals"sv);
+  //   if (weap->GetWeight() == dagger->GetWeight())
+  //   {
+  //     RE::NiAVObject* fire_node;
+  //
+  //     if (current_process) {
+  //       const auto& biped = actor->GetBiped2();
+  //       fire_node = dagger->IsCrossbow() ? current_process->GetMagicNode(biped) :
+  //       current_process->GetWeaponNode(biped);
+  //     } else {
+  //       fire_node = dagger->GetFireNode(actor->IsPlayerRef() ? actor->GetCurrent3D() :
+  //       actor->Get3D2());
+  //     }
+  //
+  //     RE::NiPoint3      origin;
+  //     RE::Projectile::ProjectileRot angles{};
+  //
+  //     if (fire_node) {
+  //       origin = fire_node->world.translate;
+  //       actor->Unk_A0(fire_node, angles.x, angles.z, origin);
+  //     } else {
+  //       origin = actor->GetPosition();
+  //       origin.z += 96.0f;
+  //
+  //       angles.x = actor->GetAimAngle();
+  //       angles.z = actor->GetAimHeading();
+  //     }
+  //     RE::ProjectileHandle handle;
+  //     auto launch_data = RE::Projectile::LaunchData(actor, origin, angles, arrow, dagger);
+  //     launch_data.enchantItem = weap->GetEnchantment();
+  //     launch_data.poison = Reflyem::Core::get_poison(weap);
+  //     RE::Projectile::Launch(&handle, launch_data);
+  //   }
+  //
+  // }
   if (config.tk_dodge().enable()) { Reflyem::TkDodge::animation_handler(*event, config); }
   if (config.parry_bash().enable()) { Reflyem::ParryBash::animation_handler(*event, config); }
   return process_event_pc_(this_, event, dispatcher);
@@ -301,32 +400,9 @@ auto OnModifyActorValue::modify_actor_value(
       return;
     }
 
-  auto& config = Reflyem::Config::get_singleton();
-
-  if (config.magick_crit().enable())
-    {
-      Reflyem::Crit::modify_actor_value(this_, actor, value, av, config);
-    }
-
-  if (config.cheat_death().enable() && config.cheat_death().magick())
-    {
-      Reflyem::CheatDeath::modify_actor_value(this_, actor, value, av, config);
-    }
-
-  if (config.petrified_blood().enable() && config.petrified_blood().magick())
-    {
-      Reflyem::PetrifiedBlood::modify_actor_value(this_, actor, value, av, config);
-    }
-
-  if (config.magic_shield().enable() && config.magic_shield().magick())
-    {
-      Reflyem::MagicShield::modify_actor_value(this_, actor, value, av, config);
-    }
-
-  Reflyem::Vampirism::modify_actor_value(this_, actor, value, av, config);
+  on_modify_actor_value(this_, actor, value, av);
 
   modify_actor_value_(this_, actor, value, av);
-  return;
 }
 
 auto OnModifyActorValue::absorb_effect_modify_actor_value(
@@ -341,32 +417,9 @@ auto OnModifyActorValue::absorb_effect_modify_actor_value(
       return;
     }
 
-  auto& config = Reflyem::Config::get_singleton();
-
-  if (config.magick_crit().enable())
-    {
-      Reflyem::Crit::modify_actor_value(this_, actor, value, av, config);
-    }
-
-  if (config.cheat_death().enable() && config.cheat_death().magick())
-    {
-      Reflyem::CheatDeath::modify_actor_value(this_, actor, value, av, config);
-    }
-
-  if (config.petrified_blood().enable() && config.petrified_blood().magick())
-    {
-      Reflyem::PetrifiedBlood::modify_actor_value(this_, actor, value, av, config);
-    }
-
-  if (config.magic_shield().enable() && config.magic_shield().magick())
-    {
-      Reflyem::MagicShield::modify_actor_value(this_, actor, value, av, config);
-    }
-
-  Reflyem::Vampirism::modify_actor_value(this_, actor, value, av, config);
+  on_modify_actor_value(this_, actor, value, av);
 
   absorb_effect_modify_actor_value_(this_, actor, value, av);
-  return;
 }
 
 auto OnModifyActorValue::peak_modify_actor_value(
@@ -383,32 +436,9 @@ auto OnModifyActorValue::peak_modify_actor_value(
       return;
     }
 
-  auto& config = Reflyem::Config::get_singleton();
-
-  if (config.magick_crit().enable())
-    {
-      Reflyem::Crit::modify_actor_value(this_, actor, value, av, config);
-    }
-
-  if (config.cheat_death().enable() && config.cheat_death().magick())
-    {
-      Reflyem::CheatDeath::modify_actor_value(this_, actor, value, av, config);
-    }
-
-  if (config.petrified_blood().enable() && config.petrified_blood().magick())
-    {
-      Reflyem::PetrifiedBlood::modify_actor_value(this_, actor, value, av, config);
-    }
-
-  if (config.magic_shield().enable() && config.magic_shield().magick())
-    {
-      Reflyem::MagicShield::modify_actor_value(this_, actor, value, av, config);
-    }
-
-  Reflyem::Vampirism::modify_actor_value(this_, actor, value, av, config);
+  on_modify_actor_value(this_, actor, value, av);
 
   peak_modify_actor_value_(this_, actor, value, av);
-  return;
 }
 
 auto OnModifyActorValue::dual_modify_actor_value(
@@ -423,32 +453,9 @@ auto OnModifyActorValue::dual_modify_actor_value(
       return;
     }
 
-  auto& config = Reflyem::Config::get_singleton();
-
-  if (config.magick_crit().enable())
-    {
-      Reflyem::Crit::modify_actor_value(this_, actor, value, av, config);
-    }
-
-  if (config.cheat_death().enable() && config.cheat_death().magick())
-    {
-      Reflyem::CheatDeath::modify_actor_value(this_, actor, value, av, config);
-    }
-
-  if (config.petrified_blood().enable() && config.petrified_blood().magick())
-    {
-      Reflyem::PetrifiedBlood::modify_actor_value(this_, actor, value, av, config);
-    }
-
-  if (config.magic_shield().enable() && config.magic_shield().magick())
-    {
-      Reflyem::MagicShield::modify_actor_value(this_, actor, value, av, config);
-    }
-
-  Reflyem::Vampirism::modify_actor_value(this_, actor, value, av, config);
+  on_modify_actor_value(this_, actor, value, av);
 
   dual_modify_actor_value_(this_, actor, value, av);
-  return;
 }
 
 auto OnModifyActorValue::dual_modify_actor_value_second_inner_call(
@@ -463,32 +470,9 @@ auto OnModifyActorValue::dual_modify_actor_value_second_inner_call(
       return;
     }
 
-  auto& config = Reflyem::Config::get_singleton();
-
-  if (config.magick_crit().enable())
-    {
-      Reflyem::Crit::modify_actor_value(this_, actor, value, av, config);
-    }
-
-  if (config.cheat_death().enable() && config.cheat_death().magick())
-    {
-      Reflyem::CheatDeath::modify_actor_value(this_, actor, value, av, config);
-    }
-
-  if (config.petrified_blood().enable() && config.petrified_blood().magick())
-    {
-      Reflyem::PetrifiedBlood::modify_actor_value(this_, actor, value, av, config);
-    }
-
-  if (config.magic_shield().enable() && config.magic_shield().magick())
-    {
-      Reflyem::MagicShield::modify_actor_value(this_, actor, value, av, config);
-    }
-
-  Reflyem::Vampirism::modify_actor_value(this_, actor, value, av, config);
+  on_modify_actor_value(this_, actor, value, av);
 
   dual_modify_actor_value_second_inner_call_(this_, actor, value, av);
-  return;
 }
 
 auto OnMainUpdate::main_update(RE::Main* this_, float unk) -> void
@@ -547,6 +531,11 @@ auto OnWeaponHit::weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void
       Reflyem::PetrifiedBlood::on_weapon_hit(target, hit_data, config);
     }
 
+  if (config.stamina_shield().enable() && config.stamina_shield().physical())
+  {
+    Reflyem::StaminaShield::on_weapon_hit(target, hit_data, config);
+  }
+  
   if (config.magic_shield().enable() && config.magic_shield().physical())
     {
       Reflyem::MagicShield::on_weapon_hit(target, hit_data, config);
@@ -555,6 +544,25 @@ auto OnWeaponHit::weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void
   Reflyem::Vampirism::on_weapon_hit(target, hit_data, config);
 
   return weapon_hit_(target, hit_data);
+}
+
+auto OnTrapHit::trap_hit(RE::Actor* target, RE::HitData* hit_data) -> void
+{
+  if (!target) { return trap_hit_(target, hit_data); }
+
+  // const auto is_trap_tweak = true;
+  //   if (is_trap_tweak)
+  //   {
+  //     auto damage_resist = 1.f;
+  //     RE::BGSEntryPoint::HandleEntryPoint(
+  //         RE::BGSEntryPoint::ENTRY_POINT::kModIncomingDamage,
+  //         &target,
+  //         aggressor,
+  //         hit_data.weapon,
+  //         std::addressof(damage_resist));
+  //   }
+
+  return trap_hit_(target, hit_data);
 }
 
 auto OnMeleeCollision::melee_collision(
@@ -804,6 +812,8 @@ auto install_hooks() -> void
   trampoline.create(1024);
   OnMeleeCollision::install_hook(trampoline);
   OnWeaponHit::install_hook(trampoline);
+  OnTrapHit::install_hook(trampoline);
+  OnInventoryOpen::install_hook(trampoline);
   // OnCheckResistance::install_hook(trampoline);
   OnCheckResistance::install_hook();
   OnEnchIgnoresResistance::install_hook();

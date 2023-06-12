@@ -28,6 +28,53 @@ auto ignores_resistance(const RE::MagicItem& this_) -> bool
          Core::bound_data_comparer(this_.boundData, EnchFlag::kTotal);
 }
 
+auto resist_value_after_penetration(RE::Actor* value_owner, const RE::ActorValue resist_av) -> float
+{
+  const auto& config = Config::get_singleton();
+  const auto resist_value = value_owner->GetActorValue(resist_av);
+
+  if (!config.resist_tweaks().enable_resist_penetration()) { return resist_value; }
+
+  auto penetration_value = value_owner->GetActorValue(config.resist_tweaks().penetration_av());
+
+  if (resist_av == RE::ActorValue::kDamageResist &&
+      config.resist_tweaks().enable_damage_resist_tweak() &&
+      config.resist_tweaks().no_av_damage_resist_penetration())
+    {
+      penetration_value = 0.f;
+    }
+
+  const auto active_effects_with_keyword =
+      Core::get_effects_by_keyword(*value_owner, *config.resist_tweaks().penetration_kw());
+
+  for (const auto active_effect : active_effects_with_keyword)
+    {
+      if (Core::get_second_av(*active_effect) != resist_av) { continue; }
+
+      if (active_effect->effect->baseEffect->data.flags.any(
+              RE::EffectSetting::EffectSettingData::Flag::kDetrimental))
+        {
+          penetration_value -= active_effect->magnitude;
+          continue;
+        }
+
+      penetration_value += active_effect->magnitude;
+    }
+
+  if (static_cast<int32_t>(penetration_value) > config.resist_tweaks().penetration_high())
+    {
+      penetration_value = static_cast<float>(config.resist_tweaks().penetration_high());
+    }
+
+  if (config.resist_tweaks().flat_penetration()) { return resist_value - penetration_value; }
+
+  if (penetration_value <= 0.f) { return resist_value; }
+
+  if (penetration_value >= 100.f) { return 0.f; }
+
+  return resist_value * (1 - (penetration_value / 100.f));
+};
+
 auto check_resistance(
     RE::MagicTarget& this_,
     RE::MagicItem& magic_item,
@@ -35,53 +82,6 @@ auto check_resistance(
     const RE::TESBoundObject* bound_object,
     const Config& config) -> float
 {
-  const auto resist_value_after_penetration =
-      [config](RE::Actor* value_owner, const RE::ActorValue resist_av) -> float
-  {
-    const auto resist_value = value_owner->GetActorValue(resist_av);
-
-    if (!config.resist_tweaks().enable_resist_penetration()) { return resist_value; }
-
-    auto penetration_value = value_owner->GetActorValue(config.resist_tweaks().penetration_av());
-
-    if (resist_av == RE::ActorValue::kDamageResist &&
-        config.resist_tweaks().enable_damage_resist_tweak() &&
-        config.resist_tweaks().no_av_damage_resist_penetration())
-      {
-        penetration_value = 0.f;
-      }
-
-    const auto active_effects_with_keyword =
-        Core::get_effects_by_keyword(*value_owner, *config.resist_tweaks().penetration_kw());
-
-    for (const auto active_effect : active_effects_with_keyword)
-      {
-        if (Core::get_second_av(*active_effect) != resist_av) { continue; }
-
-        if (active_effect->effect->baseEffect->data.flags.any(
-                RE::EffectSetting::EffectSettingData::Flag::kDetrimental))
-          {
-            penetration_value -= active_effect->magnitude;
-            continue;
-          }
-
-        penetration_value += active_effect->magnitude;
-      }
-
-    if (static_cast<int32_t>(penetration_value) > config.resist_tweaks().penetration_high())
-      {
-        penetration_value = static_cast<float>(config.resist_tweaks().penetration_high());
-      }
-
-    if (config.resist_tweaks().flat_penetration()) { return resist_value - penetration_value; }
-
-    if (penetration_value <= 0.f) { return resist_value; }
-
-    if (penetration_value >= 100.f) { return 0.f; }
-
-    return resist_value * (1 - (penetration_value / 100.f));
-  };
-
   logger::debug("Check resist"sv);
   if (magic_item.hostileCount <= 0 || bound_object && bound_object->formType == RE::FormType::Armor)
     {
@@ -131,25 +131,46 @@ auto check_resistance(
 
   auto second_resist_percent = [&](RE::Actor* value_owner, const RE::MagicItem& item) -> float
   {
-    auto second_resist_av = RE::ActorValue::kResistMagic;
+    const auto second_resist_av = [&magic_item]() -> RE::ActorValue
+    {
+      if (magic_item.IsPoison()) { return RE::ActorValue::kPoisonResist; }
+      return RE::ActorValue::kResistMagic;
+    }();
 
-    if (item.IsPoison())
-      {
-        if (config.resist_tweaks().no_double_resist_check_poison()) { return 1.f; }
-        second_resist_av = RE::ActorValue::kPoisonResist;
-      }
+    if (magic_item.IsPoison() && config.resist_tweaks().no_double_resist_check_poison() && resist_av != RE::ActorValue::kNone)
+    {
+      return 1.f;
+    }
 
-    if (config.resist_tweaks().no_double_resist_check_magick() &&
-        second_resist_av == RE::ActorValue::kResistMagic)
-      {
-      if (true && resist_av == RE::ActorValue::kNone)
-      {
-        resist_av = RE::ActorValue::kResistMagic;
-      }
-        return 1.f;
-      }
+    if (config.resist_tweaks().no_double_resist_check_magick() && resist_av != RE::ActorValue::kNone)
+    {
+      return 1.f;
+    }
 
-    if (resist_av == second_resist_av) { return 1.f; }
+    // if (item.IsPoison())
+// 
+    //   if (item.IsPoison())
+    //     {
+    //       if (config.resist_tweaks().no_double_resist_check_poison() && true &&
+    //           resist_av == RE::ActorValue::kNone)
+    //         {
+    //           second_resist_av = RE::ActorValue::kPoisonResist;
+    //         }
+    //       if (config.resist_tweaks().no_double_resist_check_poison()) { return 1.f; }
+    //       second_resist_av = RE::ActorValue::kPoisonResist;
+    //     }
+// 
+    // if (config.resist_tweaks().no_double_resist_check_magick() &&
+    //     second_resist_av == RE::ActorValue::kResistMagic)
+    //   {
+    //     if (true && resist_av == RE::ActorValue::kNone)
+    //       {
+    //         resist_av = RE::ActorValue::kResistMagic;
+    //       }
+    //     return 1.f;
+    //   }
+
+    // if (resist_av == second_resist_av) { return 1.f; }
 
     const auto second_resist_value = resist_value_after_penetration(value_owner, second_resist_av);
     if (second_resist_value <= low_cap) { return 1.f; }

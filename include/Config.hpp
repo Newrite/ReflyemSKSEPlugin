@@ -36,6 +36,35 @@ private:
     RE::BGSKeyword* mgef_cost_keyword_;
   };
 
+  struct StaminaShieldConfig final
+  {
+    [[nodiscard]] bool enable() const { return enable_; }
+
+    [[nodiscard]] bool physical() const { return physical_; }
+
+    [[nodiscard]] bool magick() const { return magick_; }
+
+    [[nodiscard]] bool must_be_or_not_be() const { return must_be_or_not_be_; }
+
+    [[nodiscard]] RE::BGSKeyword* mgef_keyword() const { return mgef_keyword_; }
+
+    [[nodiscard]] RE::ActorValue av() const { return av_; }
+
+    [[nodiscard]] RE::BGSKeyword* mgef_cost_keyword() const { return mgef_cost_keyword_; }
+
+    StaminaShieldConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
+    StaminaShieldConfig() = default;
+
+  private:
+    bool enable_;
+    bool physical_;
+    bool magick_;
+    bool must_be_or_not_be_;
+    RE::BGSKeyword* mgef_keyword_;
+    RE::ActorValue av_;
+    RE::BGSKeyword* mgef_cost_keyword_;
+  };
+
   struct PetrifiedBloodConfig final
   {
     [[nodiscard]] bool enable() const { return enable_; }
@@ -898,7 +927,10 @@ private:
 
   struct DeathLootConfig final
   {
+    [[nodiscard]] float gold_value_mult() const { return gold_value_mult_; }
+    [[nodiscard]] RE::BGSKeyword* exclusive_keyword() const { return exclusive_keyword_; }
     [[nodiscard]] bool enable() const { return enable_; }
+    [[nodiscard]] bool auto_loot() const { return auto_loot_; }
 
     DeathLootConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     DeathLootConfig() = default;
@@ -906,6 +938,28 @@ private:
 private:
     bool enable_;
     float gold_value_mult_;
+    bool auto_loot_;
+    RE::BGSKeyword* exclusive_keyword_;
+  };
+
+  struct SoulLinkConfig final
+  {
+    [[nodiscard]] bool enable() const { return enable_; }
+    [[nodiscard]] bool physic() const { return physic_; }
+    [[nodiscard]] bool magick() const { return magick_; }
+    [[nodiscard]] RE::ActorValue av() const { return av_; }
+    [[nodiscard]] RE::BGSKeyword* summons_split_keyword() const { return summons_split_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* exclusive_keyword() const { return exclusive_keyword_; }
+
+    SoulLinkConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
+    SoulLinkConfig() = default;
+
+  private:
+    bool enable_;
+    bool physic_;
+    bool magick_;
+    RE::ActorValue av_;
+    RE::BGSKeyword* summons_split_keyword_;
     RE::BGSKeyword* exclusive_keyword_;
   };
 
@@ -916,6 +970,9 @@ private:
 
   // magic shield
   MagicShieldConfig magic_shield_;
+
+  // stamina shield
+  StaminaShieldConfig stamina_shield_;
 
   // petrified blood
   PetrifiedBloodConfig petrified_blood_;
@@ -990,12 +1047,17 @@ private:
   // death loot
   DeathLootConfig death_loot_;
 
+  // soul link
+  SoulLinkConfig soul_link_;
+
   public:
   [[nodiscard]] static auto get_singleton() noexcept -> const Config&;
 
   [[nodiscard]] auto mod_name() const -> const std::string_view& { return mod_name_; }
 
   [[nodiscard]] const MagicShieldConfig& magic_shield() const { return magic_shield_; }
+
+  [[nodiscard]] const StaminaShieldConfig& stamina_shield() const { return stamina_shield_; }
 
   [[nodiscard]] const PetrifiedBloodConfig& petrified_blood() const { return petrified_blood_; }
 
@@ -1053,6 +1115,8 @@ private:
   [[nodiscard]] const ItemLimitConfig& item_limit() const { return item_limit_; }
 
   [[nodiscard]] const DeathLootConfig& death_loot() const { return death_loot_; }
+  
+  [[nodiscard]] const SoulLinkConfig& soul_link() const { return soul_link_; }
 };
 
 } // namespace Reflyem

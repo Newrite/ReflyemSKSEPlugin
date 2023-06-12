@@ -31,6 +31,10 @@ static inline REL::Relocation<uintptr_t> on_check_resistance_npc{RELOCATION_ID(2
 static inline REL::Relocation<uintptr_t> on_check_resistance_pc{RELOCATION_ID(261920, 0)};
 static inline REL::Relocation<uintptr_t> on_ench_ignores_resistance{RELOCATION_ID(228570, 0)};
 static inline REL::Relocation<uintptr_t> on_ench_get_no_absorb{RELOCATION_ID(228570, 0)};
+static inline REL::Relocation<uintptr_t> on_trap_apply_damage{RELOCATION_ID(36509, 0)};
+static inline REL::Relocation<uintptr_t> on_inventory_open{RELOCATION_ID(
+    50239,
+    0)}; // thx Fenix31415! https://github.com/fenix31415/DeathLoseLoot/blob/master/src/main.cpp#L134
 static inline REL::Relocation<uintptr_t> on_value_owner_get_actor_value_npc{
     RELOCATION_ID(261402, 0)};
 static inline REL::Relocation<uintptr_t> on_value_owner_set_actor_value_npc{
@@ -73,6 +77,10 @@ static inline auto on_check_resistance_npc = RELOCATION_OFFSET(0x0A, 0);
 static inline auto on_check_resistance_pc = RELOCATION_OFFSET(0x0A, 0);
 static inline auto on_ench_ignores_resistance = RELOCATION_OFFSET(0x5B, 0);
 static inline auto on_ench_get_no_absorb = RELOCATION_OFFSET(0x5E, 0);
+static inline auto on_trap_apply_damage = RELOCATION_OFFSET(0x43, 0);
+static inline auto on_inventory_open = RELOCATION_OFFSET(
+    0x13,
+    0); // thx Fenix31415! https://github.com/fenix31415/DeathLoseLoot/blob/master/src/main.cpp#L134
 static inline auto on_value_owner_get_actor_value_npc = RELOCATION_OFFSET(0x01, 0);
 static inline auto on_value_owner_set_actor_value_npc = RELOCATION_OFFSET(0x07, 0);
 static inline auto on_value_owner_mod_actor_value_npc = RELOCATION_OFFSET(0x05, 0);
@@ -153,6 +161,23 @@ struct OnAttackData final
   static auto process_attack(RE::ActorValueOwner* value_owner, RE::BGSAttackData* attack_data)
       -> void;
   static inline REL::Relocation<decltype(process_attack)> process_attack_;
+};
+
+struct OnInventoryOpen final
+{
+  public:
+  static auto install_hook(SKSE::Trampoline& trampoline) -> void
+  {
+    logger::info("start hook OnInventoryOpen"sv);
+    is_displayed_item_ = trampoline.write_call<5>(
+        Adresses::on_inventory_open.address() + Offsets::on_inventory_open,
+        is_displayed_item);
+    logger::info("finish hook OnInventoryOpen"sv);
+  }
+
+  private:
+  static auto is_displayed_item(RE::InventoryEntryData* item) -> bool;
+  static inline REL::Relocation<decltype(is_displayed_item)> is_displayed_item_;
 };
 
 struct OnApplySpellsFromAttack
@@ -329,6 +354,23 @@ struct OnWeaponHit final
   private:
   static auto weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void;
   static inline REL::Relocation<decltype(weapon_hit)> weapon_hit_;
+};
+
+struct OnTrapHit final
+{
+  public:
+  static auto install_hook(SKSE::Trampoline& trampoline) -> void
+  {
+    logger::info("start hook OnTrapHit"sv);
+    trap_hit_ = trampoline.write_call<5>(
+        Adresses::on_trap_apply_damage.address() + Offsets::on_trap_apply_damage,
+        trap_hit);
+    logger::info("OnTrapHit hook install"sv);
+  }
+
+  private:
+  static auto trap_hit(RE::Actor* target, RE::HitData* hit_data) -> void;
+  static inline REL::Relocation<decltype(trap_hit)> trap_hit_;
 };
 
 struct OnMeleeCollision final

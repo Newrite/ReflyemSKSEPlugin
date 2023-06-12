@@ -1,3 +1,6 @@
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/msvc_sink.h>
+
 #include "Core.hpp"
 #include "Hooks.hpp"
 #include "PrecisionAPI.hpp"

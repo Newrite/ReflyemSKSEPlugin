@@ -25,6 +25,23 @@ auto get_random_int() -> int
   return uni(rng);
 }
 
+auto actor_from_ni_pointer(const RE::NiPointer<RE::TESObjectREFR>* ni_actor) -> RE::Actor*
+{
+  if (!ni_actor) { return nullptr; }
+  let ref = ni_actor->get();
+  if (!ref) { return nullptr; }
+
+  return ref->As<RE::Actor>();
+}
+
+auto is_player_ally(RE::Actor* actor) -> bool
+{
+  if (!actor) { return false; }
+  let player = RE::PlayerCharacter::GetSingleton();
+  if (!player) { return false; }
+  return actor->IsPlayerTeammate() || !actor->IsHostileToActor(player);
+}
+
 auto flash_hud_meter(const RE::ActorValue av) -> void
 {
   using FuncT = decltype(&flash_hud_meter);
@@ -392,6 +409,19 @@ auto apply_all_combat_spells_from_attack(
   const REL::Relocation<decltype(&apply_all_combat_spells_from_attack)> func{
       RELOCATION_ID(37799, 0)};
   return func(attacker, weapon, is_left, target);
+}
+
+auto get_poison(RE::InventoryEntryData* _this) -> RE::AlchemyItem*
+{
+  const REL::Relocation<decltype(&get_poison)> func{RELOCATION_ID(15761, 0)};
+  return func(_this);
+}
+
+auto get_actor_value_max(RE::Actor* actor, const RE::ActorValue av) -> float
+{
+  if (!actor) { return 0.f; }
+  return actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, av) +
+         actor->GetPermanentActorValue(av);
 }
 
 auto get_weapon(const RE::Actor& actor, const bool is_left_hand, RE::TESObjectWEAP* fallback_weapon)

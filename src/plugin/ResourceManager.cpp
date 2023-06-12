@@ -568,11 +568,10 @@ auto animation_handler(const RE::BSAnimationGraphEvent& event, const Config& con
   const auto actor = const_cast<RE::Actor*>(event.holder->As<RE::Actor>());
 
   if (!actor) { return; }
-
-  const auto anim_event = fmt::format("{}"sv, event.tag);
+  
   const auto is_power_attack = Core::is_power_attacking(*actor);
 
-  switch (AnimationEventHandler::try_find_animation(anim_event))
+  switch (AnimationEventHandler::try_find_animation(event.tag.c_str()))
     {
       case AnimationEventHandler::AnimationEvent::kBashExit: {
         if (!config.resource_manager().bash_spend_enable()) { return; }

@@ -28,6 +28,11 @@ auto eval_equip_load(const RE::Actor& actor) -> float
 
 auto update_actor(RE::Actor& actor, const Config& config) -> void
 {
+  if (!config.equip_load().low_equip_spell() || !config.equip_load().med_equip_spell() ||
+      !config.equip_load().hig_equip_spell())
+    {
+      return;
+    }
   auto equip_weight = actor.GetActorValue(RE::ActorValue::kInventoryWeight);
   if (equip_weight < 0.f) { equip_weight = 0.f; }
 

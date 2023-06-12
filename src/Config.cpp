@@ -6,11 +6,14 @@ namespace Reflyem
 constexpr inline std::string_view PathToConfig = R"(Data\SKSE\Plugins\Reflyem.toml)";
 constexpr inline std::string_view Reflyem = "Reflyem";
 constexpr inline std::string_view ModName = "ModName";
+constexpr inline std::string_view SoulLink = "SoulLink";
 constexpr inline std::string_view DeathLoot = "DeathLoot";
 constexpr inline std::string_view GoldMult = "GoldMult";
 constexpr inline std::string_view EnableAutoRestore = "EnableAutoRestore";
 constexpr inline std::string_view ItemLimit = "ItemLimit";
+constexpr inline std::string_view AutoLoot = "AutoLoot";
 constexpr inline std::string_view ExclusiveKeywordId = "ExclusiveKeywordId";
+constexpr inline std::string_view SummonSplitKeywordId = "SummonSplitKeywordId";
 constexpr inline std::string_view StorageFormId = "StorageFormId";
 constexpr inline std::string_view EnableEnderal = "EnableEnderal";
 constexpr inline std::string_view FormListKeywordItemId = "FormListKeywordItemId";
@@ -19,6 +22,7 @@ constexpr inline std::string_view Enable = "Enable";
 constexpr inline std::string_view EnableWeapon = "EnableWeapon";
 constexpr inline std::string_view ActorValueIndex = "ActorValueIndex";
 constexpr inline std::string_view MagicShield = "MagicShield";
+constexpr inline std::string_view StaminaShield = "StaminaShield";
 constexpr inline std::string_view Vampirism = "Vampirism";
 constexpr inline std::string_view MagicVampirism = "MagicVampirism";
 constexpr inline std::string_view PetrifiedBlood = "PetrifiedBlood";
@@ -188,6 +192,37 @@ Config::MagicShieldConfig::MagicShieldConfig(
           config.mod_name());
 
       must_be_or_not_be_ = tbl[MagicShield][MustBeOrNotBe].value_or(false);
+    }
+}
+
+Config::StaminaShieldConfig::StaminaShieldConfig(
+    toml::table& tbl,
+    RE::TESDataHandler& data_handler,
+    const Config& config)
+{
+  logger::info("config init: stamina shield..."sv);
+  enable_ = tbl[StaminaShield][Enable].value_or(false);
+  if (enable_)
+    {
+      const auto effect_keyword_cost_form_id =
+          tbl[StaminaShield][CostEffectKeywordId].value<RE::FormID>();
+      mgef_cost_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(
+          effect_keyword_cost_form_id.value(),
+          config.mod_name());
+
+      av_ = static_cast<RE::ActorValue>(tbl[StaminaShield][ActorValueIndex].value_or(120));
+
+      magick_ = tbl[StaminaShield][Magick].value_or(false);
+      physical_ = tbl[StaminaShield][Physical].value_or(false);
+
+      const auto must_or_not_effect_keyword_form_id =
+          tbl[StaminaShield][KeywordId].value<RE::FormID>();
+
+      mgef_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(
+          must_or_not_effect_keyword_form_id.value(),
+          config.mod_name());
+
+      must_be_or_not_be_ = tbl[StaminaShield][MustBeOrNotBe].value_or(false);
     }
 }
 
@@ -1002,12 +1037,37 @@ Config::DeathLootConfig::DeathLootConfig(
   enable_ = tbl[DeathLoot][Enable].value_or(false);
   if (enable_)
     {
-      gold_value_mult_ = tbl[DeathLoot][GoldMult].value_or(1.f);
+      gold_value_mult_ = tbl[DeathLoot][GoldMult].value_or(0.2f);
+      auto_loot_ = tbl[DeathLoot][AutoLoot].value_or(false);
 
       const auto exclusive_keyword_id = tbl[DeathLoot][ExclusiveKeywordId].value<RE::FormID>();
 
       exclusive_keyword_ =
           data_handler.LookupForm<RE::BGSKeyword>(exclusive_keyword_id.value(), config.mod_name());
+    }
+}
+
+Config::SoulLinkConfig::SoulLinkConfig(
+    toml::table& tbl,
+    RE::TESDataHandler& data_handler,
+    const Config& config)
+{
+  logger::info("config init: soul link"sv);
+  enable_ = tbl[SoulLink][Enable].value_or(false);
+  if (enable_)
+    {
+      av_ = static_cast<RE::ActorValue>(tbl[SoulLink][ActorValueIndex].value_or(120));
+
+      physic_ = tbl[SoulLink][Physical].value_or(false);
+      magick_ = tbl[SoulLink][Magick].value_or(false);
+      const auto exclusive_keyword_id = tbl[SoulLink][ExclusiveKeywordId].value<RE::FormID>();
+      const auto summon_split_keyword_id = tbl[SoulLink][SummonSplitKeywordId].value<RE::FormID>();
+
+      exclusive_keyword_ =
+          data_handler.LookupForm<RE::BGSKeyword>(exclusive_keyword_id.value(), config.mod_name());
+      summons_split_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(
+          summon_split_keyword_id.value(),
+          config.mod_name());
     }
 }
 
@@ -1019,6 +1079,7 @@ Config::Config()
 
   mod_name_ = tbl[Reflyem][ModName].value_or("Skyrim.esm"sv);
   magic_shield_ = MagicShieldConfig{tbl, *data_handler, *this};
+  stamina_shield_ = StaminaShieldConfig{tbl, *data_handler, *this};
   petrified_blood_ = PetrifiedBloodConfig{tbl, *data_handler, *this};
   cheat_death_ = CheatDeathConfig{tbl, *data_handler, *this};
   vampirism_ = VampirismConfig{tbl, *data_handler, *this};
@@ -1043,6 +1104,7 @@ Config::Config()
   parry_bash_ = ParryBashConfig{tbl, *data_handler, *this};
   item_limit_ = ItemLimitConfig{tbl, *data_handler, *this};
   death_loot_ = DeathLootConfig{tbl, *data_handler, *this};
+  soul_link_ = SoulLinkConfig{tbl, *data_handler, *this};
 
   logger::info("finish init config"sv);
 }

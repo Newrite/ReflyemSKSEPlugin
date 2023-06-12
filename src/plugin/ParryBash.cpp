@@ -79,9 +79,9 @@ auto precision_pre_hit_callback(const PRECISION_API::PrecisionHitData& hit_data)
 {
   PRECISION_API::PreHitCallbackReturn result;
   result.bIgnoreHit = false;
-  if (!hit_data.target) { return result; }
-
   const auto& config = Config::get_singleton();
+  if (!hit_data.target || !config.parry_bash().enable()) { return result; }
+
 
   const auto target = hit_data.target->As<RE::Actor>();
   if (is_allow_parry_bash(hit_data.attacker, target, config))
@@ -115,7 +115,7 @@ auto animation_handler(const RE::BSAnimationGraphEvent& event, const Config& con
 {
   if (const auto actor = const_cast<RE::Actor*>(event.holder->As<RE::Actor>()); actor)
     {
-      switch (AnimationEventHandler::try_find_animation(fmt::format("{}"sv, event.tag)))
+      switch (AnimationEventHandler::try_find_animation(event.tag.c_str()))
         {
           case AnimationEventHandler::AnimationEvent::kWeaponSwing: {
             if (!config.parry_bash().enable_weapon_swing()) { return; }
