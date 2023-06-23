@@ -568,7 +568,7 @@ auto animation_handler(const RE::BSAnimationGraphEvent& event, const Config& con
   const auto actor = const_cast<RE::Actor*>(event.holder->As<RE::Actor>());
 
   if (!actor) { return; }
-  
+
   const auto is_power_attack = Core::is_power_attacking(*actor);
 
   switch (AnimationEventHandler::try_find_animation(event.tag.c_str()))
@@ -669,6 +669,9 @@ auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& confi
 
   auto mask_sum = calc_mask_sum(*f_mask);
 
+  constexpr auto half_part = 0.5f;
+  constexpr auto three_part = 0.35f;
+
   logger::debug(
       "mask_sum {} damage_mult {} total_damage {}"sv,
       mask_sum,
@@ -702,7 +705,7 @@ auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& confi
       {
         const auto health_part_damage = handle_block_hit(
             *target,
-            total_damage * 0.5f,
+            total_damage * half_part,
             health,
             damage_mult,
             RE::ActorValue::kHealth);
@@ -710,7 +713,7 @@ auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& confi
 
         const auto stamina_part_damage = handle_block_hit(
             *target,
-            total_damage * 0.5f,
+            total_damage * half_part,
             stamina,
             damage_mult,
             RE::ActorValue::kStamina);
@@ -721,7 +724,7 @@ auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& confi
       {
         const auto magicka_part_damage = handle_block_hit(
             *target,
-            total_damage * 0.5f,
+            total_damage * half_part,
             magicka,
             damage_mult,
             RE::ActorValue::kMagicka);
@@ -729,7 +732,7 @@ auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& confi
 
         const auto stamina_part_damage = handle_block_hit(
             *target,
-            total_damage * 0.5f,
+            total_damage * half_part,
             stamina,
             damage_mult,
             RE::ActorValue::kStamina);
@@ -740,7 +743,7 @@ auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& confi
       {
         const auto health_part_damage = handle_block_hit(
             *target,
-            total_damage * 0.5f,
+            total_damage * half_part,
             health,
             damage_mult,
             RE::ActorValue::kHealth);
@@ -748,7 +751,7 @@ auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& confi
 
         const auto magicka_part_damage = handle_block_hit(
             *target,
-            total_damage * 0.5f,
+            total_damage * half_part,
             magicka,
             damage_mult,
             RE::ActorValue::kMagicka);
@@ -759,7 +762,7 @@ auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& confi
       {
         const auto health_part_damage = handle_block_hit(
             *target,
-            total_damage * 0.35f,
+            total_damage * three_part,
             health,
             damage_mult,
             RE::ActorValue::kHealth);
@@ -767,7 +770,7 @@ auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& confi
 
         const auto magicka_part_damage = handle_block_hit(
             *target,
-            total_damage * 0.35f,
+            total_damage * three_part,
             magicka,
             damage_mult,
             RE::ActorValue::kMagicka);
@@ -775,7 +778,7 @@ auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& confi
 
         const auto stamina_part_damage = handle_block_hit(
             *target,
-            total_damage * 0.35f,
+            total_damage * three_part,
             stamina,
             damage_mult,
             RE::ActorValue::kStamina);

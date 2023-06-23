@@ -33,40 +33,40 @@ auto eval_spell_cast_cost(const RE::TESForm* spell_form, RE::Actor& caster) -> f
 auto action_event_handler(const SKSE::ActionEvent& event, RE::BSTEventSource<SKSE::ActionEvent>&)
     -> void
 {
-  if (event.actor)
+  
+  if (event.actor) { return; }
+  
+  switch (event.type.get())
     {
-      switch (event.type.get())
-        {
-          case SKSE::ActionEvent::Type::kSpellCast: {
-            if (Config::get_singleton().caster_additions().allow_cast_without_stamina()) { break; }
-            if (event.actor->GetActorValue(RE::ActorValue::kStamina) <
-                eval_spell_cast_cost(event.sourceForm, *event.actor))
-              {
-                event.actor->InterruptCast(true);
-                Core::play_sound(
-                    Config::get_singleton().caster_additions().mag_fail_sound(),
-                    event.actor);
-                Core::flash_hud_meter(RE::ActorValue::kStamina);
-              }
-            break;
+      case SKSE::ActionEvent::Type::kSpellCast: {
+        if (Config::get_singleton().caster_additions().allow_cast_without_stamina()) { break; }
+        if (event.actor->GetActorValue(RE::ActorValue::kStamina) <
+            eval_spell_cast_cost(event.sourceForm, *event.actor))
+          {
+            event.actor->InterruptCast(true);
+            Core::play_sound(
+                Config::get_singleton().caster_additions().mag_fail_sound(),
+                event.actor);
+            Core::flash_hud_meter(RE::ActorValue::kStamina);
           }
-          case SKSE::ActionEvent::Type::kSpellFire: {
-            ResourceManager::spend_actor_value(
-                *event.actor,
-                RE::ActorValue::kStamina,
-                eval_spell_cast_cost(event.sourceForm, *event.actor));
-            break;
-          }
-        case SKSE::ActionEvent::Type::kWeaponSwing:
-        case SKSE::ActionEvent::Type::kVoiceCast:
-        case SKSE::ActionEvent::Type::kVoiceFire:
-        case SKSE::ActionEvent::Type::kBowDraw:
-        case SKSE::ActionEvent::Type::kBowRelease:
-        case SKSE::ActionEvent::Type::kBeginDraw:
-        case SKSE::ActionEvent::Type::kEndDraw:
-        case SKSE::ActionEvent::Type::kBeginSheathe:
-        case SKSE::ActionEvent::Type::kEndSheathe: break;
-        }
+        break;
+      }
+      case SKSE::ActionEvent::Type::kSpellFire: {
+        ResourceManager::spend_actor_value(
+            *event.actor,
+            RE::ActorValue::kStamina,
+            eval_spell_cast_cost(event.sourceForm, *event.actor));
+        break;
+      }
+    case SKSE::ActionEvent::Type::kWeaponSwing:
+    case SKSE::ActionEvent::Type::kVoiceCast:
+    case SKSE::ActionEvent::Type::kVoiceFire:
+    case SKSE::ActionEvent::Type::kBowDraw:
+    case SKSE::ActionEvent::Type::kBowRelease:
+    case SKSE::ActionEvent::Type::kBeginDraw:
+    case SKSE::ActionEvent::Type::kEndDraw:
+    case SKSE::ActionEvent::Type::kBeginSheathe:
+    case SKSE::ActionEvent::Type::kEndSheathe: break;
     }
 }
 } // namespace Reflyem::CasterAdditions

@@ -13,8 +13,10 @@
 #include "plugin/MagicWepon.hpp"
 #include "plugin/ParryBash.hpp"
 #include "plugin/PetrifiedBlood.hpp"
+#include "plugin/PotionsDrintLimit.hpp"
 #include "plugin/ResistTweaks.hpp"
 #include "plugin/ResourceManager.hpp"
+#include "plugin/SoulLink.hpp"
 #include "plugin/SpeedCasting.hpp"
 #include "plugin/StaminaShield.hpp"
 #include "plugin/TKDodge.hpp"
@@ -129,13 +131,18 @@ auto on_modify_actor_value(
     }
 
   if (config.stamina_shield().enable() && config.stamina_shield().magick())
-  {
-    Reflyem::StaminaShield::modify_actor_value(this_, actor, value, av, config);
-  }
+    {
+      Reflyem::StaminaShield::modify_actor_value(this_, actor, value, av, config);
+    }
 
   if (config.magic_shield().enable() && config.magic_shield().magick())
     {
       Reflyem::MagicShield::modify_actor_value(this_, actor, value, av, config);
+    }
+
+  if (config.soul_link().enable() && config.soul_link().magick())
+    {
+      Reflyem::SoulLink::modify_actor_value(this_, actor, std::addressof(value), av, config);
     }
 
   Reflyem::Vampirism::modify_actor_value(this_, actor, value, av, config);
@@ -229,12 +236,29 @@ auto OnActorAddObject::pick_up_object(
   return pick_up_object_(this_, object, count, arg3, play_sound);
 }
 
+auto OnDrinkPotion::drink_potion(
+    RE::Actor* this_,
+    RE::AlchemyItem* potion,
+    RE::ExtraDataList* extra_data_list) -> bool
+{
+  if (!this_ || !potion) { return drink_potion_(this_, potion, extra_data_list); }
+
+  letr config = Reflyem::Config::get_singleton();
+  if (config.potions_drink_limit().enable())
+    {
+      return Reflyem::PotionsDrinkLimit::drink_potion(this_, potion, extra_data_list, config) &&
+             drink_potion_(this_, potion, extra_data_list);
+    }
+
+  return drink_potion_(this_, potion, extra_data_list);
+}
+
 auto OnAttackData::process_attack(RE::ActorValueOwner* value_owner, RE::BGSAttackData* attack_data)
     -> void
 {
   process_attack_(value_owner, attack_data);
-  return;
 }
+
 auto OnInventoryOpen::is_displayed_item(RE::InventoryEntryData* item) -> bool
 {
   logger::debug("In open inv hook"sv);
@@ -243,7 +267,7 @@ auto OnInventoryOpen::is_displayed_item(RE::InventoryEntryData* item) -> bool
   const auto& config = Reflyem::Config::get_singleton();
   if (config.death_loot().enable())
     {
-      return is_displayed_item_(item) && !Reflyem::DeathLoot::is_tagged(item);
+      return Reflyem::DeathLoot::is_loot(item) && is_displayed_item_(item);
     }
 
   return is_displayed_item_(item);
@@ -283,6 +307,36 @@ auto OnApplySpellsFromAttack::apply_spells_from_attack(
     }
 
   return apply_spells_from_attack_(attacker, weapon, is_left, target);
+}
+
+auto OnArrowCallHit::arrow_call_hit(
+    RE::Character* attacker,
+    RE::Actor* target,
+    RE::Projectile* projectile,
+    bool is_left) -> void
+{
+  return arrow_call_hit_(attacker, target, projectile, is_left);
+}
+
+auto OnAttackIsBlocked::is_blocked(
+    RE::Actor* attacker,
+    RE::Actor* target,
+    float* attacker_location_x,
+    float* target_location_x,
+    void* arg5,
+    float arg6,
+    float* arg7,
+    char arg8) -> bool
+{
+  return is_blocked_(
+      attacker,
+      target,
+      attacker_location_x,
+      target_location_x,
+      arg5,
+      arg6,
+      arg7,
+      arg8);
 }
 
 auto OnAnimationEvent::process_event_pc(
@@ -532,13 +586,18 @@ auto OnWeaponHit::weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void
     }
 
   if (config.stamina_shield().enable() && config.stamina_shield().physical())
-  {
-    Reflyem::StaminaShield::on_weapon_hit(target, hit_data, config);
-  }
-  
+    {
+      Reflyem::StaminaShield::on_weapon_hit(target, hit_data, config);
+    }
+
   if (config.magic_shield().enable() && config.magic_shield().physical())
     {
       Reflyem::MagicShield::on_weapon_hit(target, hit_data, config);
+    }
+
+  if (config.soul_link().enable() && config.soul_link().physic())
+    {
+      Reflyem::SoulLink::on_weapon_hit(target, hit_data, config);
     }
 
   Reflyem::Vampirism::on_weapon_hit(target, hit_data, config);
@@ -546,9 +605,62 @@ auto OnWeaponHit::weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void
   return weapon_hit_(target, hit_data);
 }
 
+auto OnCastActorValue::actor_value_for_cost_check_cast(
+    RE::MagicItem* magic_item,
+    RE::MagicSystem::CastingSource cast_source) -> RE::ActorValue
+{
+  // let cost_av = actor_value_for_cost_check_cast_(magic_item, cast_source);
+  // if (magic_item)
+  //   {
+  //     logger::info(
+  //         "CheckCast AV {} Spell {} CastSource {}"sv,
+  //         cost_av,
+  //         magic_item->fullName.c_str(),
+  //         static_cast<int>(cast_source));
+  //   }
+  // if (cost_av == RE::ActorValue::kMagicka) { return RE::ActorValue::kHealth; }
+  // return cost_av;
+  return actor_value_for_cost_check_cast_(magic_item, cast_source);
+}
+
+auto OnCastActorValue::actor_value_for_cost_during_cast(
+    RE::MagicItem* magic_item,
+    RE::MagicSystem::CastingSource cast_source) -> RE::ActorValue
+{
+  // let cost_av = actor_value_for_cost_during_cast_(magic_item, cast_source);
+  // if (magic_item)
+  //   {
+  //     logger::info(
+  //         "DuringCast AV {} Spell {} CastSource {}"sv,
+  //         cost_av,
+  //         magic_item->fullName.c_str(),
+  //         static_cast<int>(cast_source));
+  //   }
+  // if (cost_av == RE::ActorValue::kMagicka) { return RE::ActorValue::kHealth; }
+  // return cost_av;
+  return actor_value_for_cost_during_cast_(magic_item, cast_source);
+}
+auto OnCastActorValue::actor_value_for_cost_restore_value(
+    RE::MagicItem* magic_item,
+    RE::MagicSystem::CastingSource cast_source) -> RE::ActorValue
+{
+  // let cost_av = actor_value_for_cost_restore_value_(magic_item, cast_source);
+  // if (magic_item)
+  //   {
+  //     logger::info(
+  //         "RestoreCost AV {} Spell {} CastSource {}"sv,
+  //         cost_av,
+  //         magic_item->fullName.c_str(),
+  //         static_cast<int>(cast_source));
+  //   }
+  // if (cost_av == RE::ActorValue::kMagicka) { return RE::ActorValue::kHealth; }
+  // return cost_av;
+  return actor_value_for_cost_restore_value_(magic_item, cast_source);
+}
+
 auto OnTrapHit::trap_hit(RE::Actor* target, RE::HitData* hit_data) -> void
 {
-  if (!target) { return trap_hit_(target, hit_data); }
+  if (!target || !hit_data) { return trap_hit_(target, hit_data); }
 
   // const auto is_trap_tweak = true;
   //   if (is_trap_tweak)
@@ -561,6 +673,33 @@ auto OnTrapHit::trap_hit(RE::Actor* target, RE::HitData* hit_data) -> void
   //         hit_data.weapon,
   //         std::addressof(damage_resist));
   //   }
+
+  auto& config = Reflyem::Config::get_singleton();
+
+  if (config.cheat_death().enable() && config.cheat_death().physical())
+    {
+      Reflyem::CheatDeath::on_weapon_hit(target, *hit_data, config);
+    }
+
+  if (config.petrified_blood().enable() && config.petrified_blood().physical())
+    {
+      Reflyem::PetrifiedBlood::on_weapon_hit(target, *hit_data, config);
+    }
+
+  if (config.stamina_shield().enable() && config.stamina_shield().physical())
+    {
+      Reflyem::StaminaShield::on_weapon_hit(target, *hit_data, config);
+    }
+
+  if (config.magic_shield().enable() && config.magic_shield().physical())
+    {
+      Reflyem::MagicShield::on_weapon_hit(target, *hit_data, config);
+    }
+
+  if (config.soul_link().enable() && config.soul_link().physic())
+    {
+      Reflyem::SoulLink::on_weapon_hit(target, *hit_data, config);
+    }
 
   return trap_hit_(target, hit_data);
 }
@@ -794,6 +933,7 @@ auto OnHealthMagickaStaminaRegeneration::restore_stamina(
     RE::ActorValue av,
     float value) -> void
 {
+  auto ptr = &actor;
   if (!actor) { return restore_stamina_(actor, av, value); }
 
   const auto& config = Reflyem::Config::get_singleton();
@@ -812,8 +952,11 @@ auto install_hooks() -> void
   trampoline.create(1024);
   OnMeleeCollision::install_hook(trampoline);
   OnWeaponHit::install_hook(trampoline);
+  OnAttackIsBlocked::install_hook(trampoline);
   OnTrapHit::install_hook(trampoline);
   OnInventoryOpen::install_hook(trampoline);
+  OnCastActorValue::install_hook(trampoline);
+  OnDrinkPotion::install_hook();
   // OnCheckResistance::install_hook(trampoline);
   OnCheckResistance::install_hook();
   OnEnchIgnoresResistance::install_hook();

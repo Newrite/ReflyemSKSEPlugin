@@ -1,5 +1,5 @@
-﻿#include "Core.hpp"
-#include "plugin/StaminaShield.hpp"
+﻿#include "plugin/StaminaShield.hpp"
+#include "Core.hpp"
 
 namespace Reflyem::StaminaShield
 {
@@ -38,7 +38,8 @@ auto stamina_shield(RE::Actor& target, float& damage_value, const Config& config
     {
       auto damage = std::abs(absorb_cost) / cost_per_damage;
       Core::damage_actor_value(target, RE::ActorValue::kStamina, stamina);
-      auto calc = damage / damage_mult + (damage_value * ((100.f - stamina_shield_percent) / 100.f));
+      auto calc =
+          damage / damage_mult + (damage_value * ((100.f - stamina_shield_percent) / 100.f));
       logger::debug("else damage: {}, damage_value: {}, calc: {}"sv, damage, damage_value, calc);
       damage_value = calc;
     }
@@ -77,4 +78,4 @@ auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& confi
 {
   stamina_shield(*target, hit_data.totalDamage, config);
 }
-}
+} // namespace Reflyem::StaminaShield

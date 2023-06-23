@@ -156,17 +156,16 @@ auto is_allow_dodge(RE::PlayerCharacter& player, const DrainValues& drain_values
 
 auto get_key_hold_duration(const std::uint32_t a_index, float& result) -> bool
 {
-
-  const auto is_pressed_reimplement = [](const std::uint32_t key_code, std::uint8_t cur_state[256]) -> bool
-  {
-    return (key_code < sizeof(cur_state)) && ((cur_state[key_code] & 0x80) != 0);
-  };
-  
   const auto input_mgr = RE::BSInputDeviceManager::GetSingleton();
   if (!input_mgr) { return false; }
   const auto keyboard = input_mgr->GetKeyboard();
   if (!keyboard) { return false; }
-  const auto is_pressed = is_pressed_reimplement(a_index, keyboard->curState);
+
+  let key_state = keyboard->curState[a_index]; // uint8_t
+  let is_pressed = (key_state & 0x80) != 0; // bool
+
+  logger::debug("KeyState {} IsPressed {}"sv, key_state, is_pressed);
+
   if (is_pressed && keyboard->deviceButtons.find(a_index)->second)
     {
       result = keyboard->deviceButtons.find(a_index)->second->heldDownSecs;

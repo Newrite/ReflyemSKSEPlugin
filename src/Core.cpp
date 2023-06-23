@@ -34,6 +34,43 @@ auto actor_from_ni_pointer(const RE::NiPointer<RE::TESObjectREFR>* ni_actor) -> 
   return ref->As<RE::Actor>();
 }
 
+auto actor_from_actor_handle(const RE::ActorHandle* handle) -> RE::Actor*
+{
+  if (!handle) { return nullptr; }
+
+  let ni_actor = handle->get();
+  if (!ni_actor) { return nullptr; }
+
+  return ni_actor.get();
+}
+
+auto get_commander_actor(const RE::Actor* actor) -> RE::Actor*
+{
+  if (!actor) { return nullptr; }
+
+  let target_process = actor->currentProcess;
+
+  if (!target_process) { return nullptr; }
+
+  let commanding_actor_handle = target_process->GetCommandingActor();
+
+  return actor_from_actor_handle(&commanding_actor_handle);
+}
+
+auto get_commanded_actors(const RE::Actor* actor) -> RE::BSTArray<RE::CommandedActorData>*
+{
+  if (!actor) { return nullptr; }
+
+  let process = actor->currentProcess;
+  if (!process) { return nullptr; }
+
+  let mid_high = process->middleHigh;
+  if (!mid_high) { return nullptr; }
+
+  if (!mid_high->commandedActors.empty()) { return std::addressof(mid_high->commandedActors); }
+  return nullptr;
+}
+
 auto is_player_ally(RE::Actor* actor) -> bool
 {
   if (!actor) { return false; }
@@ -69,12 +106,14 @@ auto character_timer_map_handler(
 
 auto damage_actor_value(RE::Actor& actor, const RE::ActorValue av, float value) -> void
 {
+  logger::info("DamageActorValue: {} {}"sv, av, value);
   if (value > 0.f) { value = value * -1.f; }
   actor.RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, av, value);
 }
 
 auto restore_actor_value(RE::Actor& actor, const RE::ActorValue av, const float value) -> void
 {
+  logger::info("RestoreActorValue: {} {}"sv, av, value);
   if (value <= 0.f) { return; }
 
   actor.RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, av, value);
@@ -244,6 +283,34 @@ auto actor_has_active_mgef_with_keyword(RE::Actor& actor, const RE::BGSKeyword& 
   return false;
 }
 
+auto try_actor_has_active_mgef_with_keyword(RE::Actor* actor, const RE::BGSKeyword* keyword) -> bool
+{
+  if (!actor || !keyword) { return false; }
+
+  auto active_effects = actor->GetActiveEffectList();
+  if (!active_effects) { return false; }
+  logger::debug("Start search mgef wigh keyword"sv);
+  for (const auto active_effect : *active_effects)
+    {
+      if (!active_effect || active_effect->flags.any(RE::ActiveEffect::Flag::kInactive) ||
+          !active_effect->effect || !active_effect->effect->baseEffect)
+        {
+          continue;
+        }
+      const auto base_effect = active_effect->effect->baseEffect;
+
+      logger::debug("Not null effect and active"sv);
+
+      if (base_effect->HasKeyword(keyword))
+        {
+          logger::debug("Found keyword with id"sv);
+          return true;
+        }
+    }
+  logger::debug("Not found keyword with id"sv);
+  return false;
+}
+
 auto cast(RE::SpellItem& spell, RE::Actor& target, RE::Actor& caster) -> void
 {
   if (spell.data.delivery == RE::MagicSystem::Delivery::kSelf)
@@ -346,6 +413,17 @@ auto has_absolute_keyword(RE::Actor& actor, RE::BGSKeyword& keyword) -> bool
   const auto result = actor.HasKeyword(&keyword) ||
                       actor_has_active_mgef_with_keyword(actor, keyword) ||
                       worn_has_keyword(&actor, &keyword);
+  logger::debug("After check keywords in has_absolute_keyword, result: {}", result);
+  return result;
+}
+
+auto try_has_absolute_keyword(RE::Actor* actor, RE::BGSKeyword* keyword) -> bool
+{
+  if (!actor || !keyword) { return false; }
+  logger::debug("Before check keywords in has_absolute_keyword");
+  const auto result = actor->HasKeyword(keyword) ||
+                      try_actor_has_active_mgef_with_keyword(actor, keyword) ||
+                      worn_has_keyword(actor, keyword);
   logger::debug("After check keywords in has_absolute_keyword, result: {}", result);
   return result;
 }
@@ -455,6 +533,38 @@ auto form_has_keyword(const RE::TESForm* form, const RE::BGSKeyword* keyword) ->
     }
 
   return keyword_form->HasKeyword(keyword);
+}
+
+
+auto is_dual_wielding(const RE::Actor* actor) -> bool
+{
+  let left_hand = actor->GetEquippedEntryData(true);
+  if (!left_hand || !left_hand->object) { return false; }
+  let right_hand = actor->GetEquippedEntryData(false);
+  if (!right_hand || !right_hand->object) { return false; }
+
+  if (left_hand->object->IsWeapon() && right_hand->object->IsWeapon()) { return true; }
+
+  return false;
+}
+
+auto is_bashing(const RE::Actor* attacker) -> bool
+{
+  if (!attacker) { return false; }
+
+  let is_bashing_state = attacker->GetAttackState() == RE::ATTACK_STATE_ENUM::kBash;
+  if (is_bashing_state) { return true; }
+
+  let process = attacker->currentProcess;
+  if (!process) { return false; }
+
+  let high_process = process->high;
+  if (!high_process) { return false; }
+
+  let attack_data = high_process->attackData ? high_process->attackData.get() : nullptr;
+  if (!attack_data) { return false; }
+
+  return attack_data->data.flags.any(RE::AttackData::AttackFlag::kBashAttack);
 }
 
 auto play_sound(RE::BGSSoundDescriptorForm* sound, RE::Actor* actor) -> void

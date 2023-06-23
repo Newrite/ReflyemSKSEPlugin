@@ -28,7 +28,7 @@ auto ActionEventHandler::ProcessEvent(
   if (event && event_source)
     {
       const auto& config = Config::get_singleton();
-      if (config.caster_additions().stamina_cost())
+      if (config.caster_additions().enable() && config.caster_additions().stamina_cost())
         {
           CasterAdditions::action_event_handler(*event, *event_source);
         }

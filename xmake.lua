@@ -43,7 +43,7 @@ target("Reflyem")
         description = "Reflyem additions"
     })
 
-    set_targetdir("G:/SteamLibrary/steamapps/common/Skyrim Special Edition/MO2/mods/Reflyem/SKSE/Plugins")
+    set_targetdir("G:/SteamLibrary/steamapps/common/Skyrim Special Edition/MO2/mods/ReflyemDLL/SKSE/Plugins")
 
     add_files("/src/**.cpp")
     -- add_files("src/**.ixx", "src/plugin/**.ixx")

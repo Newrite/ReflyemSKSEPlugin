@@ -137,18 +137,20 @@ auto check_resistance(
       return RE::ActorValue::kResistMagic;
     }();
 
-    if (magic_item.IsPoison() && config.resist_tweaks().no_double_resist_check_poison() && resist_av != RE::ActorValue::kNone)
-    {
-      return 1.f;
-    }
+    if (magic_item.IsPoison() && config.resist_tweaks().no_double_resist_check_poison() &&
+        resist_av != RE::ActorValue::kNone)
+      {
+        return 1.f;
+      }
 
-    if (config.resist_tweaks().no_double_resist_check_magick() && resist_av != RE::ActorValue::kNone)
-    {
-      return 1.f;
-    }
+    if (config.resist_tweaks().no_double_resist_check_magick() &&
+        resist_av != RE::ActorValue::kNone)
+      {
+        return 1.f;
+      }
 
     // if (item.IsPoison())
-// 
+    //
     //   if (item.IsPoison())
     //     {
     //       if (config.resist_tweaks().no_double_resist_check_poison() && true &&
@@ -159,7 +161,7 @@ auto check_resistance(
     //       if (config.resist_tweaks().no_double_resist_check_poison()) { return 1.f; }
     //       second_resist_av = RE::ActorValue::kPoisonResist;
     //     }
-// 
+    //
     // if (config.resist_tweaks().no_double_resist_check_magick() &&
     //     second_resist_av == RE::ActorValue::kResistMagic)
     //   {

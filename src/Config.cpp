@@ -9,16 +9,22 @@ constexpr inline std::string_view ModName = "ModName";
 constexpr inline std::string_view SoulLink = "SoulLink";
 constexpr inline std::string_view DeathLoot = "DeathLoot";
 constexpr inline std::string_view GoldMult = "GoldMult";
+constexpr inline std::string_view CapBase = "CapBase";
+constexpr inline std::string_view DurationBase = "DurationBase";
+constexpr inline std::string_view Notify = "Notify";
 constexpr inline std::string_view EnableAutoRestore = "EnableAutoRestore";
 constexpr inline std::string_view ItemLimit = "ItemLimit";
 constexpr inline std::string_view AutoLoot = "AutoLoot";
 constexpr inline std::string_view ExclusiveKeywordId = "ExclusiveKeywordId";
+constexpr inline std::string_view CapKeywordId = "CapKeywordId";
+constexpr inline std::string_view DurationKeywordId = "DurationKeywordId";
 constexpr inline std::string_view SummonSplitKeywordId = "SummonSplitKeywordId";
 constexpr inline std::string_view StorageFormId = "StorageFormId";
 constexpr inline std::string_view EnableEnderal = "EnableEnderal";
 constexpr inline std::string_view FormListKeywordItemId = "FormListKeywordItemId";
 constexpr inline std::string_view FormListKeywordCapId = "FormListKeywordCapId";
 constexpr inline std::string_view Enable = "Enable";
+constexpr inline std::string_view PotionsDrinkLimit = "PotionsDrinkLimit";
 constexpr inline std::string_view EnableWeapon = "EnableWeapon";
 constexpr inline std::string_view ActorValueIndex = "ActorValueIndex";
 constexpr inline std::string_view MagicShield = "MagicShield";
@@ -1071,6 +1077,34 @@ Config::SoulLinkConfig::SoulLinkConfig(
     }
 }
 
+Config::PotionsDrinkLimitConfig::PotionsDrinkLimitConfig(
+    toml::table& tbl,
+    RE::TESDataHandler& data_handler,
+    const Config& config)
+{
+  logger::info("config init: potions drink limit"sv);
+  enable_ = tbl[PotionsDrinkLimit][Enable].value_or(false);
+  if (enable_)
+    {
+      cap_base_ = tbl[PotionsDrinkLimit][CapBase].value_or(7);
+      duration_base_ = tbl[PotionsDrinkLimit][DurationBase].value_or(15.f);
+      notify_ = tbl[PotionsDrinkLimit][Notify].value_or("Я не могу больше выпить зелье."s);
+
+      const auto exclusive_keyword_id =
+          tbl[PotionsDrinkLimit][ExclusiveKeywordId].value<RE::FormID>();
+      const auto cap_keyword_id = tbl[PotionsDrinkLimit][CapKeywordId].value<RE::FormID>();
+      const auto duration_keyword_id =
+          tbl[PotionsDrinkLimit][DurationKeywordId].value<RE::FormID>();
+
+      exclusive_keyword_ =
+          data_handler.LookupForm<RE::BGSKeyword>(exclusive_keyword_id.value(), config.mod_name());
+      cap_keyword_ =
+          data_handler.LookupForm<RE::BGSKeyword>(cap_keyword_id.value(), config.mod_name());
+      duration_keyword_ =
+          data_handler.LookupForm<RE::BGSKeyword>(duration_keyword_id.value(), config.mod_name());
+    }
+}
+
 Config::Config()
 {
   logger::info("start init config toml"sv);
@@ -1105,6 +1139,7 @@ Config::Config()
   item_limit_ = ItemLimitConfig{tbl, *data_handler, *this};
   death_loot_ = DeathLootConfig{tbl, *data_handler, *this};
   soul_link_ = SoulLinkConfig{tbl, *data_handler, *this};
+  potions_drink_limit_ = PotionsDrinkLimitConfig{tbl, *data_handler, *this};
 
   logger::info("finish init config"sv);
 }

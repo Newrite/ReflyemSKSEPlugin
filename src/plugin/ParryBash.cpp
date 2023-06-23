@@ -9,7 +9,9 @@ auto is_allow_parry_bash(RE::Actor* attacker, RE::Actor* target, const Config& c
 {
   if (!attacker || !target) { return false; }
 
-  const auto is_attacker_bashing = attacker->GetAttackState() == RE::ATTACK_STATE_ENUM::kBash;
+  if (!target->IsAttacking()) { return false; }
+
+  const auto is_attacker_bashing = Core::is_bashing(attacker);
   if (!is_attacker_bashing) { return false; }
 
   const auto& target_data = Core::ActorsCache::get_singleton().get_or_add(target->formID).get();
@@ -80,20 +82,26 @@ auto precision_pre_hit_callback(const PRECISION_API::PrecisionHitData& hit_data)
   PRECISION_API::PreHitCallbackReturn result;
   result.bIgnoreHit = false;
   const auto& config = Config::get_singleton();
-  if (!hit_data.target || !config.parry_bash().enable()) { return result; }
+  if (!hit_data.target || !hit_data.attacker || !config.parry_bash().enable()) { return result; }
 
+  const auto& attacker_data =
+      Core::ActorsCache::get_singleton().get_or_add(hit_data.attacker->formID).get();
+  if (attacker_data.bash_parry_timer_no_hit() > 0.f)
+    {
+      result.bIgnoreHit = true;
+      return result;
+    }
 
   const auto target = hit_data.target->As<RE::Actor>();
   if (is_allow_parry_bash(hit_data.attacker, target, config))
     {
+      auto& target_data = Core::ActorsCache::get_singleton().get_or_add(target->formID).get();
+      target_data.bash_parry_timer_no_hit(0.5f);
       parry_bash_handler(*target, *hit_data.attacker, config);
     }
   else
     {
-      if (hit_data.attacker && hit_data.attacker->GetAttackState() == RE::ATTACK_STATE_ENUM::kBash)
-        {
-          result.bIgnoreHit = true;
-        }
+      if (hit_data.attacker && Core::is_bashing(hit_data.attacker)) { result.bIgnoreHit = true; }
     }
 
   return result;
@@ -101,12 +109,17 @@ auto precision_pre_hit_callback(const PRECISION_API::PrecisionHitData& hit_data)
 
 auto on_melee_collision(RE::Actor& attacker, RE::Actor& victim, const Config& config) -> bool
 {
+  const auto& attacker_data = Core::ActorsCache::get_singleton().get_or_add(attacker.formID).get();
+  if (attacker_data.bash_parry_timer_no_hit() > 0.f) { return true; }
+
   if (is_allow_parry_bash(&attacker, &victim, config))
     {
+      auto& target_data = Core::ActorsCache::get_singleton().get_or_add(victim.formID).get();
+      target_data.bash_parry_timer_no_hit(0.5f);
       parry_bash_handler(victim, attacker, config);
       return false;
     }
-  if (attacker.GetAttackState() == RE::ATTACK_STATE_ENUM::kBash) { return true; }
+  if (Core::is_bashing(&attacker)) { return true; }
 
   return false;
 }

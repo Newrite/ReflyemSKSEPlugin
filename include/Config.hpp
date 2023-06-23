@@ -55,7 +55,7 @@ private:
     StaminaShieldConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     StaminaShieldConfig() = default;
 
-  private:
+private:
     bool enable_;
     bool physical_;
     bool magick_;
@@ -954,12 +954,102 @@ private:
     SoulLinkConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     SoulLinkConfig() = default;
 
-  private:
+private:
     bool enable_;
     bool physic_;
     bool magick_;
     RE::ActorValue av_;
     RE::BGSKeyword* summons_split_keyword_;
+    RE::BGSKeyword* exclusive_keyword_;
+  };
+
+  struct PotionsDrinkLimitConfig final
+  {
+    [[nodiscard]] bool enable() const { return enable_; }
+    [[nodiscard]] std::int32_t cap_base() const { return cap_base_; }
+    [[nodiscard]] float duration_base() const { return duration_base_; }
+    [[nodiscard]] std::string notify() const { return notify_; }
+    [[nodiscard]] RE::BGSKeyword* exclusive_keyword() const { return exclusive_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* cap_keyword() const { return cap_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* duration_keyword() const { return duration_keyword_; }
+
+    PotionsDrinkLimitConfig(
+        toml::table& tbl,
+        RE::TESDataHandler& data_handler,
+        const Config& config);
+    PotionsDrinkLimitConfig() = default;
+
+private:
+    bool enable_;
+    std::int32_t cap_base_;
+    float duration_base_;
+    std::string notify_;
+    RE::BGSKeyword* exclusive_keyword_;
+    RE::BGSKeyword* cap_keyword_;
+    RE::BGSKeyword* duration_keyword_;
+
+    // RE::TESGlobal* max_potions_;
+    // RE::TESGlobal* used_potions_;
+  };
+
+  struct AbsorbShieldConfig final
+  {
+private:
+    bool enable_;
+    bool enbale_base_shield_;
+    bool enable_from_physick_attack_shield_;
+    bool enable_from_magick_attack_shield_;
+    bool enable_delay_degeneration_after_damage_;
+    bool enable_delay_regeneration_after_damage_;
+
+    float base_regeneration_base_shield_physick_;
+    float base_regeneration_base_shield_magick_;
+    float base_regeneration_base_shield_all_;
+
+    float base_regeneration_from_attack_shield_physick_;
+    float base_regeneration_from_attack_shield_magick_;
+    float base_regeneration_from_attack_shield_all_;
+
+    float base_delay_base_shield_physick_;
+    float base_delay_base_shield_magick_;
+    float base_delay_base_shield_all_;
+
+    float base_delay_from_attack_shield_physick_;
+    float base_delay_from_attack_shield_magick_;
+    float base_delay_from_attack_shield_all_;
+
+    float cap_from_attack_shield_physick_;
+    float cap_from_attack_shield_magick_;
+    float cap_from_attack_shield_all_;
+
+    RE::BGSKeyword* keyword_base_shield_value_physick_;
+    RE::BGSKeyword* keyword_base_shield_value_magick_;
+    RE::BGSKeyword* keyword_base_shield_value_all_;
+
+    RE::BGSKeyword* keyword_mult_shield_value_physick_;
+    RE::BGSKeyword* keyword_mult_shield_value_magick_;
+    RE::BGSKeyword* keyword_mult_shield_value_all_;
+
+    RE::BGSKeyword* keyword_base_delay_base_shield_physick_;
+    RE::BGSKeyword* keyword_base_delay_base_shield_magick_;
+    RE::BGSKeyword* keyword_base_delay_base_shield_all_;
+
+    RE::BGSKeyword* keyword_percent_from_attack_physick_shield_value_physick_;
+    RE::BGSKeyword* keyword_percent_from_attack_physick_shield_value_magick_;
+    RE::BGSKeyword* keyword_percent_from_attack_physick_shield_value_all_;
+
+    RE::BGSKeyword* keyword_percent_from_attack_magick_shield_value_physick_;
+    RE::BGSKeyword* keyword_percent_from_attack_magick_shield_value_magick_;
+    RE::BGSKeyword* keyword_percent_from_attack_magick_shield_value_all_;
+
+    RE::BGSKeyword* keyword_base_delay_from_attack_shield_physick_;
+    RE::BGSKeyword* keyword_base_delay_from_attack_shield_magick_;
+    RE::BGSKeyword* keyword_base_delay_from_attack_shield_all_;
+
+    RE::BGSKeyword* keyword_cap_from_attack_shield_physick_;
+    RE::BGSKeyword* keyword_cap_from_attack_shield_magick_;
+    RE::BGSKeyword* keyword_cap_from_attack_shield_all_;
+
     RE::BGSKeyword* exclusive_keyword_;
   };
 
@@ -1050,6 +1140,9 @@ private:
   // soul link
   SoulLinkConfig soul_link_;
 
+  // potions drink limit
+  PotionsDrinkLimitConfig potions_drink_limit_;
+
   public:
   [[nodiscard]] static auto get_singleton() noexcept -> const Config&;
 
@@ -1115,8 +1208,13 @@ private:
   [[nodiscard]] const ItemLimitConfig& item_limit() const { return item_limit_; }
 
   [[nodiscard]] const DeathLootConfig& death_loot() const { return death_loot_; }
-  
+
   [[nodiscard]] const SoulLinkConfig& soul_link() const { return soul_link_; }
+
+  [[nodiscard]] const PotionsDrinkLimitConfig& potions_drink_limit() const
+  {
+    return potions_drink_limit_;
+  }
 };
 
 } // namespace Reflyem

@@ -3,11 +3,19 @@
 namespace Adresses
 {
 static inline REL::Relocation<uintptr_t> on_weapon_hit{RELOCATION_ID(37673, 0)};
+static inline REL::Relocation<uintptr_t> on_arrow_call_hit{RELOCATION_ID(43027, 0)};
+static inline REL::Relocation<uintptr_t> on_is_blocked{RELOCATION_ID(42842, 0)};
 // static inline REL::Relocation<uintptr_t> on_init_hit_data{RELOCATION_ID(37673, 0)};
 static inline REL::Relocation<uintptr_t> on_apply_spells_from_attack{RELOCATION_ID(37673, 0)};
 static inline REL::Relocation<uintptr_t> on_regeneration_health{RELOCATION_ID(37509, 0)};
 static inline REL::Relocation<uintptr_t> on_regeneration_stamina{RELOCATION_ID(37510, 0)};
 static inline REL::Relocation<uintptr_t> on_regeneration_magicka{RELOCATION_ID(37511, 0)};
+static inline REL::Relocation<uintptr_t> on_actor_value_for_cost_during_cast{
+    RELOCATION_ID(33362, 0)};
+static inline REL::Relocation<uintptr_t> on_actor_value_for_cost_check_cast{
+    RELOCATION_ID(33364, 0)};
+static inline REL::Relocation<uintptr_t> on_actor_value_for_cost_restore_value{
+    RELOCATION_ID(33359, 0)};
 static inline REL::Relocation<uintptr_t> on_melee_collision{RELOCATION_ID(37650, 0)};
 static inline REL::Relocation<uintptr_t> on_main_update{RELOCATION_ID(35551, 0)};
 static inline REL::Relocation<uintptr_t> on_adjust_active_effect{RELOCATION_ID(33763, 0)};
@@ -29,6 +37,7 @@ static inline REL::Relocation<uintptr_t> on_actor_add_object_pc{RELOCATION_ID(26
 static inline REL::Relocation<uintptr_t> on_actor_pickup_object_pc{RELOCATION_ID(261916, 0)};
 static inline REL::Relocation<uintptr_t> on_check_resistance_npc{RELOCATION_ID(261401, 0)};
 static inline REL::Relocation<uintptr_t> on_check_resistance_pc{RELOCATION_ID(261920, 0)};
+static inline REL::Relocation<uintptr_t> on_drink_potion_pc{RELOCATION_ID(261916, 0)};
 static inline REL::Relocation<uintptr_t> on_ench_ignores_resistance{RELOCATION_ID(228570, 0)};
 static inline REL::Relocation<uintptr_t> on_ench_get_no_absorb{RELOCATION_ID(228570, 0)};
 static inline REL::Relocation<uintptr_t> on_trap_apply_damage{RELOCATION_ID(36509, 0)};
@@ -52,11 +61,18 @@ static inline REL::Relocation<uintptr_t> on_value_owner_mod_actor_value_pc{
 namespace Offsets
 {
 static inline auto on_weapon_hit = RELOCATION_OFFSET(0x3C0, 0);
+static inline auto on_arrow_call_hit = RELOCATION_OFFSET(0x90, 0);
+static inline auto on_is_blocked = RELOCATION_OFFSET(0x2EA, 0);
 // static inline auto on_init_hit_data                             = RELOCATION_OFFSET(0x18F, 0);
 static inline auto on_apply_spells_from_attack = RELOCATION_OFFSET(0x185, 0);
 static inline auto on_regeneration_health = RELOCATION_OFFSET(0x68, 0);
 static inline auto on_regeneration_stamina = RELOCATION_OFFSET(0x176, 0);
 static inline auto on_regeneration_magicka = RELOCATION_OFFSET(0x68, 0);
+static inline auto on_actor_value_for_cost_during_cast = RELOCATION_OFFSET(0x151, 0);
+static inline auto on_actor_value_for_cost_check_cast = RELOCATION_OFFSET(0xC1, 0);
+static inline auto on_actor_value_for_cost_restore_value = RELOCATION_OFFSET(0x4C, 0);
+static inline auto on_cost_for_cast_conc_during_cast = RELOCATION_OFFSET(0x1C4, 0);
+static inline auto on_cost_for_cast_ff_during_cast = RELOCATION_OFFSET(0x1FB, 0);
 static inline auto on_melee_collision = RELOCATION_OFFSET(0x38B, 0);
 static inline auto on_main_update = RELOCATION_OFFSET(0x11f, 0);
 static inline auto on_adjust_active_effect = RELOCATION_OFFSET(0x4A3, 0);
@@ -75,6 +91,7 @@ static inline auto on_actor_add_object_pc = RELOCATION_OFFSET(0x5A, 0);
 static inline auto on_actor_pickup_object_pc = RELOCATION_OFFSET(0xCC, 0);
 static inline auto on_check_resistance_npc = RELOCATION_OFFSET(0x0A, 0);
 static inline auto on_check_resistance_pc = RELOCATION_OFFSET(0x0A, 0);
+static inline auto on_drink_potion_pc = RELOCATION_OFFSET(0x10F, 0);
 static inline auto on_ench_ignores_resistance = RELOCATION_OFFSET(0x5B, 0);
 static inline auto on_ench_get_no_absorb = RELOCATION_OFFSET(0x5E, 0);
 static inline auto on_trap_apply_damage = RELOCATION_OFFSET(0x43, 0);
@@ -145,6 +162,26 @@ struct OnActorAddObject final
   static inline REL::Relocation<decltype(pick_up_object)> pick_up_object_;
 };
 
+struct OnDrinkPotion final
+{
+  public:
+  static auto install_hook() -> void
+  {
+    logger::info("start hook OnActorDrinkPotion"sv);
+    drink_potion_ =
+        Adresses::on_drink_potion_pc.write_vfunc(Offsets::on_drink_potion_pc, drink_potion);
+    logger::info("finish hook OnActorDrinkPotion"sv);
+  }
+
+  private:
+  static auto drink_potion(
+      RE::Actor* this_,
+      RE::AlchemyItem* potion,
+      RE::ExtraDataList* extra_data_list) -> bool;
+
+  static inline REL::Relocation<decltype(drink_potion)> drink_potion_;
+};
+
 struct OnAttackData final
 {
   public:
@@ -197,6 +234,48 @@ struct OnApplySpellsFromAttack
       bool is_left,
       RE::Actor* target) -> void;
   static inline REL::Relocation<decltype(apply_spells_from_attack)> apply_spells_from_attack_;
+};
+
+struct OnArrowCallHit
+{
+    static auto install_hook(SKSE::Trampoline& trampoline) -> void
+    {
+        logger::info("start hook OnArrowCallHit"sv);
+        arrow_call_hit_ = trampoline.write_call<5>(
+            Adresses::on_arrow_call_hit.address() + Offsets::on_arrow_call_hit,
+            arrow_call_hit);
+        logger::info("finish hook OnArrowCallHit"sv);
+    }
+
+    static auto arrow_call_hit(
+        RE::Character* attacker,
+        RE::Actor* target,
+        RE::Projectile* projectile,
+        bool is_left) -> void;
+    static inline REL::Relocation<decltype(arrow_call_hit)> arrow_call_hit_;
+};
+
+struct OnAttackIsBlocked final
+{
+  static auto install_hook(SKSE::Trampoline& trampoline) -> void
+  {
+    logger::info("start hook OnAttackIsBlocked"sv);
+    is_blocked_ = trampoline.write_call<5>(
+        Adresses::on_is_blocked.address() + Offsets::on_is_blocked,
+        is_blocked);
+    logger::info("finish hook OnAttackIsBlocked"sv);
+  }
+
+  static auto is_blocked(
+      RE::Actor* attacker,
+      RE::Actor* target,
+      float* attacker_location_x,
+      float* target_location_x,
+      void* arg5,
+      float arg6,
+      float* arg7,
+      char arg8) -> bool;
+  static inline REL::Relocation<decltype(is_blocked)> is_blocked_;
 };
 
 struct OnAttackAction final
@@ -354,6 +433,45 @@ struct OnWeaponHit final
   private:
   static auto weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void;
   static inline REL::Relocation<decltype(weapon_hit)> weapon_hit_;
+};
+
+struct OnCastActorValue final
+{
+  public:
+  static auto install_hook(SKSE::Trampoline& trampoline) -> void
+  {
+    logger::info("start hook OnCastActorValue"sv);
+    actor_value_for_cost_check_cast_ = trampoline.write_call<5>(
+        Adresses::on_actor_value_for_cost_check_cast.address() +
+            Offsets::on_actor_value_for_cost_check_cast,
+        actor_value_for_cost_check_cast);
+    actor_value_for_cost_during_cast_ = trampoline.write_call<5>(
+        Adresses::on_actor_value_for_cost_during_cast.address() +
+            Offsets::on_actor_value_for_cost_during_cast,
+        actor_value_for_cost_during_cast);
+      actor_value_for_cost_restore_value_ = trampoline.write_call<5>(
+          Adresses::on_actor_value_for_cost_restore_value.address() +
+              Offsets::on_actor_value_for_cost_restore_value,
+          actor_value_for_cost_restore_value);
+    logger::info("OnCastActorValue hook install"sv);
+  }
+
+  private:
+  static auto actor_value_for_cost_check_cast(
+      RE::MagicItem* magic_item,
+      RE::MagicSystem::CastingSource cast_source) -> RE::ActorValue;
+  static auto actor_value_for_cost_during_cast(
+      RE::MagicItem* magic_item,
+      RE::MagicSystem::CastingSource cast_source) -> RE::ActorValue;
+    static auto actor_value_for_cost_restore_value(
+        RE::MagicItem* magic_item,
+        RE::MagicSystem::CastingSource cast_source) -> RE::ActorValue;
+  static inline REL::Relocation<decltype(actor_value_for_cost_check_cast)>
+      actor_value_for_cost_check_cast_;
+  static inline REL::Relocation<decltype(actor_value_for_cost_during_cast)>
+      actor_value_for_cost_during_cast_;
+    static inline REL::Relocation<decltype(actor_value_for_cost_restore_value)>
+        actor_value_for_cost_restore_value_;
 };
 
 struct OnTrapHit final

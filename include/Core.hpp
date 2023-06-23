@@ -39,6 +39,9 @@ struct ActorsCache final
 {
   struct Data final
   {
+    static constexpr auto POTIONS_ARRAY_SIZE = 128;
+    float potions_cooldawn_timers[POTIONS_ARRAY_SIZE]{};
+
 private:
     float last_delta_update_{0.f};
 
@@ -54,8 +57,17 @@ private:
     float update_1000_timer_{0.f};
 
     float bash_parry_timer_{0.f};
+    float bash_parry_timer_no_hit_{0.f};
 
     float petrified_blood_accumulator_{0.f};
+
+    float absorb_shield_value_magick_{0.f};
+    float absorb_shield_value_physic_{0.f};
+    float absorb_shield_value_all_{0.f};
+
+    float absorb_shield_from_attack_value_magick_{0.f};
+    float absorb_shield_from_attack_value_physic_{0.f};
+    float absorb_shield_from_attack_value_all_{0.f};
 
     uint64_t last_tick_count_{GetTickCount64()};
 
@@ -77,6 +89,14 @@ public:
       mod(timing_parry_counter_, count);
     }
 
+    auto mod_potions_cooldawn_timers(const float delta) -> void
+    {
+      for (int32_t index : views::iota(0, POTIONS_ARRAY_SIZE))
+        {
+          mod(potions_cooldawn_timers[index], delta);
+        }
+    }
+
     auto mod_timing_parry_counter_timer(const float delta) -> void
     {
       timing_parry_counter_timer_ += delta;
@@ -85,6 +105,51 @@ public:
           timing_parry_counter(0);
           timing_parry_counter_timer_ = 0;
         }
+    }
+
+    auto mod_absorb_shield_value_magick(const float delta) -> void
+    {
+      mod(absorb_shield_value_magick_, delta);
+    }
+    auto mod_absorb_shield_value_physic(const float delta) -> void
+    {
+      mod(absorb_shield_value_physic_, delta);
+    }
+    auto mod_absorb_shield_value_all(const float delta) -> void
+    {
+      mod(absorb_shield_value_all_, delta);
+    }
+    auto mod_absorb_shield_from_attack_value_magick(const float delta) -> void
+    {
+      mod(absorb_shield_from_attack_value_magick_, delta);
+    }
+    auto mod_absorb_shield_from_attack_value_physic(const float delta) -> void
+    {
+      mod(absorb_shield_from_attack_value_physic_, delta);
+    }
+    auto mod_absorb_shield_from_attack_value_all(const float delta) -> void
+    {
+      mod(absorb_shield_from_attack_value_all_, delta);
+    }
+
+    auto mod_absorbs_not_from_attack(const float delta) -> void
+    {
+      mod_absorb_shield_value_all(delta);
+      mod_absorb_shield_value_physic(delta);
+      mod_absorb_shield_value_magick(delta);
+    }
+
+    auto mod_absorbs_from_attack(const float delta) -> void
+    {
+      mod_absorb_shield_from_attack_value_all(delta);
+      mod_absorb_shield_from_attack_value_physic(delta);
+      mod_absorb_shield_from_attack_value_magick(delta);
+    }
+
+    auto mod_all_absorbs(const float delta) -> void
+    {
+      mod_absorbs_not_from_attack(delta);
+      mod_absorbs_from_attack(delta);
     }
 
     auto mod_cast_on_crit_delay(const float delta) -> void { mod(cast_on_crit_delay_, delta); }
@@ -98,6 +163,11 @@ public:
     auto mod_update_1000_timer(const float delta) -> void { mod(update_1000_timer_, delta); }
 
     auto mod_bash_parry_timer(const float delta) -> void { mod(bash_parry_timer_, delta); }
+
+    auto mod_bash_parry_timer_no_hit(const float delta) -> void
+    {
+      mod(bash_parry_timer_no_hit_, delta);
+    }
 
     auto mod_petrified_blood_accumulator(const float delta) -> void
     {
@@ -170,11 +240,59 @@ public:
       set(bash_parry_timer_, bash_parry_timer);
     }
 
+    [[nodiscard]] float bash_parry_timer_no_hit() const { return bash_parry_timer_no_hit_; }
+
+    void bash_parry_timer_no_hit(const float bash_parry_timer_no_hit)
+    {
+      set(bash_parry_timer_no_hit_, bash_parry_timer_no_hit);
+    }
+
     [[nodiscard]] float petrified_blood_accumulator() const { return petrified_blood_accumulator_; }
 
     void petrified_blood_accumulator(const float petrified_blood_accumulator)
     {
       set(petrified_blood_accumulator_, petrified_blood_accumulator);
+    }
+
+    void absorb_shield_value_magick(const float absorb_shield_value_magick)
+    {
+      set(absorb_shield_value_magick_, absorb_shield_value_magick);
+    }
+    void absorb_shield_value_physic(const float absorb_shield_value_physic)
+    {
+      set(absorb_shield_value_physic_, absorb_shield_value_physic);
+    }
+    void absorb_shield_value_all(const float absorb_shield_value_all)
+    {
+      set(absorb_shield_value_all_, absorb_shield_value_all);
+    }
+    void absorb_shield_from_attack_value_magick(const float absorb_shield_from_attack_value_magick)
+    {
+      set(absorb_shield_from_attack_value_magick_, absorb_shield_from_attack_value_magick);
+    }
+    void absorb_shield_from_attack_value_physic(const float absorb_shield_from_attack_value_physic)
+    {
+      set(absorb_shield_from_attack_value_physic_, absorb_shield_from_attack_value_physic);
+    }
+    void absorb_shield_from_attack_value_all(const float absorb_shield_from_attack_value_all)
+    {
+      set(absorb_shield_from_attack_value_all_, absorb_shield_from_attack_value_all);
+    }
+
+    [[nodiscard]] float absorb_shield_value_magick() const { return absorb_shield_value_magick_; }
+    [[nodiscard]] float absorb_shield_value_physic() const { return absorb_shield_value_physic_; }
+    [[nodiscard]] float absorb_shield_value_all() const { return absorb_shield_value_all_; }
+    [[nodiscard]] float absorb_shield_from_attack_value_magick() const
+    {
+      return absorb_shield_from_attack_value_magick_;
+    }
+    [[nodiscard]] float absorb_shield_from_attack_value_physic() const
+    {
+      return absorb_shield_from_attack_value_physic_;
+    }
+    [[nodiscard]] float absorb_shield_from_attack_value_all() const
+    {
+      return absorb_shield_from_attack_value_all_;
     }
 
     [[nodiscard]] uint64_t last_tick_count() const { return last_tick_count_; }
@@ -186,12 +304,14 @@ public:
     {
       const auto negative_delta = -std::abs(delta);
       mod_bash_parry_timer(negative_delta);
+      mod_bash_parry_timer_no_hit(negative_delta);
       mod_cast_on_crit_delay(negative_delta);
       mod_timing_block_timer(negative_delta);
       mod_update_50_timer(negative_delta);
       mod_update_100_timer(negative_delta);
       mod_update_1000_timer(negative_delta);
       mod_timing_parry_counter_timer(negative_delta);
+      mod_potions_cooldawn_timers(negative_delta);
     }
   };
 
@@ -203,7 +323,7 @@ public:
   std::mutex mutex_;
   static constexpr uint32_t LABEL = 'ACCA';
   // ReSharper disable once CppVariableCanBeMadeConstexpr
-  static const int32_t SERIALIZATION_VERSION = 2;
+  static const int32_t SERIALIZATION_VERSION = 4;
 
   [[nodiscard]] static auto is_garbage(const Data& data) -> bool
   {
@@ -379,7 +499,6 @@ public:
         const auto data = at(key);
         return data;
       }
-    garbage_collector();
     cache_map_[key] = Data();
     const auto data = at(key);
     return data;
@@ -405,6 +524,12 @@ auto get_random_int() -> int;
 
 auto actor_from_ni_pointer(const RE::NiPointer<RE::TESObjectREFR>* ni_actor) -> RE::Actor*;
 
+auto actor_from_actor_handle(const RE::ActorHandle* handle) -> RE::Actor*;
+
+auto get_commander_actor(const RE::Actor* actor) -> RE::Actor*;
+
+auto get_commanded_actors(const RE::Actor* actor) -> RE::BSTArray<RE::CommandedActorData>*;
+
 auto is_player_ally(RE::Actor* actor) -> bool;
 
 auto damage_actor_value(RE::Actor& actor, RE::ActorValue av, float value) -> void;
@@ -422,6 +547,9 @@ auto can_modify_actor_value(
 auto flash_hud_meter(const RE::ActorValue av) -> void;
 
 auto actor_has_active_mgef_with_keyword(RE::Actor& actor, const RE::BGSKeyword& keyword) -> bool;
+
+auto try_actor_has_active_mgef_with_keyword(RE::Actor* actor, const RE::BGSKeyword* keyword)
+    -> bool;
 
 auto get_effects_magnitude_sum(const std::vector<RE::ActiveEffect*>& effects)
     -> std::optional<float>;
@@ -449,6 +577,8 @@ auto cast_on_handle(RE::TESForm* keyword, RE::TESForm* spell, RE::Actor& target,
 auto is_power_attacking(RE::Actor& actor) -> bool;
 
 auto has_absolute_keyword(RE::Actor& actor, RE::BGSKeyword& keyword) -> bool;
+
+auto try_has_absolute_keyword(RE::Actor* actor, RE::BGSKeyword* keyword) -> bool;
 
 auto is_casting_actor(RE::Character& character) -> bool;
 
@@ -483,6 +613,10 @@ auto get_weapon(const RE::Actor& actor, const bool is_left_hand, RE::TESObjectWE
     -> RE::TESObjectWEAP*;
 
 auto form_has_keyword(const RE::TESForm* form, const RE::BGSKeyword* keyword) -> bool;
+
+auto is_dual_wielding(const RE::Actor* actor) -> bool;
+
+auto is_bashing(const RE::Actor* attacker) -> bool;
 
 auto play_sound(RE::BGSSoundDescriptorForm* sound, RE::Actor* actor) -> void;
 
