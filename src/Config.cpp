@@ -121,6 +121,7 @@ constexpr inline std::string_view CastOnParryBash = "CastOnParryBash";
 constexpr inline std::string_view CastOnKill = "CastOnKill";
 constexpr inline std::string_view RegenDelay = "RegenDelay";
 constexpr inline std::string_view ResistTweaks = "ResistTweaks";
+constexpr inline std::string_view MaxResistKeywordId = "MaxResistKeywordId";
 constexpr inline std::string_view EnableCheckResistance = "EnableCheckResistance";
 constexpr inline std::string_view EnchGetNoAbsorb = "EnchGetNoAbsorb";
 constexpr inline std::string_view EnchIgnoreResistance = "EnchIgnoreResistance";
@@ -827,6 +828,12 @@ Config::ResistTweaksConfig::ResistTweaksConfig(
     {
       ench_get_no_absorb_ = tbl[ResistTweaks][EnchGetNoAbsorb].value_or(false);
       enable_check_resistance_ = tbl[ResistTweaks][EnableCheckResistance].value_or(false);
+      const auto max_resist_keyword_form_id =
+          tbl[ResistTweaks][MaxResistKeywordId].value<RE::FormID>();
+      max_resist_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(
+          max_resist_keyword_form_id.value(),
+          config.mod_name());
+      low_ = tbl[ResistTweaks][Low].value_or(-100.f);
       no_double_resist_check_magick_ = tbl[ResistTweaks][NoDoubleResistCheckMagick].value_or(false);
       no_double_resist_check_poison_ = tbl[ResistTweaks][NoDoubleResistCheckPoison].value_or(false);
       npc_max_resistance_ = tbl[ResistTweaks][NpcMaxResistance].value_or(false);

@@ -157,6 +157,8 @@ auto can_modify_actor_value(
 auto get_effects_magnitude_sum(const std::vector<RE::ActiveEffect*>& effects)
     -> std::optional<float>
 {
+  if (effects.empty()) { return std::nullopt; }
+
   auto pos_value = 0.f;
   auto neg_value = 0.f;
 
@@ -200,6 +202,37 @@ auto get_effects_by_keyword(RE::Actor& actor, const RE::BGSKeyword& keyword)
       const auto effect = active_effect->effect;
 
       if (const auto base_effect = effect->baseEffect; !base_effect->HasKeywordID(keyword.formID))
+        {
+          continue;
+        }
+
+      effects.push_back(active_effect);
+    }
+
+  return effects;
+}
+
+auto try_get_effects_by_keyword(RE::Actor* actor, const RE::BGSKeyword* keyword)
+    -> std::vector<RE::ActiveEffect*>
+{
+  std::vector<RE::ActiveEffect*> effects = {};
+
+  if (!actor || !keyword) { return effects; }
+
+  auto active_effects = actor->GetActiveEffectList();
+  if (!active_effects) { return effects; }
+
+  for (auto active_effect : *active_effects)
+    {
+      if (!active_effect || active_effect->flags.any(RE::ActiveEffect::Flag::kInactive) ||
+          !active_effect->effect || !active_effect->effect->baseEffect)
+        {
+          continue;
+        }
+
+      const auto effect = active_effect->effect;
+
+      if (const auto base_effect = effect->baseEffect; !base_effect->HasKeywordID(keyword->formID))
         {
           continue;
         }
@@ -313,15 +346,17 @@ auto try_actor_has_active_mgef_with_keyword(RE::Actor* actor, const RE::BGSKeywo
 
 auto cast(RE::SpellItem& spell, RE::Actor& target, RE::Actor& caster) -> void
 {
+  auto& caster_ = false ? spell.HasKeyword(nullptr) ? target : caster : caster;
+  auto& target_ = false ? spell.HasKeyword(nullptr) ? caster : target : target;
   if (spell.data.delivery == RE::MagicSystem::Delivery::kSelf)
     {
       caster.GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)
-          ->CastSpellImmediate(&spell, true, &caster, 1.00f, false, 0.0f, &caster);
+          ->CastSpellImmediate(&spell, true, &caster_, 1.00f, false, 0.0f, &caster_);
     }
   else
     {
       caster.GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)
-          ->CastSpellImmediate(&spell, true, &target, 1.00f, false, 0.0f, &caster);
+          ->CastSpellImmediate(&spell, true, &target_, 1.00f, false, 0.0f, &caster_);
     }
 }
 

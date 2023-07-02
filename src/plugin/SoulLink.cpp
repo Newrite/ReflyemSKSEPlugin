@@ -159,7 +159,7 @@ auto modify_actor_value(
 
 auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& config) -> void
 {
-  if (!target) { return; }
+  if (!target || target->IsDead()) { return; }
 
   if (hit_data.weapon && config.soul_link().exclusive_keyword() &&
       hit_data.weapon->HasKeyword(config.soul_link().exclusive_keyword()))

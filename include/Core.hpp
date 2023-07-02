@@ -557,6 +557,9 @@ auto get_effects_magnitude_sum(const std::vector<RE::ActiveEffect*>& effects)
 auto get_effects_by_keyword(RE::Actor& actor, const RE::BGSKeyword& keyword)
     -> std::vector<RE::ActiveEffect*>;
 
+auto try_get_effects_by_keyword(RE::Actor* actor, const RE::BGSKeyword* keyword)
+    -> std::vector<RE::ActiveEffect*>;
+
 auto get_dual_value_mult(const RE::ValueModifierEffect& active_effect) -> float;
 
 auto get_second_av(const RE::ActiveEffect& active_effect) -> RE::ActorValue;

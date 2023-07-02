@@ -686,6 +686,8 @@ private:
     [[nodiscard]] bool enable() const { return enable_; }
 
     [[nodiscard]] bool enable_check_resistance() const { return enable_check_resistance_; }
+    [[nodiscard]] RE::BGSKeyword* max_resist_keyword() const { return max_resist_keyword_; }
+    [[nodiscard]] float low() const { return low_; }
 
     [[nodiscard]] bool no_double_resist_check_magick() const
     {
@@ -733,6 +735,8 @@ private:
 private:
     bool enable_;
     bool enable_check_resistance_;
+    RE::BGSKeyword* max_resist_keyword_;
+    float low_;
     bool no_double_resist_check_magick_;
     bool no_double_resist_check_poison_;
     bool no_av_damage_resist_penetration_;

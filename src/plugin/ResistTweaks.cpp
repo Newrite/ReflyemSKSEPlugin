@@ -73,7 +73,55 @@ auto resist_value_after_penetration(RE::Actor* value_owner, const RE::ActorValue
   if (penetration_value >= 100.f) { return 0.f; }
 
   return resist_value * (1 - (penetration_value / 100.f));
-};
+}
+
+auto get_second_resist_av(const RE::MagicItem& magic_item) -> RE::ActorValue
+{
+  if (magic_item.IsPoison()) { return RE::ActorValue::kPoisonResist; }
+  return RE::ActorValue::kResistMagic;
+}
+
+auto get_resist_percent(
+    RE::Actor* value_owner,
+    const RE::ActorValue resist_av,
+    float low_cap,
+    float high_cap,
+    const Config& config) -> float
+{
+  if (resist_av == RE::ActorValue::kNone) { return 1.f; }
+
+  auto resist_weight = config.resist_tweaks().resist_weight();
+
+  if (config.resist_tweaks().enable_damage_resist_tweak() &&
+      resist_av == RE::ActorValue::kDamageResist)
+    {
+      const auto armor_scaling =
+          RE::GameSettingCollection::GetSingleton()->GetSetting("fArmorScalingFactor")->GetFloat();
+
+      high_cap = 100.f / armor_scaling;
+      low_cap = low_cap / armor_scaling;
+      resist_weight = armor_scaling / 100.f;
+    }
+
+  auto resist_value = resist_value_after_penetration(value_owner, resist_av);
+  if (resist_value < low_cap) { resist_value = low_cap; }
+  if (resist_value > high_cap) { resist_value = high_cap; }
+
+  return 1.f - (resist_value * resist_weight);
+}
+
+auto get_max_resist(RE::Actor* actor, const Config& config) -> float
+{
+  auto resist =
+      RE::GameSettingCollection::GetSingleton()->GetSetting("fPlayerMaxResistance")->GetFloat();
+  if (!config.resist_tweaks().npc_max_resistance() && !actor->IsPlayerRef()) { resist = 100.f; }
+  let effects = Core::try_get_effects_by_keyword(actor, config.resist_tweaks().max_resist_keyword());
+  let effects_sum = Core::get_effects_magnitude_sum(effects).value_or(0.f);
+  resist = resist + effects_sum;
+  if (resist >= 100.f) { return 0.f; }
+  if (resist <= 0.f) { return 1.f; }
+  return 1.f - (resist * 0.01f);
+}
 
 auto check_resistance(
     RE::MagicTarget& this_,
@@ -105,8 +153,6 @@ auto check_resistance(
       return 1.f;
     }
 
-  auto resist_av = effect.baseEffect->data.resistVariable;
-
   // ReSharper disable once CppCStyleCast  // NOLINT(clang-diagnostic-cast-align)
   const auto actor = (RE::Actor*)((char*)&this_ - 0x98);
   if (!actor)
@@ -115,104 +161,40 @@ auto check_resistance(
       return 1.f;
     }
 
-  auto max_resist = []() -> float
-  {
-    const auto resist =
-        RE::GameSettingCollection::GetSingleton()->GetSetting("fPlayerMaxResistance")->GetFloat();
-    if (resist > 100.f) { return 0.f; }
-    if (resist <= 0.f) { return 1.f; }
-    return 1 - (resist * 0.01f);
-  }();
+  const auto resist_av = effect.baseEffect->data.resistVariable;
+  const auto second_resist_av = get_second_resist_av(magic_item);
 
-  if (!config.resist_tweaks().npc_max_resistance() && !actor->IsPlayerRef()) { max_resist = 0.f; }
+  const auto max_resist = get_max_resist(actor, config);
 
   const auto high_cap = 1.f / config.resist_tweaks().resist_weight();
-  constexpr auto low_cap = 0.f;
+  const auto low_cap = config.resist_tweaks().low();
 
-  auto second_resist_percent = [&](RE::Actor* value_owner, const RE::MagicItem& item) -> float
-  {
-    const auto second_resist_av = [&magic_item]() -> RE::ActorValue
-    {
-      if (magic_item.IsPoison()) { return RE::ActorValue::kPoisonResist; }
-      return RE::ActorValue::kResistMagic;
-    }();
+  auto resist_percent = get_resist_percent(actor, resist_av, low_cap, high_cap, config);
+  auto second_resist_percent =
+      get_resist_percent(actor, second_resist_av, low_cap, high_cap, config);
 
-    if (magic_item.IsPoison() && config.resist_tweaks().no_double_resist_check_poison() &&
-        resist_av != RE::ActorValue::kNone)
-      {
-        return 1.f;
-      }
-
-    if (config.resist_tweaks().no_double_resist_check_magick() &&
-        resist_av != RE::ActorValue::kNone)
-      {
-        return 1.f;
-      }
-
-    // if (item.IsPoison())
-    //
-    //   if (item.IsPoison())
-    //     {
-    //       if (config.resist_tweaks().no_double_resist_check_poison() && true &&
-    //           resist_av == RE::ActorValue::kNone)
-    //         {
-    //           second_resist_av = RE::ActorValue::kPoisonResist;
-    //         }
-    //       if (config.resist_tweaks().no_double_resist_check_poison()) { return 1.f; }
-    //       second_resist_av = RE::ActorValue::kPoisonResist;
-    //     }
-    //
-    // if (config.resist_tweaks().no_double_resist_check_magick() &&
-    //     second_resist_av == RE::ActorValue::kResistMagic)
-    //   {
-    //     if (true && resist_av == RE::ActorValue::kNone)
-    //       {
-    //         resist_av = RE::ActorValue::kResistMagic;
-    //       }
-    //     return 1.f;
-    //   }
-
-    // if (resist_av == second_resist_av) { return 1.f; }
-
-    const auto second_resist_value = resist_value_after_penetration(value_owner, second_resist_av);
-    if (second_resist_value <= low_cap) { return 1.f; }
-    if (second_resist_value >= high_cap) { return max_resist; }
-
-    return 1.f - (second_resist_value * config.resist_tweaks().resist_weight());
-  }(actor, magic_item);
-
+  if (resist_percent < max_resist) { resist_percent = max_resist; }
   if (second_resist_percent < max_resist) { second_resist_percent = max_resist; }
 
-  if (config.resist_tweaks().enable_damage_resist_tweak() &&
-      resist_av == RE::ActorValue::kDamageResist)
-    {
-      if (config.resist_tweaks().no_double_damage_resist_check()) { second_resist_percent = 1.f; }
-
-      const auto armor_scaling =
-          RE::GameSettingCollection::GetSingleton()->GetSetting("fArmorScalingFactor")->GetFloat();
-
-      const auto damage_resist_high_cap = 100.f / armor_scaling;
-
-      const auto resist_value = resist_value_after_penetration(actor, resist_av);
-      if (resist_value <= low_cap) { return 1.f * second_resist_percent; }
-      if (resist_value >= damage_resist_high_cap) { return max_resist * second_resist_percent; }
-
-      auto resist_percent = 1.f - (resist_value * armor_scaling / 100);
-      if (resist_percent < max_resist) { resist_percent = max_resist; }
-
-      return resist_percent * second_resist_percent;
-    }
-
-  auto resist_value = 0.f;
   if (resist_av != RE::ActorValue::kNone)
     {
-      resist_value = resist_value_after_penetration(actor, resist_av);
+      if (second_resist_av == RE::ActorValue::kPoisonResist &&
+          config.resist_tweaks().no_double_resist_check_poison())
+        {
+          second_resist_percent = 1.f;
+        }
+      if (second_resist_av == RE::ActorValue::kResistMagic &&
+          config.resist_tweaks().no_double_resist_check_magick())
+        {
+          second_resist_percent = 1.f;
+        }
+      if (resist_av == RE::ActorValue::kDamageResist &&
+          config.resist_tweaks().enable_damage_resist_tweak() &&
+          config.resist_tweaks().no_double_damage_resist_check())
+        {
+          second_resist_percent = 1.f;
+        }
     }
-  if (resist_value <= low_cap) { return 1.f * second_resist_percent; }
-  if (resist_value >= high_cap) { return max_resist * second_resist_percent; }
-
-  auto resist_percent = 1.f - (resist_value * config.resist_tweaks().resist_weight());
-  if (resist_percent < max_resist) { resist_percent = max_resist; }
 
   return resist_percent * second_resist_percent;
 }
