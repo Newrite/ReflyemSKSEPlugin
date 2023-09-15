@@ -1,5 +1,4 @@
 ﻿#include "plugin/TimingBlock.hpp"
-#include "Core.hpp"
 
 namespace Reflyem::TimingBlock
 {
@@ -70,7 +69,7 @@ auto is_allow_timing_parry(
     }
 
   const auto timing_effects =
-      Core::get_effects_by_keyword(attacker, *config.timing_block().parry_timing_keyword());
+      Core::get_effects_by_keyword(target, *config.timing_block().parry_timing_keyword());
   const auto parry_timing = config.timing_block().parry_timing() +
                             Core::get_effects_magnitude_sum(timing_effects).value_or(0.f);
 
@@ -99,7 +98,7 @@ auto is_allow_timing_block(
     }
 
   const auto timing_effects =
-      Core::get_effects_by_keyword(attacker, *config.timing_block().block_timing_keyword());
+      Core::get_effects_by_keyword(target, *config.timing_block().block_timing_keyword());
   const auto block_timing = config.timing_block().block_timing() +
                             Core::get_effects_magnitude_sum(timing_effects).value_or(0.f);
 

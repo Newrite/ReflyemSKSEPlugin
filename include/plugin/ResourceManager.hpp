@@ -75,7 +75,12 @@ struct ResourceDrain final
   }
 };
 
-auto regeneration(RE::Actor& actor, const RE::ActorValue av, const float delta) -> float;
+auto regeneration_actor_value(
+    RE::Actor& actor,
+    const RE::ActorValue regen_av,
+    const RE::ActorValue regen_av_mult) -> float;
+
+// auto regeneration(RE::Actor& actor, const RE::ActorValue av, const float delta) -> float;
 
 auto calc_mask_sum(const FormMask& f_mask) -> std::int32_t;
 

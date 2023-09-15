@@ -5,11 +5,30 @@ namespace Adresses
 static inline REL::Relocation<uintptr_t> on_weapon_hit{RELOCATION_ID(37673, 0)};
 static inline REL::Relocation<uintptr_t> on_arrow_call_hit{RELOCATION_ID(43027, 0)};
 static inline REL::Relocation<uintptr_t> on_is_blocked{RELOCATION_ID(42842, 0)};
+static inline REL::Relocation<uintptr_t> on_fill_actor_caster_enchant_data{RELOCATION_ID(33370, 0)};
+static inline REL::Relocation<uintptr_t> on_container_menu{RELOCATION_ID(268222, 0)};
+static inline REL::Relocation<uintptr_t> on_equip_manager_equip_spell{RELOCATION_ID(37939, 0)};
+static inline REL::Relocation<uintptr_t> on_spell_equip{RELOCATION_ID(37965, 0)};
+static inline REL::Relocation<uintptr_t> on_standard_item_data{RELOCATION_ID(267990, 0)};
+static inline REL::Relocation<uintptr_t> on_magic_item_data{RELOCATION_ID(269320, 0)};
+static inline REL::Relocation<uintptr_t> on_some_menu_call_equip_slot_01{RELOCATION_ID(50650, 0)};
+static inline REL::Relocation<uintptr_t> on_some_menu_call_equip_slot_02{RELOCATION_ID(50657, 0)};
+static inline REL::Relocation<uintptr_t> on_some_menu_call_equip_slot_03{RELOCATION_ID(50659, 0)};
+static inline REL::Relocation<uintptr_t> on_spell_equip_menu{RELOCATION_ID(51164, 0)};
+static inline REL::Relocation<uintptr_t> on_spell_equip_menu_favorite{RELOCATION_ID(50654, 0)};
+static inline REL::Relocation<uintptr_t> on_some_equip{RELOCATION_ID(37938, 0)};
+static inline REL::Relocation<uintptr_t> on_set_spell_impl{RELOCATION_ID(257613, 0)};
 // static inline REL::Relocation<uintptr_t> on_init_hit_data{RELOCATION_ID(37673, 0)};
 static inline REL::Relocation<uintptr_t> on_apply_spells_from_attack{RELOCATION_ID(37673, 0)};
 static inline REL::Relocation<uintptr_t> on_regeneration_health{RELOCATION_ID(37509, 0)};
 static inline REL::Relocation<uintptr_t> on_regeneration_stamina{RELOCATION_ID(37510, 0)};
+static inline REL::Relocation<uintptr_t> on_regeneration_stamina_calculate_const_delta{
+    RELOCATION_ID(40356, 0)};
+static inline REL::Relocation<uintptr_t> on_regeneration_stamina_calculate{RELOCATION_ID(37831, 0)};
 static inline REL::Relocation<uintptr_t> on_regeneration_magicka{RELOCATION_ID(37511, 0)};
+static inline REL::Relocation<uintptr_t> on_calculate_sprint_cost{RELOCATION_ID(36994, 0)};
+static inline REL::Relocation<uintptr_t> on_check_mount_in_encumbered{RELOCATION_ID(36457, 0)};
+static inline REL::Relocation<uintptr_t> on_regeneration_permanent_value{RELOCATION_ID(37515, 0)};
 static inline REL::Relocation<uintptr_t> on_actor_value_for_cost_during_cast{
     RELOCATION_ID(33362, 0)};
 static inline REL::Relocation<uintptr_t> on_actor_value_for_cost_check_cast{
@@ -32,12 +51,16 @@ static inline REL::Relocation<uintptr_t> on_dual_modify_actor_value_second_inner
     0)}; // thx Fenix31415 for this address, call inner ModifyActorValue method of DualMod
 static inline REL::Relocation<uintptr_t> on_attack_action{RELOCATION_ID(48139, 0)};
 static inline REL::Relocation<uintptr_t> on_actor_update_pc{RELOCATION_ID(261916, 0)};
+static inline REL::Relocation<uintptr_t> on_bound_equip_change{RELOCATION_ID(257628, 0)};
 static inline REL::Relocation<uintptr_t> on_actor_update_npc{RELOCATION_ID(261397, 0)};
 static inline REL::Relocation<uintptr_t> on_actor_add_object_pc{RELOCATION_ID(261916, 0)};
 static inline REL::Relocation<uintptr_t> on_actor_pickup_object_pc{RELOCATION_ID(261916, 0)};
 static inline REL::Relocation<uintptr_t> on_check_resistance_npc{RELOCATION_ID(261401, 0)};
 static inline REL::Relocation<uintptr_t> on_check_resistance_pc{RELOCATION_ID(261920, 0)};
 static inline REL::Relocation<uintptr_t> on_drink_potion_pc{RELOCATION_ID(261916, 0)};
+static inline REL::Relocation<uintptr_t> on_set_current_spell_pc{RELOCATION_ID(37813, 0)};
+static inline REL::Relocation<uintptr_t> on_set_current_spell_block{RELOCATION_ID(41338, 0)};
+static inline REL::Relocation<uintptr_t> on_set_current_spell_FUN{RELOCATION_ID(48037, 0)};
 static inline REL::Relocation<uintptr_t> on_ench_ignores_resistance{RELOCATION_ID(228570, 0)};
 static inline REL::Relocation<uintptr_t> on_ench_get_no_absorb{RELOCATION_ID(228570, 0)};
 static inline REL::Relocation<uintptr_t> on_trap_apply_damage{RELOCATION_ID(36509, 0)};
@@ -58,16 +81,43 @@ static inline REL::Relocation<uintptr_t> on_value_owner_mod_actor_value_pc{
     RELOCATION_ID(261921, 0)};
 } // namespace Adresses
 
+// FUN_1408793d0+155
+// void __fastcall ActorMagicCaster::sub_140542DD0(RE::ActorMagicCaster *caster,
+// RE::MagicSystem::CannotCastReason reasonCannotCast)
+
 namespace Offsets
 {
 static inline auto on_weapon_hit = RELOCATION_OFFSET(0x3C0, 0);
 static inline auto on_arrow_call_hit = RELOCATION_OFFSET(0x90, 0);
 static inline auto on_is_blocked = RELOCATION_OFFSET(0x2EA, 0);
+static inline auto on_container_menu_process_message = RELOCATION_OFFSET(0x04, 0);
+static inline auto on_container_menu_accept = RELOCATION_OFFSET(0x01, 0);
+static inline auto on_fill_actor_caster_enchant_data = RELOCATION_OFFSET(0x6E, 0);
+static inline auto on_equip_manager_equip_spell = RELOCATION_OFFSET(0x47, 0);
+static inline auto on_standard_item_data_equip_state = RELOCATION_OFFSET(0x03, 0);
+static inline auto on_some_menu_call_equip_slot_01 = RELOCATION_OFFSET(0x1DC, 0);
+static inline auto on_some_menu_call_equip_slot_02 = RELOCATION_OFFSET(0x16B, 0);
+static inline auto on_some_menu_call_equip_slot_03 = RELOCATION_OFFSET(0x161, 0);
+static inline auto on_magic_item_data_equip_state = RELOCATION_OFFSET(0x03, 0);
+static inline auto on_spell_equip_left = RELOCATION_OFFSET(0x4C, 0);
+static inline auto on_spell_equip_right = RELOCATION_OFFSET(0x6A, 0);
+static inline auto on_spell_equip_voice = RELOCATION_OFFSET(0x93, 0);
+static inline auto on_spell_equip_menu = RELOCATION_OFFSET(0xFF, 0);
+static inline auto on_spell_equip_menu_favorite = RELOCATION_OFFSET(0x155, 0);
+static inline auto on_some_equip = RELOCATION_OFFSET(0xE5, 0);
+static inline auto on_some_equip_default_slot = RELOCATION_OFFSET(0x7F, 0);
+static inline auto on_set_spell_impl = RELOCATION_OFFSET(0x11, 0);
 // static inline auto on_init_hit_data                             = RELOCATION_OFFSET(0x18F, 0);
 static inline auto on_apply_spells_from_attack = RELOCATION_OFFSET(0x185, 0);
 static inline auto on_regeneration_health = RELOCATION_OFFSET(0x68, 0);
 static inline auto on_regeneration_stamina = RELOCATION_OFFSET(0x176, 0);
+static inline auto on_regeneration_stamina_calculate_const_delta = RELOCATION_OFFSET(0x163, 0);
+static inline auto on_regeneration_stamina_calculate = RELOCATION_OFFSET(0x18E, 0);
 static inline auto on_regeneration_magicka = RELOCATION_OFFSET(0x68, 0);
+static inline auto on_calculate_sprint_cost = RELOCATION_OFFSET(0xC9, 0);
+static inline auto on_check_mount_in_encumbered = RELOCATION_OFFSET(0x1E, 0);
+static inline auto on_calculate_regeneration_health_magicka = RELOCATION_OFFSET(0x4C, 0);
+static inline auto on_regeneration_permanent_value = RELOCATION_OFFSET(0x1AF, 0);
 static inline auto on_actor_value_for_cost_during_cast = RELOCATION_OFFSET(0x151, 0);
 static inline auto on_actor_value_for_cost_check_cast = RELOCATION_OFFSET(0xC1, 0);
 static inline auto on_actor_value_for_cost_restore_value = RELOCATION_OFFSET(0x4C, 0);
@@ -86,12 +136,16 @@ static inline auto on_peak_modify_actor_value = RELOCATION_OFFSET(0x20, 0);
 static inline auto on_dual_modify_actor_value_second_inner_call = RELOCATION_OFFSET(0x5a, 0);
 static inline auto on_attack_action = RELOCATION_OFFSET(0x4D7, 0);
 static inline auto on_actor_update_pc = RELOCATION_OFFSET(0xAD, 0);
+static inline auto on_bound_equip_change = RELOCATION_OFFSET(0x01, 0);
 static inline auto on_actor_update_npc = RELOCATION_OFFSET(0xAD, 0);
 static inline auto on_actor_add_object_pc = RELOCATION_OFFSET(0x5A, 0);
 static inline auto on_actor_pickup_object_pc = RELOCATION_OFFSET(0xCC, 0);
 static inline auto on_check_resistance_npc = RELOCATION_OFFSET(0x0A, 0);
 static inline auto on_check_resistance_pc = RELOCATION_OFFSET(0x0A, 0);
 static inline auto on_drink_potion_pc = RELOCATION_OFFSET(0x10F, 0);
+static inline auto on_set_current_spell_pc = RELOCATION_OFFSET(0x74, 0);
+static inline auto on_set_current_spell_block = RELOCATION_OFFSET(0xA8, 0);
+static inline auto on_set_current_spell_FUN = RELOCATION_OFFSET(0x15E, 0);
 static inline auto on_ench_ignores_resistance = RELOCATION_OFFSET(0x5B, 0);
 static inline auto on_ench_get_no_absorb = RELOCATION_OFFSET(0x5E, 0);
 static inline auto on_trap_apply_damage = RELOCATION_OFFSET(0x43, 0);
@@ -127,6 +181,98 @@ struct OnCharacterUpdate final
 
   static inline REL::Relocation<decltype(update_npc)> update_npc_;
   static inline REL::Relocation<decltype(update_pc)> update_pc_;
+};
+
+struct OnActorUpdateEquipBound final
+{
+  public:
+  static auto install_hook() -> void
+  {
+    logger::info("start hook OnActorUpdateEquipBound"sv);
+    process_event_ =
+        Adresses::on_bound_equip_change.write_vfunc(Offsets::on_bound_equip_change, process_event);
+    logger::info("finish hook OnActorUpdateEquipBound"sv);
+  }
+
+  private:
+  static auto process_event(
+      const RE::ActorInventoryEvent* event,
+      RE::BSTEventSource<RE::ActorInventoryEvent>* event_source) -> RE::BSEventNotifyControl;
+
+  static inline REL::Relocation<decltype(process_event)> process_event_;
+};
+
+struct OnContainerMenu final
+{
+public:
+    static auto install_hook() -> void
+    {
+        logger::info("start hook OnContainerMenu"sv);
+        process_message_ =
+            Adresses::on_container_menu.write_vfunc(Offsets::on_container_menu_process_message, process_message);
+        accept_ =
+            Adresses::on_container_menu.write_vfunc(Offsets::on_container_menu_accept, accept);
+        logger::info("finish hook OnContainerMenu"sv);
+    }
+
+private:
+    static auto process_message(RE::ContainerMenu* this_, RE::UIMessage& message) -> RE::UI_MESSAGE_RESULTS;
+    static auto accept(RE::ContainerMenu* this_, RE::CallbackProcessor* processor) -> void;
+
+    static inline REL::Relocation<decltype(process_message)> process_message_;
+    static inline REL::Relocation<decltype(accept)> accept_;
+};
+
+struct OnStandardItemData final
+{
+public:
+    static auto install_hook() -> void
+    {
+        logger::info("start hook OnStandardItemData"sv);
+        get_equip_state_ =
+            Adresses::on_standard_item_data.write_vfunc(Offsets::on_standard_item_data_equip_state, get_equip_state);
+        logger::info("finish hook OnStandardItemData"sv);
+    }
+
+private:
+    static auto get_equip_state(
+        RE::StandardItemData* this_) -> std::uint32_t;
+
+    static inline REL::Relocation<decltype(get_equip_state)> get_equip_state_;
+};
+
+struct OnMagicItemData final
+{
+public:
+    static auto install_hook() -> void
+    {
+        logger::info("start hook OnMagicItemData"sv);
+        get_equip_state_ =
+            Adresses::on_magic_item_data.write_vfunc(Offsets::on_magic_item_data_equip_state, get_equip_state);
+        logger::info("finish hook OnMagicItemData"sv);
+    }
+
+private:
+    static auto get_equip_state(
+        RE::StandardItemData* this_) -> std::uint32_t;
+
+    static inline REL::Relocation<decltype(get_equip_state)> get_equip_state_;
+};
+
+struct OnActorMagicCaster final
+{
+  public:
+  static auto install_hook() -> void
+  {
+    logger::info("start hook OnActorMagicCaster"sv);
+    on_set_spell_impl_ =
+        Adresses::on_set_spell_impl.write_vfunc(Offsets::on_set_spell_impl, on_set_spell_impl);
+    logger::info("finish hook OnActorMagicCaster"sv);
+  }
+
+  private:
+  static auto on_set_spell_impl(RE::ActorMagicCaster* caster, RE::MagicItem* magic_item) -> void;
+  static inline REL::Relocation<decltype(on_set_spell_impl)> on_set_spell_impl_;
 };
 
 struct OnActorAddObject final
@@ -182,6 +328,46 @@ struct OnDrinkPotion final
   static inline REL::Relocation<decltype(drink_potion)> drink_potion_;
 };
 
+struct OnSetCurrentSpell final
+{
+  public:
+  static auto install_hook(SKSE::Trampoline& trampoline) -> void
+  {
+    logger::info("start hook OnSetCurrentSpell"sv);
+    set_spell_impl_pc_ = trampoline.write_call<5>(
+        Adresses::on_set_current_spell_pc.address() + Offsets::on_set_current_spell_pc,
+        set_spell_impl_pc);
+    set_spell_impl_block_ = trampoline.write_call<5>(
+        Adresses::on_set_current_spell_block.address() + Offsets::on_set_current_spell_block,
+        set_spell_impl_block);
+    set_spell_impl_FUN_ = trampoline.write_call<5>(
+        Adresses::on_set_current_spell_FUN.address() + Offsets::on_set_current_spell_FUN,
+        set_spell_impl_fun);
+    logger::info("finish hook OnSetCurrentSpell"sv);
+  }
+
+  private:
+  static auto set_spell_impl_pc(
+      RE::ActorMagicCaster* caster,
+      RE::MagicItem* magic_item,
+      RE::TESObjectREFR* ref,
+      bool a4) -> bool;
+  static auto set_spell_impl_block(
+      RE::ActorMagicCaster* caster,
+      RE::MagicItem* magic_item,
+      RE::TESObjectREFR* ref,
+      bool a4) -> bool;
+  static auto set_spell_impl_fun(
+      RE::ActorMagicCaster* caster,
+      RE::MagicItem* magic_item,
+      RE::TESObjectREFR* ref,
+      bool a4) -> bool;
+
+  static inline REL::Relocation<decltype(set_spell_impl_pc)> set_spell_impl_pc_;
+  static inline REL::Relocation<decltype(set_spell_impl_block)> set_spell_impl_block_;
+  static inline REL::Relocation<decltype(set_spell_impl_fun)> set_spell_impl_FUN_;
+};
+
 struct OnAttackData final
 {
   public:
@@ -198,6 +384,198 @@ struct OnAttackData final
   static auto process_attack(RE::ActorValueOwner* value_owner, RE::BGSAttackData* attack_data)
       -> void;
   static inline REL::Relocation<decltype(process_attack)> process_attack_;
+};
+
+struct OnSomeMenuEquipState final
+{
+public:
+    static auto install_hook(SKSE::Trampoline& trampoline) -> void
+    {
+        logger::info("start hook OnSomeMenuEquipState"sv);
+        get_equip_state_01_ = trampoline.write_call<5>(
+            Adresses::on_some_menu_call_equip_slot_01.address() + Offsets::on_some_menu_call_equip_slot_01,
+            get_equip_state_01);
+        get_equip_state_02_ = trampoline.write_call<5>(
+            Adresses::on_some_menu_call_equip_slot_02.address() + Offsets::on_some_menu_call_equip_slot_02,
+            get_equip_state_01);
+        get_equip_state_03_ = trampoline.write_call<5>(
+            Adresses::on_some_menu_call_equip_slot_03.address() + Offsets::on_some_menu_call_equip_slot_03,
+            get_equip_state_01);
+        logger::info("finish hook OnSomeMenuEquipState"sv);
+    }
+
+private:
+    static auto get_equip_state_01(RE::Actor* actor, RE::TESBoundObject* object, void* a3, void* a4)
+        -> std::uint32_t;
+    static auto get_equip_state_02(RE::Actor* actor, RE::TESBoundObject* object, void* a3, void* a4)
+        -> std::uint32_t;
+    static auto get_equip_state_03(RE::Actor* actor, RE::TESBoundObject* object, void* a3, void* a4)
+        -> std::uint32_t;
+    static inline REL::Relocation<decltype(get_equip_state_01)> get_equip_state_01_;
+    static inline REL::Relocation<decltype(get_equip_state_02)> get_equip_state_02_;
+    static inline REL::Relocation<decltype(get_equip_state_03)> get_equip_state_03_;
+};
+
+struct OnSpellEquip final
+{
+  public:
+  static auto install_hook(SKSE::Trampoline& trampoline) -> void
+  {
+    logger::info("start hook OnSpellEquip"sv);
+    equip_spell_left_ = trampoline.write_call<5>(
+        Adresses::on_spell_equip.address() + Offsets::on_spell_equip_left,
+        equip_spell_left);
+    equip_spell_right_ = trampoline.write_call<5>(
+        Adresses::on_spell_equip.address() + Offsets::on_spell_equip_right,
+        equip_spell_right);
+    logger::info("finish hook OnSpellEquip"sv);
+  }
+
+  private:
+  static auto equip_spell_left(
+      RE::Actor* actor,
+      RE::Actor::SlotTypes slot_type,
+      RE::MagicItem* magic_item) -> void*;
+  static auto equip_spell_right(
+      RE::Actor* actor,
+      RE::Actor::SlotTypes slot_type,
+      RE::MagicItem* magic_item) -> void*;
+  static auto equip_spell_voice(RE::Actor* actor, RE::MagicItem* magic_item) -> void*;
+  static inline REL::Relocation<decltype(equip_spell_left)> equip_spell_left_;
+  static inline REL::Relocation<decltype(equip_spell_right)> equip_spell_right_;
+  static inline REL::Relocation<decltype(equip_spell_voice)> equip_spell_voice_;
+};
+
+struct OnSomeEquip final
+{
+  public:
+  static auto install_hook(SKSE::Trampoline& trampoline) -> void
+  {
+    logger::info("start hook OnSomeEquip"sv);
+    some_equip_ = trampoline.write_call<5>(
+        Adresses::on_some_equip.address() + Offsets::on_some_equip,
+        some_equip);
+    some_equip_default_equip_ = trampoline.write_call<5>(
+        Adresses::on_some_equip.address() + Offsets::on_some_equip_default_slot,
+        some_equip_default_equip);
+    logger::info("finish hook OnSomeEquip"sv);
+  }
+
+  private:
+  static auto some_equip(
+      RE::ActorEquipManager* equip_manager,
+      RE::Actor* actor,
+      RE::TESBoundObject* bound_object,
+      void* extra_data_list) -> void;
+  static auto some_equip_default_equip(
+      RE::ActorEquipManager* equip_manager,
+      RE::Actor* actor,
+      RE::TESBoundObject* bound_object) -> RE::BGSEquipSlot*;
+  static inline REL::Relocation<decltype(some_equip)> some_equip_;
+  static inline REL::Relocation<decltype(some_equip_default_equip)> some_equip_default_equip_;
+};
+
+struct OnEquipManagerEquipSpell final
+{
+  public:
+  static auto install_hook(SKSE::Trampoline& trampoline) -> void
+  {
+    logger::info("start hook OnEquipManagerEquipSpell"sv);
+    equip_spell_ = trampoline.write_call<5>(
+        Adresses::on_equip_manager_equip_spell.address() + Offsets::on_equip_manager_equip_spell,
+        equip_spell);
+    logger::info("finish hook OnEquipManagerEquipSpell"sv);
+  }
+
+  private:
+  static auto equip_spell(
+      RE::ActorEquipManager* equip_manager,
+      RE::Actor* actor,
+      RE::TESBoundObject* bound_object,
+      RE::BGSEquipSlot* equip_slot) -> void*;
+  static inline REL::Relocation<decltype(equip_spell)> equip_spell_;
+};
+
+struct OnFillCasterEnchantData final
+{
+  public:
+  static auto install_hook(SKSE::Trampoline& trampoline) -> void
+  {
+    logger::info("start hook OnFillCasterEnchantData"sv);
+    fill_caster_enchant_data_ = trampoline.write_call<5>(
+        Adresses::on_fill_actor_caster_enchant_data.address() +
+            Offsets::on_fill_actor_caster_enchant_data,
+        fill_caster_enchant_data);
+    logger::info("finish hook OnFillCasterEnchantData"sv);
+  }
+
+  private:
+  static auto fill_caster_enchant_data(RE::ActorMagicCaster* caster) -> void;
+  static inline REL::Relocation<decltype(fill_caster_enchant_data)> fill_caster_enchant_data_;
+};
+
+struct OnEquipSpellMenu final
+{
+  public:
+  static auto install_hook(SKSE::Trampoline& trampoline) -> void
+  {
+    logger::info("start hook OnEquipSpellMenu"sv);
+    equip_spell_menu_ = trampoline.write_call<5>(
+        Adresses::on_spell_equip_menu.address() + Offsets::on_spell_equip_menu,
+        equip_spell_menu);
+    equip_spell_menu_favorite_ = trampoline.write_call<5>(
+        Adresses::on_spell_equip_menu_favorite.address() + Offsets::on_spell_equip_menu_favorite,
+        equip_spell_menu_favorite);
+    logger::info("finish hook OnEquipSpellMenu"sv);
+  }
+
+  private:
+  static auto equip_spell_menu(
+      RE::ActorEquipManager* equip_manager,
+      RE::Actor* actor,
+      RE::TESBoundObject* bound_object,
+      RE::BGSEquipSlot* equip_slot) -> RE::BGSEquipSlot*;
+  static auto equip_spell_menu_favorite(
+      RE::ActorEquipManager* equip_manager,
+      RE::Actor* actor,
+      RE::TESBoundObject* bound_object,
+      RE::BGSEquipSlot* equip_slot) -> RE::BGSEquipSlot*;
+  static inline REL::Relocation<decltype(equip_spell_menu)> equip_spell_menu_;
+  static inline REL::Relocation<decltype(equip_spell_menu_favorite)> equip_spell_menu_favorite_;
+};
+
+struct OnActorIsOverEncumbered final
+{
+  public:
+  static auto install_hook(SKSE::Trampoline& trampoline) -> void
+  {
+    logger::info("start hook OnActorIsOverEncumbered"sv);
+    is_actor_on_mount_ = trampoline.write_call<5>(
+        Adresses::on_check_mount_in_encumbered.address() + Offsets::on_check_mount_in_encumbered,
+        is_actor_on_mount);
+    logger::info("finish hook OnActorIsOverEncumbered"sv);
+  }
+
+  private:
+  static auto is_actor_on_mount(RE::Actor* actor) -> bool;
+  static inline REL::Relocation<decltype(is_actor_on_mount)> is_actor_on_mount_;
+};
+
+struct OnCalculatePlayerSprintCost final
+{
+  public:
+  static auto install_hook(SKSE::Trampoline& trampoline) -> void
+  {
+    logger::info("start OnCalculatePlayerSprintCost"sv);
+    calculate_sprint_cost_ = trampoline.write_call<5>(
+        Adresses::on_calculate_sprint_cost.address() + Offsets::on_calculate_sprint_cost,
+        calculate_sprint_cost);
+    logger::info("finish OnCalculatePlayerSprintCost"sv);
+  }
+
+  private:
+  static auto calculate_sprint_cost(float player_stamina, float maybe_delta) -> float;
+  static inline REL::Relocation<decltype(calculate_sprint_cost)> calculate_sprint_cost_;
 };
 
 struct OnInventoryOpen final
@@ -217,7 +595,7 @@ struct OnInventoryOpen final
   static inline REL::Relocation<decltype(is_displayed_item)> is_displayed_item_;
 };
 
-struct OnApplySpellsFromAttack
+struct OnApplySpellsFromAttack final
 {
   static auto install_hook(SKSE::Trampoline& trampoline) -> void
   {
@@ -236,23 +614,64 @@ struct OnApplySpellsFromAttack
   static inline REL::Relocation<decltype(apply_spells_from_attack)> apply_spells_from_attack_;
 };
 
-struct OnArrowCallHit
+struct OnRegenerationPermanentValue final
 {
-    static auto install_hook(SKSE::Trampoline& trampoline) -> void
-    {
-        logger::info("start hook OnArrowCallHit"sv);
-        arrow_call_hit_ = trampoline.write_call<5>(
-            Adresses::on_arrow_call_hit.address() + Offsets::on_arrow_call_hit,
-            arrow_call_hit);
-        logger::info("finish hook OnArrowCallHit"sv);
-    }
+  static auto install_hook(SKSE::Trampoline& trampoline) -> void
+  {
+    logger::info("start hook OnRegenerationPermanentValue"sv);
+    calculate_regeneration_value_health_ = trampoline.write_call<5>(
+        Adresses::on_regeneration_health.address() +
+            Offsets::on_calculate_regeneration_health_magicka,
+        calculate_regeneration_value_health);
+    calculate_regeneration_value_magicka_ = trampoline.write_call<5>(
+        Adresses::on_regeneration_magicka.address() +
+            Offsets::on_calculate_regeneration_health_magicka,
+        calculate_regeneration_value_magicka);
+    calculate_regeneration_value_stamina_const_delta_ = trampoline.write_call<5>(
+        Adresses::on_regeneration_stamina_calculate_const_delta.address() +
+            Offsets::on_regeneration_stamina_calculate_const_delta,
+        calculate_regeneration_value_stamina_const_delta);
+    calculate_regeneration_value_stamina_ = trampoline.write_call<5>(
+        Adresses::on_regeneration_stamina_calculate.address() +
+            Offsets::on_regeneration_stamina_calculate,
+        calculate_regeneration_value_stamina);
+    logger::info("finish hook OnRegenerationPermanentValue"sv);
+  }
 
-    static auto arrow_call_hit(
-        RE::Character* attacker,
-        RE::Actor* target,
-        RE::Projectile* projectile,
-        bool is_left) -> void;
-    static inline REL::Relocation<decltype(arrow_call_hit)> arrow_call_hit_;
+  static auto calculate_regeneration_value_health(RE::Character* character, RE::ActorValue av)
+      -> float;
+  static auto calculate_regeneration_value_magicka(RE::Character* character, RE::ActorValue av)
+      -> float;
+  static auto calculate_regeneration_value_stamina_const_delta(RE::Actor* actor, float delta)
+      -> void;
+  static auto calculate_regeneration_value_stamina(RE::Actor* actor, float delta) -> void;
+  static inline REL::Relocation<decltype(calculate_regeneration_value_health)>
+      calculate_regeneration_value_health_;
+  static inline REL::Relocation<decltype(calculate_regeneration_value_magicka)>
+      calculate_regeneration_value_magicka_;
+  static inline REL::Relocation<decltype(calculate_regeneration_value_stamina_const_delta)>
+      calculate_regeneration_value_stamina_const_delta_;
+  static inline REL::Relocation<decltype(calculate_regeneration_value_stamina)>
+      calculate_regeneration_value_stamina_;
+};
+
+struct OnArrowCallHit final
+{
+  static auto install_hook(SKSE::Trampoline& trampoline) -> void
+  {
+    logger::info("start hook OnArrowCallHit"sv);
+    arrow_call_hit_ = trampoline.write_call<5>(
+        Adresses::on_arrow_call_hit.address() + Offsets::on_arrow_call_hit,
+        arrow_call_hit);
+    logger::info("finish hook OnArrowCallHit"sv);
+  }
+
+  static auto arrow_call_hit(
+      RE::Character* attacker,
+      RE::Actor* target,
+      RE::Projectile* projectile,
+      bool is_left) -> void;
+  static inline REL::Relocation<decltype(arrow_call_hit)> arrow_call_hit_;
 };
 
 struct OnAttackIsBlocked final
@@ -267,8 +686,8 @@ struct OnAttackIsBlocked final
   }
 
   static auto is_blocked(
-      RE::Actor* attacker,
       RE::Actor* target,
+      RE::Actor* attacker,
       float* attacker_location_x,
       float* target_location_x,
       void* arg5,
@@ -449,10 +868,10 @@ struct OnCastActorValue final
         Adresses::on_actor_value_for_cost_during_cast.address() +
             Offsets::on_actor_value_for_cost_during_cast,
         actor_value_for_cost_during_cast);
-      actor_value_for_cost_restore_value_ = trampoline.write_call<5>(
-          Adresses::on_actor_value_for_cost_restore_value.address() +
-              Offsets::on_actor_value_for_cost_restore_value,
-          actor_value_for_cost_restore_value);
+    actor_value_for_cost_restore_value_ = trampoline.write_call<5>(
+        Adresses::on_actor_value_for_cost_restore_value.address() +
+            Offsets::on_actor_value_for_cost_restore_value,
+        actor_value_for_cost_restore_value);
     logger::info("OnCastActorValue hook install"sv);
   }
 
@@ -463,15 +882,15 @@ struct OnCastActorValue final
   static auto actor_value_for_cost_during_cast(
       RE::MagicItem* magic_item,
       RE::MagicSystem::CastingSource cast_source) -> RE::ActorValue;
-    static auto actor_value_for_cost_restore_value(
-        RE::MagicItem* magic_item,
-        RE::MagicSystem::CastingSource cast_source) -> RE::ActorValue;
+  static auto actor_value_for_cost_restore_value(
+      RE::MagicItem* magic_item,
+      RE::MagicSystem::CastingSource cast_source) -> RE::ActorValue;
   static inline REL::Relocation<decltype(actor_value_for_cost_check_cast)>
       actor_value_for_cost_check_cast_;
   static inline REL::Relocation<decltype(actor_value_for_cost_during_cast)>
       actor_value_for_cost_during_cast_;
-    static inline REL::Relocation<decltype(actor_value_for_cost_restore_value)>
-        actor_value_for_cost_restore_value_;
+  static inline REL::Relocation<decltype(actor_value_for_cost_restore_value)>
+      actor_value_for_cost_restore_value_;
 };
 
 struct OnTrapHit final

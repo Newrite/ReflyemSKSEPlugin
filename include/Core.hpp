@@ -568,6 +568,30 @@ auto getting_damage_mult(RE::Actor& actor) -> float;
 
 auto cast(RE::SpellItem& spell, RE::Actor& target, RE::Actor& caster) -> void;
 
+// template<typename FormType>
+// void get_data(RE::FormID form_id, std::string_view mod_name);
+
+// #define get_data(TypeName, RE::FormID form_id, std::string_view mod_name) (let data_handler = RE::TESDataHandler::GetSingleton(); if (!data_handler) { logi("Data handler is null"sv); return nullptr; return data_handler->LookupForm<TypeName>(form_id, mod_name);)
+// #define test_macro(some_typename) some_typename func (some_typename x) {return x;}
+
+#define get_data(form_name, form_id, mod_name)    \
+[&]() -> form_name* {   \
+  let data_handler = RE::TESDataHandler::GetSingleton(); \
+  if (!data_handler) { \
+    logi("Data handler is null"sv); \
+    return nullptr; \
+  } \
+  return data_handler->LookupForm<form_name>(form_id, mod_name);     \
+}()
+
+auto get_left_hand_equip_slot() -> RE::BGSEquipSlot*;
+
+auto get_right_hand_equip_slot() -> RE::BGSEquipSlot*;
+
+auto get_voice_equip_slot() -> RE::BGSEquipSlot*;
+
+auto equip_slot_comparer(RE::BGSEquipSlot* first, RE::BGSEquipSlot* second) -> bool;
+
 auto cast_on_handle_formlists(
     RE::BGSListForm* keywords,
     RE::BGSListForm* spells,
@@ -615,7 +639,11 @@ auto get_actor_value_max(RE::Actor* actor, const RE::ActorValue av) -> float;
 auto get_weapon(const RE::Actor& actor, const bool is_left_hand, RE::TESObjectWEAP* fallback_weapon)
     -> RE::TESObjectWEAP*;
 
+auto get_float_game_setting(const char* setting_name) -> std::optional<float>;
+
 auto form_has_keyword(const RE::TESForm* form, const RE::BGSKeyword* keyword) -> bool;
+
+auto get_actor_value_owner_as_actor(RE::ActorValueOwner* actor_value_owner) -> RE::Actor*;
 
 auto is_dual_wielding(const RE::Actor* actor) -> bool;
 

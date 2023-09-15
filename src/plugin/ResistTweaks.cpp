@@ -88,7 +88,7 @@ auto get_resist_percent(
     float high_cap,
     const Config& config) -> float
 {
-  if (resist_av == RE::ActorValue::kNone) { return 1.f; }
+  if (resist_av == RE::ActorValue::kNone || !value_owner) { return 1.f; }
 
   auto resist_weight = config.resist_tweaks().resist_weight();
 
@@ -103,6 +103,13 @@ auto get_resist_percent(
       resist_weight = armor_scaling / 100.f;
     }
 
+  if (Core::try_has_absolute_keyword(
+          value_owner,
+          config.resist_tweaks().negative_resist_immune_keyword()))
+    {
+      low_cap = 0.f;
+    }
+
   auto resist_value = resist_value_after_penetration(value_owner, resist_av);
   if (resist_value < low_cap) { resist_value = low_cap; }
   if (resist_value > high_cap) { resist_value = high_cap; }
@@ -115,7 +122,8 @@ auto get_max_resist(RE::Actor* actor, const Config& config) -> float
   auto resist =
       RE::GameSettingCollection::GetSingleton()->GetSetting("fPlayerMaxResistance")->GetFloat();
   if (!config.resist_tweaks().npc_max_resistance() && !actor->IsPlayerRef()) { resist = 100.f; }
-  let effects = Core::try_get_effects_by_keyword(actor, config.resist_tweaks().max_resist_keyword());
+  let effects =
+      Core::try_get_effects_by_keyword(actor, config.resist_tweaks().max_resist_keyword());
   let effects_sum = Core::get_effects_magnitude_sum(effects).value_or(0.f);
   resist = resist + effects_sum;
   if (resist >= 100.f) { return 0.f; }

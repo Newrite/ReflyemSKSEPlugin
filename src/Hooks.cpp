@@ -18,6 +18,7 @@
 #include "plugin/ResourceManager.hpp"
 #include "plugin/SoulLink.hpp"
 #include "plugin/SpeedCasting.hpp"
+#include "plugin/SpeedMultCap.hpp"
 #include "plugin/StaminaShield.hpp"
 #include "plugin/TKDodge.hpp"
 #include "plugin/TimingBlock.hpp"
@@ -27,6 +28,37 @@ namespace Hooks
 {
 
 static float player_last_delta = 0.f;
+static bool object_manager_dumped = false;
+
+
+auto dump_default_object_manager() -> void
+{
+  let object_manager = RE::BGSDefaultObjectManager::GetSingleton();
+
+  if (!object_manager)
+    {
+      object_manager_dumped = true;
+      logi("Object manager is null"sv);
+    }
+
+  for (uint32_t index : views::iota(0u, RE::DEFAULT_OBJECTS::kTotal))
+    {
+      if (!object_manager->objectInit[index]) { continue; }
+
+      let form = object_manager->objects[index];
+
+      if (!form) { continue; }
+
+      logi(
+          "Object[{}] : {} | {} | {}",
+          index,
+          form->GetFormType(),
+          form->GetName(),
+          form->GetObjectTypeName());
+    }
+
+  object_manager_dumped = true;
+}
 
 auto update_actor(RE::Character& character, const float delta, const Reflyem::Config& config)
     -> void
@@ -84,6 +116,44 @@ auto update_actor(RE::Character& character, const float delta, const Reflyem::Co
 
       actor_data.update_1000_timer_refresh();
       actor_data.last_tick_count_refresh();
+
+      let caster_right =
+          character.magicCasters[static_cast<int>(RE::MagicSystem::CastingSource::kRightHand)];
+      let caster_left =
+          character.magicCasters[static_cast<int>(RE::MagicSystem::CastingSource::kLeftHand)];
+      let equip_spell_right =
+          character.selectedSpells[static_cast<int>(RE::MagicSystem::CastingSource::kRightHand)];
+      let equip_spell_left =
+          character.selectedSpells[static_cast<int>(RE::MagicSystem::CastingSource::kLeftHand)];
+      let caster_info = [](const RE::ActorMagicCaster* caster)
+      {
+        if (!caster)
+          {
+            logi("Caster null"sv);
+            return;
+          }
+
+        logi(
+            "SpellName: {} Cost: {}"sv,
+            caster->currentSpell ? caster->currentSpell->fullName.c_str() : "null spell"sv,
+            caster->currentSpellCost);
+      };
+
+      let spell_info = [](const RE::MagicItem* magic_item)
+      {
+        if (!magic_item)
+          {
+            logi("Spell null"sv);
+            return;
+          }
+
+        logi("EquippedSpellName: {}"sv, magic_item->fullName.c_str());
+      };
+
+      // caster_info(caster_left);
+      // caster_info(caster_right);
+      // spell_info(equip_spell_left);
+      // spell_info(equip_spell_right);
 
       if (config.petrified_blood().enable() && config.petrified_blood().magick())
         {
@@ -148,10 +218,221 @@ auto on_modify_actor_value(
   Reflyem::Vampirism::modify_actor_value(this_, actor, value, av, config);
 }
 
+auto calculate_stamina_regeneration(RE::Actor* actor, float delta) -> void
+{
+  if (!actor) { return; }
+
+  let sub_140620CC0_character_update_regen_delay =
+      [](RE::Actor* character, RE::ActorValue av, float delta_) -> bool
+  {
+    using FuncT = bool (*)(RE::Actor*, RE::ActorValue, float);
+    const REL::Relocation<FuncT> func{RELOCATION_ID(37516, 0)};
+    return func(character, av, delta_);
+  };
+
+  let sub_140620900_restore_actor_value =
+      [](RE::Actor* character, RE::ActorValue av, float value) -> bool
+  {
+    using FuncT = bool (*)(RE::Actor*, RE::ActorValue, float);
+    const REL::Relocation<FuncT> func{RELOCATION_ID(37513, 0)};
+    return func(character, av, value);
+  };
+
+  let updated = sub_140620CC0_character_update_regen_delay(actor, RE::ActorValue::kStamina, delta);
+  let process = actor->currentProcess;
+  if (!process || !process->cachedValues) { return; }
+
+  let cached_values = process->cachedValues;
+  if (cached_values->flags.any(RE::CachedValues::Flags::kStaminaDamaged) && !updated &&
+      (!actor->IsSprinting() || actor->IsOnMount()))
+    {
+      let combat_regen_mult =
+          Reflyem::Core::get_float_game_setting("fCombatStaminaRegenRateMult").value_or(1.f);
+
+      let config = Reflyem::Config::get_singleton().resource_manager();
+      let changed_regen = config.enable() && config.regeneration_enable();
+
+      let stamina_rate = actor->GetActorValue(RE::ActorValue::kStaminaRate);
+      let stamina_rate_mult = actor->GetActorValue(RE::ActorValue::kStaminaRateMult);
+      let max_stamina = Reflyem::Core::get_actor_value_max(actor, RE::ActorValue::kStamina);
+
+      auto restore_value = changed_regen
+                               ? Reflyem::ResourceManager::regeneration_actor_value(
+                                     *actor,
+                                     RE::ActorValue::kStaminaRate,
+                                     RE::ActorValue::kStaminaRateMult)
+                               : max_stamina * (stamina_rate * 0.01f) * (stamina_rate_mult * 0.01f);
+      if (actor->IsInCombat()) { restore_value = restore_value * combat_regen_mult; }
+
+      logger::debug("Calculate regeneration value for Stamina it's {}"sv, restore_value);
+
+      if (restore_value > 0.f)
+        {
+          sub_140620900_restore_actor_value(actor, RE::ActorValue::kStamina, restore_value * delta);
+        }
+    }
+}
+
+auto calculate_actor_value_regeneration(RE::Character* character, const RE::ActorValue av) -> float
+{
+  if (!character) { return 0.f; }
+
+  auto av_rate = RE::ActorValue::kNone;
+  auto av_rate_mult = RE::ActorValue::kNone;
+  auto entry_point = RE::BGSEntryPoint::ENTRY_POINTS::kTotal;
+  auto combat_regen_mult = 0.f;
+  auto essentialNonCombatHealRateBonus = 0.f;
+  auto restore_value = 0.f;
+
+  let get_bleedout_rate = [](const RE::Character* character_) -> float
+  {
+    let current_process = character_->currentProcess;
+    if (!current_process) { return 0.f; }
+    let middle_high = current_process->middleHigh;
+    if (!middle_high) { return 0.f; }
+    return middle_high->bleedoutRate;
+  };
+
+  let sub_1405E1F40_object_ref_form_flags = [](RE::Character* character_) -> void*
+  {
+    using FuncT = void* (*)(RE::Character*);
+    const REL::Relocation<FuncT> func{RELOCATION_ID(36469, 0)};
+    return func(character_);
+  };
+
+  let sub_1403BD3C0_actor_value_owner_restore_health = [](RE::ActorValueOwner* owner,
+                                                          RE::TESBoundObject* object_reference,
+                                                          void* form_flags) -> float
+  {
+    using FuncT = float (*)(RE::ActorValueOwner*, RE::TESBoundObject*, void*);
+    const REL::Relocation<FuncT> func{RELOCATION_ID(25830, 0)};
+    return func(owner, object_reference, form_flags);
+  };
+
+  let sub_1405E1F40_set_bleedout_rate = [](RE::Character* character_, float bleedout_rate) -> void*
+  {
+    using FuncT = void* (*)(RE::Character*);
+    const REL::Relocation<FuncT> func{RELOCATION_ID(37680, 0)};
+    return func(character_);
+  };
+
+  switch (av)
+    {
+      case RE::ActorValue::kHealth: {
+        av_rate = RE::ActorValue::kHealRate;
+        av_rate_mult = RE::ActorValue::kHealRateMult;
+        entry_point = RE::BGSEntryPoint::ENTRY_POINT::kModRecoveredHealth;
+
+        let combat_health_regen_mult =
+            character->GetActorValue(RE::ActorValue::kCombatHealthRegenMultiply);
+        combat_regen_mult = combat_health_regen_mult;
+
+        if (character->IsProtected() && !character->IsInCombat() && !character->IsPlayerRef())
+          {
+            essentialNonCombatHealRateBonus =
+                Reflyem::Core::get_float_game_setting("fEssentialNonCombatHealRateBonus")
+                    .value_or(0.f);
+          }
+
+        if (character->IsBleedingOut())
+          {
+            av_rate = RE::ActorValue::kNone;
+            if (combat_health_regen_mult == 0.f)
+              {
+                combat_regen_mult =
+                    Reflyem::Core::get_float_game_setting("fEssentialDownCombatHealthRegenMult")
+                        .value_or(0.f);
+              }
+
+            if (character->boolFlags.none(RE::Actor::BOOL_FLAGS::kNoBleedoutRecovery))
+              {
+                let bleedout_rate = get_bleedout_rate(character);
+                restore_value = bleedout_rate;
+
+                if (get_bleedout_rate(character) == 0.f)
+                  {
+                    let object_reference = character->data.objectReference;
+                    let bleedout_rate_setting =
+                        Reflyem::Core::get_float_game_setting("fBleedoutRate").value_or(1.f);
+
+                    const auto form_flags = sub_1405E1F40_object_ref_form_flags(character);
+
+                    let new_bleedout_rate = sub_1403BD3C0_actor_value_owner_restore_health(
+                                                character,
+                                                object_reference,
+                                                form_flags) /
+                                            bleedout_rate_setting;
+                    sub_1405E1F40_set_bleedout_rate(character, new_bleedout_rate);
+                    restore_value = new_bleedout_rate;
+                  }
+
+                break;
+              }
+            essentialNonCombatHealRateBonus = 0.f;
+          }
+        break;
+      }
+      case RE::ActorValue::kStamina: {
+        combat_regen_mult =
+            Reflyem::Core::get_float_game_setting("fCombatStaminaRegenRateMult").value_or(1.f);
+        av_rate = RE::ActorValue::kStaminaRate;
+        av_rate_mult = RE::ActorValue::kStaminaRateMult;
+        break;
+      }
+      case RE::ActorValue::kMagicka: {
+        combat_regen_mult =
+            Reflyem::Core::get_float_game_setting("fCombatMagickaRegenRateMult").value_or(1.f);
+        av_rate = RE::ActorValue::kMagickaRate;
+        av_rate_mult = RE::ActorValue::kMagickaRateMult;
+        break;
+      }
+      default: {
+        return essentialNonCombatHealRateBonus + restore_value;
+      }
+    }
+
+  let max_actor_value = Reflyem::Core::get_actor_value_max(character, av);
+  let actor_value_rate_mult = character->GetActorValue(av_rate_mult);
+
+  let config = Reflyem::Config::get_singleton().resource_manager();
+  let changed_regen = config.enable() && config.regeneration_enable();
+
+  if (av_rate != RE::ActorValue::kNone)
+    {
+      restore_value = changed_regen ? character->GetActorValue(av_rate)
+                                    : max_actor_value * (character->GetActorValue(av_rate) * 0.01f);
+    }
+
+  if (restore_value > 0.f)
+    {
+      if (character->IsInCombat() &&
+          (av != RE::ActorValue::kHealth ||
+           character->race->data.flags.none(RE::RACE_DATA::Flag::kRegenHPInCombat)))
+        {
+          restore_value = restore_value * combat_regen_mult;
+        }
+      if (entry_point != RE::BGSEntryPoint::ENTRY_POINT::kTotal)
+        {
+          RE::BGSEntryPoint::HandleEntryPoint(entry_point, character, &restore_value);
+        }
+      auto mult = 1.f + (actor_value_rate_mult / 100.f);
+      if (mult < 0.f) { mult = 1.f; }
+      restore_value =
+          changed_regen ? restore_value * mult : restore_value * (actor_value_rate_mult * 0.01f);
+    }
+
+  restore_value = essentialNonCombatHealRateBonus + restore_value;
+
+  logd("Calculate regeneration value for {} it's {}"sv, av, restore_value);
+
+  return restore_value;
+}
+
 auto OnCharacterUpdate::update_pc(RE::PlayerCharacter* this_, float delta) -> void
 {
   if (this_)
     {
+      // if (!object_manager_dumped) { dump_default_object_manager(); }
       auto& config = Reflyem::Config::get_singleton();
       player_last_delta = delta;
       update_actor(*this_, delta, config);
@@ -168,6 +449,112 @@ auto OnCharacterUpdate::update_npc(RE::Character* this_, float delta) -> void
       update_actor(*this_, delta, config);
     }
   return update_npc_(this_, delta);
+}
+
+auto OnActorUpdateEquipBound::process_event(
+    const RE::ActorInventoryEvent* event,
+    RE::BSTEventSource<RE::ActorInventoryEvent>* event_source) -> RE::BSEventNotifyControl
+{
+  logger::info("Process bound event"sv);
+
+  letr config = Reflyem::Config::get_singleton();
+
+  if (config.misc_fixes().equip_bound_fix()) { return RE::BSEventNotifyControl::kContinue; }
+
+  return process_event_(event, event_source);
+}
+
+static void update_label(const RE::ContainerMenu* menu, RE::TESObjectARMO* armor)
+{
+  if (let movie = menu->uiMovie.get(); menu->itemList && movie)
+    {
+      RE::GFxValue ApparelArmorLabel;
+      RE::GFxValue ApparelArmorValue;
+      RE::GFxValue ApparelArmorValueText;
+      if (movie->GetVariable(
+              &ApparelArmorValue,
+              "_root.Menu_mc.itemCardFadeHolder.ItemCard_mc.ApparelArmorValue") &&
+          movie->GetVariable(
+              &ApparelArmorValueText,
+              "_root.Menu_mc.itemCardFadeHolder.ItemCard_mc.ApparelArmorValue.text"))
+        {
+          logi(
+              "{} {} {}"sv,
+              ApparelArmorValueText.GetNumber(),
+              ApparelArmorValueText.GetSInt(),
+              ApparelArmorValueText.GetUInt());
+          ApparelArmorValue.SetText(
+              std::format("{}/{}", ApparelArmorValueText.GetString(), "10").c_str());
+        }
+      if (movie->GetVariable(
+              &ApparelArmorLabel,
+              "_root.Menu_mc.itemCardFadeHolder.ItemCard_mc.ApparelArmorLabel"))
+        {
+          ApparelArmorLabel.SetMember("htmlText", std::format("{}/{}", "Д", "ВУ").c_str());
+        }
+    }
+}
+
+auto OnContainerMenu::process_message(RE::ContainerMenu* this_, RE::UIMessage& message)
+    -> RE::UI_MESSAGE_RESULTS
+{
+  logi("Container menu process"sv);
+
+  if (!this_ || !this_->itemCard || !this_->itemList)
+    {
+      logi("Container menu process some null"sv);
+      return process_message_(this_, message);
+    }
+
+  if (let selected_item = this_->itemList->GetSelectedItem())
+    {
+      logi("Selected Item not null: {}"sv, selected_item->data.GetName());
+      if (selected_item->data.objDesc && selected_item->data.objDesc->object &&
+          selected_item->data.objDesc->object->IsArmor())
+        {
+          // logi("Selected armor, start change, old text: {}"sv,
+          // this_->itemCard->infoText.c_str());
+          update_label(this_, selected_item->data.objDesc->object->As<RE::TESObjectARMO>());
+        }
+    }
+
+  return process_message_(this_, message);
+}
+
+auto OnContainerMenu::accept(RE::ContainerMenu* this_, RE::CallbackProcessor* processor) -> void
+{
+  logi("Container menu accept"sv);
+
+  return accept_(this_, processor);
+
+  if (!this_ || !this_->itemCard || !this_->itemList)
+    {
+      logi("Container menu accept some null"sv);
+      return;
+    }
+
+  if (let selected_item = this_->itemList->GetSelectedItem())
+    {
+      logi("Selected Item not null: {}"sv, selected_item->data.GetName());
+      if (selected_item->data.objDesc && selected_item->data.objDesc->object &&
+          selected_item->data.objDesc->object->IsArmor())
+        {
+          logi("Selected armor, start change, old text: {}"sv, this_->itemCard->infoText.c_str());
+          this_->itemCard->infoText = "BzIk ChOrT";
+        }
+    }
+}
+
+auto OnStandardItemData::get_equip_state(RE::StandardItemData* this_) -> std::uint32_t
+{
+  if (this_) { logi("Check equip state for: {}"sv, this_->GetName()); }
+  return 1;
+}
+
+auto OnMagicItemData::get_equip_state(RE::StandardItemData* this_) -> std::uint32_t
+{
+  if (this_) { logi("Check equip state for: {}"sv, this_->GetName()); }
+  return 1;
 }
 
 auto OnActorAddObject::add_object_to_container(
@@ -252,11 +639,270 @@ auto OnDrinkPotion::drink_potion(
 
   return drink_potion_(this_, potion, extra_data_list);
 }
+auto OnSetCurrentSpell::set_spell_impl_pc(
+    RE::ActorMagicCaster* caster,
+    RE::MagicItem* magic_item,
+    RE::TESObjectREFR* ref,
+    bool a4) -> bool
+{
+  // logi("In set current spell implPC"sv);
+  if (magic_item) { logi("SpellSetPC: {}"sv, magic_item->fullName.c_str()); }
+  return set_spell_impl_pc_(caster, magic_item, ref, a4);
+}
+
+static RE::MagicItem* staff_spell = nullptr;
+
+auto OnActorMagicCaster::on_set_spell_impl(RE::ActorMagicCaster* caster, RE::MagicItem* magic_item)
+    -> void
+{
+  logi("On set spell impl"sv);
+
+  if (staff_spell)
+    {
+      caster->currentSpell = magic_item;
+      caster->actor->selectedSpells[static_cast<int>(caster->castingSource)] = magic_item;
+      return on_set_spell_impl_(caster, staff_spell);
+    }
+  return on_set_spell_impl_(caster, magic_item);
+}
+
+auto OnSetCurrentSpell::set_spell_impl_block(
+    RE::ActorMagicCaster* caster,
+    RE::MagicItem* magic_item,
+    RE::TESObjectREFR* ref,
+    bool a4) -> bool
+{
+  // logi("In set current spell impl BLOCK"sv);
+  if (magic_item) { logi("SpellSetBLOCK: {}"sv, magic_item->fullName.c_str()); }
+  // let fire_ball = get_data(RE::MagicItem, 0x1C789, "Skyrim.esm"sv);
+  // if (fire_ball) {
+  //   logi("Success get skyrim fireball"sv);
+  // }
+  // let data_handler = RE::TESDataHandler::GetSingleton();
+  // if (!data_handler)
+  //   {
+  //     logi("Data handler is null"sv);
+  //     return false;
+  //   }
+  // let fire_ball = data_handler->LookupForm<RE::SpellItem>(0x01C789, "Skyrim.esm"sv);
+  // if (!fire_ball) { logi("Fireball is null"sv); }
+  return set_spell_impl_block_(caster, staff_spell ? staff_spell : magic_item, ref, a4);
+}
+
+auto OnSetCurrentSpell::set_spell_impl_fun(
+    RE::ActorMagicCaster* caster,
+    RE::MagicItem* magic_item,
+    RE::TESObjectREFR* ref,
+    bool a4) -> bool
+{
+  // logi("In set current spell impl FUN"sv);
+  if (magic_item) { logi("SpellSetFUN: {}"sv, magic_item->fullName.c_str()); }
+  return set_spell_impl_FUN_(caster, staff_spell ? staff_spell : magic_item, ref, a4);
+}
+
 
 auto OnAttackData::process_attack(RE::ActorValueOwner* value_owner, RE::BGSAttackData* attack_data)
     -> void
 {
   process_attack_(value_owner, attack_data);
+}
+
+auto OnSomeMenuEquipState::get_equip_state_01(
+    RE::Actor* actor,
+    RE::TESBoundObject* object,
+    void* a3,
+    void* a4) -> std::uint32_t
+{
+  if (object) { logi("01 Check state for: {}"sv, object->GetName()); }
+  return 1;
+}
+
+auto OnSomeMenuEquipState::get_equip_state_02(
+    RE::Actor* actor,
+    RE::TESBoundObject* object,
+    void* a3,
+    void* a4) -> std::uint32_t
+{
+  if (object) { logi("02 Check state for: {}"sv, object->GetName()); }
+  return 1;
+}
+
+auto OnSomeMenuEquipState::get_equip_state_03(
+    RE::Actor* actor,
+    RE::TESBoundObject* object,
+    void* a3,
+    void* a4) -> std::uint32_t
+{
+  if (object) { logi("03 Check state for: {}"sv, object->GetName()); }
+  return 1;
+}
+
+auto OnSpellEquip::equip_spell_left(
+    RE::Actor* actor,
+    RE::Actor::SlotTypes slot_type,
+    RE::MagicItem* magic_item) -> void*
+{
+  logi("In on spell equip left call"sv);
+
+  if (!magic_item || !actor) { return equip_spell_left_(actor, slot_type, magic_item); }
+  return equip_spell_left_(actor, slot_type, magic_item);
+}
+
+auto OnSpellEquip::equip_spell_right(
+    RE::Actor* actor,
+    RE::Actor::SlotTypes slot_type,
+    RE::MagicItem* magic_item) -> void*
+{
+  logi("In on spell equip left call"sv);
+
+  if (!magic_item || !actor) { return equip_spell_right_(actor, slot_type, magic_item); }
+  return equip_spell_right_(actor, slot_type, magic_item);
+}
+
+static bool is_equipped = false;
+
+auto OnSomeEquip::some_equip(
+    RE::ActorEquipManager* equip_manager,
+    RE::Actor* actor,
+    RE::TESBoundObject* bound_object,
+    void* extra_data_list) -> void
+{
+  // logi("In on some equip call"sv);
+
+  if (!equip_manager || !actor || !bound_object || !extra_data_list)
+    {
+      return some_equip_(equip_manager, actor, bound_object, extra_data_list);
+    }
+
+  // let is_left =
+  //     Reflyem::Core::equip_slot_comparer(equip_slot, Reflyem::Core::get_left_hand_equip_slot());
+  // let is_right =
+  //     Reflyem::Core::equip_slot_comparer(equip_slot, Reflyem::Core::get_right_hand_equip_slot());
+  // let is_voice =
+  //     Reflyem::Core::equip_slot_comparer(equip_slot, Reflyem::Core::get_voice_equip_slot());
+
+  logi("BoundObjectName: {}"sv, bound_object->GetName());
+  // is_right,
+  // is_left,
+  // is_voice);
+
+  if (!is_equipped && bound_object->IsWeapon() &&
+      bound_object->As<RE::TESObjectWEAP>()->IsOneHandedSword())
+    {
+      is_equipped = true;
+      logi("dual equip"sv);
+      let left_hand_equip = Reflyem::Core::get_left_hand_equip_slot();
+      equip_manager->EquipObject(actor, bound_object, nullptr, 1, left_hand_equip);
+    }
+
+
+  return some_equip_(equip_manager, actor, bound_object, extra_data_list);
+}
+auto OnSomeEquip::some_equip_default_equip(
+    RE::ActorEquipManager* equip_manager,
+    RE::Actor* actor,
+    RE::TESBoundObject* bound_object) -> RE::BGSEquipSlot*
+{
+  // logi("In default equip"sv);
+  if (!equip_manager || !actor || !bound_object)
+    {
+      return some_equip_default_equip_(equip_manager, actor, bound_object);
+    }
+
+  let left_equip = Reflyem::Core::get_left_hand_equip_slot();
+  let return_value = some_equip_default_equip_(equip_manager, actor, bound_object);
+  if (left_equip == return_value) { return return_value; }
+
+  if (!bound_object->IsWeapon()) { return return_value; }
+
+  let weapon = bound_object->As<RE::TESObjectWEAP>();
+  if (!weapon) { return return_value; }
+
+  if (weapon->GetWeaponType() == RE::WEAPON_TYPE::kStaff)
+    {
+      // logi("Weapon is staff"sv);
+      return left_equip;
+    }
+
+  return return_value;
+}
+
+auto OnEquipManagerEquipSpell::equip_spell(
+    RE::ActorEquipManager* equip_manager,
+    RE::Actor* actor,
+    RE::TESBoundObject* bound_object,
+    RE::BGSEquipSlot* equip_slot) -> void*
+{
+  logi("Manager equip slot"sv);
+  if (bound_object && bound_object->IsMagicItem())
+    {
+      staff_spell = bound_object->As<RE::MagicItem>();
+    }
+  return equip_slot;
+  // return equip_spell_(equip_manager, actor, bound_object, equip_slot);
+}
+auto OnFillCasterEnchantData::fill_caster_enchant_data(RE::ActorMagicCaster* caster) -> void
+{
+  // logi("In fill ench data"sv);
+  // if (!caster || !caster->actor) { return fill_caster_enchant_data_(caster); }
+  //
+  // let spell = caster->actor->selectedSpells[static_cast<int>(caster->castingSource)];
+  // if (spell) { logi("Spell in fill: {}"sv, spell->fullName.c_str()); }
+  //
+  // if (caster->weaponEnchantmentController) { logi("Ench controller not null"sv); }
+
+  return fill_caster_enchant_data_(caster);
+}
+
+auto OnEquipSpellMenu::equip_spell_menu(
+    RE::ActorEquipManager* equip_manager,
+    RE::Actor* actor,
+    RE::TESBoundObject* bound_object,
+    RE::BGSEquipSlot* equip_slot) -> RE::BGSEquipSlot*
+{
+  logi("Equip spell menu"sv);
+  if (bound_object && bound_object->IsMagicItem())
+    {
+      staff_spell = bound_object->As<RE::MagicItem>();
+    }
+  return equip_slot;
+}
+auto OnEquipSpellMenu::equip_spell_menu_favorite(
+    RE::ActorEquipManager* equip_manager,
+    RE::Actor* actor,
+    RE::TESBoundObject* bound_object,
+    RE::BGSEquipSlot* equip_slot) -> RE::BGSEquipSlot*
+{
+  logi("Equip spell menu favorite"sv);
+  if (bound_object && bound_object->IsMagicItem())
+    {
+      staff_spell = bound_object->As<RE::MagicItem>();
+    }
+  // return nullptr;
+  return equip_slot;
+}
+
+auto OnActorIsOverEncumbered::is_actor_on_mount(RE::Actor* actor) -> bool
+{
+  if (actor && actor->IsPlayerRef() &&
+      Reflyem::Config::get_singleton().misc_fixes().disable_over_encumbered())
+    {
+      return true;
+    }
+  return is_actor_on_mount_(actor);
+}
+
+auto OnCalculatePlayerSprintCost::calculate_sprint_cost(float player_stamina, float maybe_delta)
+    -> float
+{
+  logger::debug("Calculate player sprint {} {}"sv, player_stamina, maybe_delta);
+  if (let player = RE::PlayerCharacter::GetSingleton();
+      !player->IsInCombat() &&
+      Reflyem::Config::get_singleton().misc_fixes().disable_sprint_cost_in_combat())
+    {
+      return 0.f;
+    }
+  return calculate_sprint_cost_(player_stamina, maybe_delta);
 }
 
 auto OnInventoryOpen::is_displayed_item(RE::InventoryEntryData* item) -> bool
@@ -292,10 +938,52 @@ auto OnApplySpellsFromAttack::apply_spells_from_attack(
       return apply_spells_from_attack_(attacker, weapon, is_left, target);
     }
 
-  if (Reflyem::Config::get_singleton().timing_block().enable())
+  letr config = Reflyem::Config::get_singleton();
+  RE::HitData hit_data{};
+  Reflyem::Core::initialization_hit_data(hit_data, attacker, target, weapon, is_left);
+
+  if (config.unblockable_attack().enable() && hit_data.flags.any(RE::HitData::Flag::kBlocked) &&
+      !target->IsDead())
     {
-      RE::HitData hit_data{};
-      Reflyem::Core::initialization_hit_data(hit_data, attacker, target, weapon, is_left);
+      logd("Apply spells unblock check start"sv);
+      if (Reflyem::Core::try_has_absolute_keyword(
+              attacker,
+              config.unblockable_attack().absolute_unblock()))
+        {
+          logd("Is absolute unblock"sv);
+          return apply_spells_from_attack_(attacker, weapon, is_left, target);
+        }
+
+      if (config.timing_block().enable())
+        {
+          auto& actor_cache = Reflyem::Core::ActorsCache::get_singleton();
+          const auto& actor_data = actor_cache.get_or_add(target->formID).get();
+          if (Reflyem::TimingBlock::is_allow_timing_parry(*attacker, *target, actor_data, config))
+            {
+              logd("Is allow timing parry"sv);
+              return;
+            }
+          if (Reflyem::TimingBlock::is_allow_timing_block(*attacker, *target, actor_data, config) &&
+              !Reflyem::Core::try_has_absolute_keyword(
+                  attacker,
+                  config.unblockable_attack().timing_block_unblock()))
+            {
+              logd("Is allow timing block"sv);
+              return;
+            }
+        }
+
+      if (Reflyem::Core::try_has_absolute_keyword(
+              attacker,
+              config.unblockable_attack().just_block_unblock()))
+        {
+          logd("Just unblock attack"sv);
+          return apply_spells_from_attack_(attacker, weapon, is_left, target);
+        }
+    }
+
+  if (config.timing_block().enable())
+    {
       if (Reflyem::TimingBlock::apply_spells_from_attack(
               *attacker,
               *target,
@@ -308,6 +996,65 @@ auto OnApplySpellsFromAttack::apply_spells_from_attack(
 
   return apply_spells_from_attack_(attacker, weapon, is_left, target);
 }
+auto OnRegenerationPermanentValue::calculate_regeneration_value_magicka(
+    RE::Character* character,
+    RE::ActorValue av) -> float
+{
+  letr config = Reflyem::Config::get_singleton();
+
+  if (character &&
+      (config.misc_fixes().regeneration_fix() ||
+       (config.resource_manager().enable() && config.resource_manager().regeneration_enable())))
+    {
+      return calculate_actor_value_regeneration(character, av);
+    }
+  return calculate_regeneration_value_health_(character, av);
+}
+
+auto OnRegenerationPermanentValue::calculate_regeneration_value_stamina_const_delta(
+    RE::Actor* actor,
+    float delta) -> void
+{
+  letr config = Reflyem::Config::get_singleton();
+
+  if (actor &&
+      (config.misc_fixes().regeneration_fix() ||
+       (config.resource_manager().enable() && config.resource_manager().regeneration_enable())))
+    {
+      return calculate_stamina_regeneration(actor, delta);
+    }
+  return calculate_regeneration_value_stamina_const_delta_(actor, delta);
+}
+
+auto OnRegenerationPermanentValue::calculate_regeneration_value_stamina(
+    RE::Actor* actor,
+    float delta) -> void
+{
+  letr config = Reflyem::Config::get_singleton();
+
+  if (actor &&
+      (config.misc_fixes().regeneration_fix() ||
+       (config.resource_manager().enable() && config.resource_manager().regeneration_enable())))
+    {
+      return calculate_stamina_regeneration(actor, delta);
+    }
+  return calculate_regeneration_value_stamina_(actor, delta);
+}
+
+auto OnRegenerationPermanentValue::calculate_regeneration_value_health(
+    RE::Character* character,
+    RE::ActorValue av) -> float
+{
+  letr config = Reflyem::Config::get_singleton();
+
+  if (character &&
+      (config.misc_fixes().regeneration_fix() ||
+       (config.resource_manager().enable() && config.resource_manager().regeneration_enable())))
+    {
+      return calculate_actor_value_regeneration(character, av);
+    }
+  return calculate_regeneration_value_health_(character, av);
+}
 
 auto OnArrowCallHit::arrow_call_hit(
     RE::Character* attacker,
@@ -319,8 +1066,8 @@ auto OnArrowCallHit::arrow_call_hit(
 }
 
 auto OnAttackIsBlocked::is_blocked(
-    RE::Actor* attacker,
     RE::Actor* target,
+    RE::Actor* attacker,
     float* attacker_location_x,
     float* target_location_x,
     void* arg5,
@@ -328,9 +1075,83 @@ auto OnAttackIsBlocked::is_blocked(
     float* arg7,
     char arg8) -> bool
 {
+  if (!attacker || !target)
+    {
+      return is_blocked_(
+          target,
+          attacker,
+          attacker_location_x,
+          target_location_x,
+          arg5,
+          arg6,
+          arg7,
+          arg8);
+    }
+
+  letr config = Reflyem::Config::get_singleton();
+  if (config.unblockable_attack().enable())
+    {
+      logd(
+          "Is block unblock check start Attacker: {} | Target: {}"sv,
+          attacker->GetDisplayFullName(),
+          target->GetDisplayFullName());
+
+      if (Reflyem::Core::try_has_absolute_keyword(
+              attacker,
+              config.unblockable_attack().absolute_unblock()))
+        {
+          logd("Is absolute keyword"sv);
+          return false;
+        }
+
+      if (config.timing_block().enable())
+        {
+          auto& actor_cache = Reflyem::Core::ActorsCache::get_singleton();
+          const auto& actor_data = actor_cache.get_or_add(target->formID).get();
+          if (Reflyem::TimingBlock::is_allow_timing_parry(*attacker, *target, actor_data, config))
+            {
+              logd("Is timing parry"sv);
+              return is_blocked_(
+                  target,
+                  attacker,
+                  attacker_location_x,
+                  target_location_x,
+                  arg5,
+                  arg6,
+                  arg7,
+                  arg8);
+            }
+          if (Reflyem::TimingBlock::is_allow_timing_block(*attacker, *target, actor_data, config) &&
+              !Reflyem::Core::try_has_absolute_keyword(
+                  attacker,
+                  config.unblockable_attack().timing_block_unblock()))
+            {
+              logd("Is timing block"sv);
+              return is_blocked_(
+                  target,
+                  attacker,
+                  attacker_location_x,
+                  target_location_x,
+                  arg5,
+                  arg6,
+                  arg7,
+                  arg8);
+            }
+        }
+
+      if (Reflyem::Core::try_has_absolute_keyword(
+              attacker,
+              config.unblockable_attack().just_block_unblock()))
+        {
+          logd("Is just unblock"sv);
+          return false;
+        }
+    }
+
+  logd("Is blocked function final"sv);
   return is_blocked_(
-      attacker,
       target,
+      attacker,
       attacker_location_x,
       target_location_x,
       arg5,
@@ -808,10 +1629,28 @@ auto OnActorValueOwner::get_actor_value_npc(RE::ActorValueOwner* this_, RE::Acto
 {
   if (!this_) { return get_actor_value_npc_(this_, av); }
 
-  if (Reflyem::Config::get_singleton().equip_load().enable())
+  letr config = Reflyem::Config::get_singleton();
+
+  if (config.equip_load().enable() && av == RE::ActorValue::kInventoryWeight)
     {
       return Reflyem::EquipLoad::get_actor_value(*this_, av)
           .value_or(get_actor_value_npc_(this_, av));
+    }
+
+  if (av == RE::ActorValue::kSpeedMult)
+    {
+      let speed_mult =
+          config.speed_mult_cap_config().enable()
+              ? Reflyem::SpeedMultCap::get_actor_value(*this_, av, get_actor_value_npc_)
+                    .value_or(get_actor_value_npc_(this_, av))
+              : get_actor_value_npc_(this_, av);
+
+      if (config.misc_fixes().negative_speed_mult_fix())
+        {
+          if (speed_mult < 1.f) return 1.f;
+        }
+
+      return speed_mult;
     }
 
   return get_actor_value_npc_(this_, av);
@@ -824,7 +1663,8 @@ auto OnActorValueOwner::set_actor_value_npc(
 {
   if (!this_) { return set_actor_value_npc_(this_, av, value); }
 
-  if (Reflyem::Config::get_singleton().equip_load().enable())
+  if (Reflyem::Config::get_singleton().equip_load().enable() &&
+      av == RE::ActorValue::kInventoryWeight)
     {
       return set_actor_value_npc_(
           this_,
@@ -842,7 +1682,8 @@ auto OnActorValueOwner::mod_actor_value_npc(
 {
   if (!this_) { return mod_actor_value_npc_(this_, av, value); }
 
-  if (Reflyem::Config::get_singleton().equip_load().enable())
+  if (Reflyem::Config::get_singleton().equip_load().enable() &&
+      av == RE::ActorValue::kInventoryWeight)
     {
       return mod_actor_value_npc_(
           this_,
@@ -857,11 +1698,29 @@ auto OnActorValueOwner::get_actor_value_pc(RE::ActorValueOwner* this_, RE::Actor
 {
   if (!this_) { return get_actor_value_pc_(this_, av); }
 
-  if (Reflyem::Config::get_singleton().equip_load().enable())
+  letr config = Reflyem::Config::get_singleton();
+
+  if (config.equip_load().enable() && av == RE::ActorValue::kInventoryWeight)
+  {
+    return Reflyem::EquipLoad::get_actor_value(*this_, av)
+        .value_or(get_actor_value_pc_(this_, av));
+  }
+
+  if (av == RE::ActorValue::kSpeedMult)
+  {
+    let speed_mult =
+        config.speed_mult_cap_config().enable()
+            ? Reflyem::SpeedMultCap::get_actor_value(*this_, av, get_actor_value_pc_)
+                  .value_or(get_actor_value_pc_(this_, av))
+            : get_actor_value_pc_(this_, av);
+
+    if (config.misc_fixes().negative_speed_mult_fix())
     {
-      return Reflyem::EquipLoad::get_actor_value(*this_, av)
-          .value_or(get_actor_value_pc_(this_, av));
+      if (speed_mult < 1.f) return 1.f;
     }
+
+    return speed_mult;
+  }
 
   return get_actor_value_pc_(this_, av);
 }
@@ -873,7 +1732,8 @@ auto OnActorValueOwner::set_actor_value_pc(
 {
   if (!this_) { return set_actor_value_pc_(this_, av, value); }
 
-  if (Reflyem::Config::get_singleton().equip_load().enable())
+  if (Reflyem::Config::get_singleton().equip_load().enable() &&
+      av == RE::ActorValue::kInventoryWeight)
     {
       return set_actor_value_pc_(this_, av, Reflyem::EquipLoad::set_actor_value(*this_, av, value));
     }
@@ -888,9 +1748,13 @@ auto OnActorValueOwner::mod_actor_value_pc(
 {
   if (!this_) { return mod_actor_value_pc_(this_, av, value); }
 
-  if (Reflyem::Config::get_singleton().equip_load().enable())
+  if (Reflyem::Config::get_singleton().equip_load().enable() &&
+      av == RE::ActorValue::kInventoryWeight)
     {
-      return mod_actor_value_pc_(this_, av, Reflyem::EquipLoad::mod_actor_value(*this_, av, value));
+      return mod_actor_value_npc_(
+          this_,
+          av,
+          Reflyem::EquipLoad::mod_actor_value(*this_, av, value));
     }
 
   return mod_actor_value_pc_(this_, av, value);
@@ -901,13 +1765,13 @@ auto OnHealthMagickaStaminaRegeneration::restore_health(
     RE::ActorValue av,
     float value) -> void
 {
-  if (!actor) { return restore_health_(actor, av, value); }
-
-  const auto& config = Reflyem::Config::get_singleton();
-  if (config.resource_manager().enable() && config.resource_manager().regeneration_enable())
-    {
-      value = Reflyem::ResourceManager::regeneration(*actor, av, player_last_delta);
-    }
+  // if (!actor) { return restore_health_(actor, av, value); }
+  //
+  // const auto& config = Reflyem::Config::get_singleton();
+  // if (config.resource_manager().enable() && config.resource_manager().regeneration_enable())
+  //   {
+  //     value = Reflyem::ResourceManager::regeneration(*actor, av, player_last_delta);
+  //   }
 
   return restore_health_(actor, av, value);
 }
@@ -917,13 +1781,13 @@ auto OnHealthMagickaStaminaRegeneration::restore_magicka(
     RE::ActorValue av,
     float value) -> void
 {
-  if (!actor) { return restore_magicka_(actor, av, value); }
-
-  const auto& config = Reflyem::Config::get_singleton();
-  if (config.resource_manager().enable() && config.resource_manager().regeneration_enable())
-    {
-      value = Reflyem::ResourceManager::regeneration(*actor, av, player_last_delta);
-    }
+  // if (!actor) { return restore_magicka_(actor, av, value); }
+  //
+  // const auto& config = Reflyem::Config::get_singleton();
+  // if (config.resource_manager().enable() && config.resource_manager().regeneration_enable())
+  //   {
+  //     value = Reflyem::ResourceManager::regeneration(*actor, av, player_last_delta);
+  //   }
 
   return restore_magicka_(actor, av, value);
 }
@@ -933,15 +1797,15 @@ auto OnHealthMagickaStaminaRegeneration::restore_stamina(
     RE::ActorValue av,
     float value) -> void
 {
-  auto ptr = &actor;
-  if (!actor) { return restore_stamina_(actor, av, value); }
+  // if (!actor) { return restore_stamina_(actor, av, value); }
+  //
+  // const auto& config = Reflyem::Config::get_singleton();
+  // if (config.resource_manager().enable() && config.resource_manager().regeneration_enable())
+  //   {
+  //     value = Reflyem::ResourceManager::regeneration(*actor, av, player_last_delta);
+  //   }
 
-  const auto& config = Reflyem::Config::get_singleton();
-  if (config.resource_manager().enable() && config.resource_manager().regeneration_enable())
-    {
-      value = Reflyem::ResourceManager::regeneration(*actor, av, player_last_delta);
-    }
-
+  // if (actor->IsPlayerRef()) { logger::info("RestoreStamina Value: {}"sv, value); }
   return restore_stamina_(actor, av, value);
 }
 
@@ -956,19 +1820,33 @@ auto install_hooks() -> void
   OnTrapHit::install_hook(trampoline);
   OnInventoryOpen::install_hook(trampoline);
   OnCastActorValue::install_hook(trampoline);
+  OnCalculatePlayerSprintCost::install_hook(trampoline);
+  OnRegenerationPermanentValue::install_hook(trampoline);
+  OnActorIsOverEncumbered::install_hook(trampoline);
   OnDrinkPotion::install_hook();
-  // OnCheckResistance::install_hook(trampoline);
+  OnActorUpdateEquipBound::install_hook();
   OnCheckResistance::install_hook();
   OnEnchIgnoresResistance::install_hook();
   OnEnchGetNoAbsorb::install_hook();
   OnActorValueOwner::install_hook();
+  // OnContainerMenu::install_hook();
+  // OnStandardItemData::install_hook();
+  // OnMagicItemData::install_hook();
   // OnMainUpdate::install_hook(trampoline);
   // OnAdjustActiveEffect::install_hook(trampoline);
   OnAnimationEvent::install_hook();
   OnCharacterUpdate::install_hook();
+  // OnActorMagicCaster::install_hook();
+  // OnSetCurrentSpell::install_hook(trampoline);
   OnModifyActorValue::install_hook(trampoline);
+  // OnSpellEquip::install_hook(trampoline);
+  // OnSomeEquip::install_hook(trampoline);
+  // OnEquipManagerEquipSpell::install_hook(trampoline);
+  // OnEquipSpellMenu::install_hook(trampoline);
   OnHealthMagickaStaminaRegeneration::install_hook(trampoline);
   OnApplySpellsFromAttack::install_hook(trampoline);
+  // OnSomeMenuEquipState::install_hook(trampoline);
+  // OnFillCasterEnchantData::install_hook(trampoline);
   // OnActorAddObject::install_hook();
   // OnAttackAction::install_hook(trampoline);
   // OnAttackData::install_hook(trampoline);

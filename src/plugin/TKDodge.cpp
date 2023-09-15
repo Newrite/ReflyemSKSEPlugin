@@ -38,17 +38,17 @@ auto get_actor_effects_mask(RE::Actor& actor, const Config& config) -> std::uniq
   MgefMask f_mask{{{0, 0, 0}}};
   logger::debug("start get actor mgef keyword"sv);
   f_mask.at(0).at(0) = 1;
-  if (Core::has_absolute_keyword(actor, *config.tk_dodge().health_kw()))
+  if (Core::try_has_absolute_keyword(&actor, config.tk_dodge().health_kw()))
     {
       f_mask.at(0).at(0) = 0;
       f_mask.at(0).at(1) = 1;
     }
-  if (Core::has_absolute_keyword(actor, *config.tk_dodge().magicka_kw()))
+  if (Core::try_has_absolute_keyword(&actor, config.tk_dodge().magicka_kw()))
     {
       f_mask.at(0).at(0) = 0;
       f_mask.at(0).at(2) = 1;
     }
-  if (Core::has_absolute_keyword(actor, *config.tk_dodge().stamina_kw()))
+  if (Core::try_has_absolute_keyword(&actor, config.tk_dodge().stamina_kw()))
     {
       f_mask.at(0).at(0) = 1;
     }
@@ -61,7 +61,7 @@ auto calc_dodge_cost(RE::Actor& actor, const Config& config) -> float
   auto cost = actor.equippedWeight * config.tk_dodge().equipped_weight_mult();
   cost += config.tk_dodge().flat_cost();
   cost += Core::get_effects_magnitude_sum(
-              Core::get_effects_by_keyword(actor, *config.tk_dodge().cost_from_mgef_kw()))
+              Core::try_get_effects_by_keyword(&actor, config.tk_dodge().cost_from_mgef_kw()))
               .value_or(0.f);
 
   if (cost > config.tk_dodge().max_cost()) { cost = config.tk_dodge().max_cost(); }
@@ -87,23 +87,23 @@ auto is_allow_pc_control_for_dodge(RE::PlayerCharacter& player) -> bool
 
   auto is_attacking = config.tk_dodge().block_dodge_when_attack();
   if (config.tk_dodge().block_dodge_when_attack_keyword() &&
-      Core::has_absolute_keyword(player, *config.tk_dodge().block_dodge_when_attack_keyword()))
+      Core::try_has_absolute_keyword(&player, config.tk_dodge().block_dodge_when_attack_keyword()))
     {
       is_attacking = !is_attacking;
     }
 
   auto is_power_attacking = config.tk_dodge().block_dodge_when_power_attack();
   if (config.tk_dodge().block_dodge_when_power_attack_keyword() &&
-      Core::has_absolute_keyword(
-          player,
-          *config.tk_dodge().block_dodge_when_power_attack_keyword()))
+      Core::try_has_absolute_keyword(
+          &player,
+          config.tk_dodge().block_dodge_when_power_attack_keyword()))
     {
       is_power_attacking = !is_power_attacking;
     }
 
   auto is_casting = config.tk_dodge().block_dodge_when_casting();
   if (config.tk_dodge().block_dodge_when_casting_keyword() &&
-      Core::has_absolute_keyword(player, *config.tk_dodge().block_dodge_when_casting_keyword()))
+      Core::try_has_absolute_keyword(&player, config.tk_dodge().block_dodge_when_casting_keyword()))
     {
       is_casting = !is_casting;
     }
@@ -497,9 +497,9 @@ auto process_event_input_handler(
 
               auto i_frame_duration = config.tk_dodge().iframe_duration();
               i_frame_duration +=
-                  Core::get_effects_magnitude_sum(Core::get_effects_by_keyword(
-                                                      *player_character,
-                                                      *config.tk_dodge().iframe_duration_mgef_kw()))
+                  Core::get_effects_magnitude_sum(Core::try_get_effects_by_keyword(
+                                                      player_character,
+                                                      config.tk_dodge().iframe_duration_mgef_kw()))
                       .value_or(0.f);
               if (i_frame_duration < 0.f) { i_frame_duration = 0.f; }
 

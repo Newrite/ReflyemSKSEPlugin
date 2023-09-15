@@ -39,19 +39,19 @@ auto soul_link_commander_actor(RE::Actor* target, float* damage, const Config& c
       if (valid_commanded_actor(target, commanded_actor, config))
         {
           valid_commanded_actors.push_back(commanded_actor);
-          logger::info("COM:Add valid actor to vector {}"sv, commanded_actor->GetDisplayFullName());
+          logd("COM:Add valid actor to vector {}"sv, commanded_actor->GetDisplayFullName());
         }
     }
 
   if (valid_commanded_actors.empty())
     {
-      logger::info("COM:Vector of valid actors is empty"sv);
+      logd("COM:Vector of valid actors is empty"sv);
       return;
     }
 
   let damage_after = *damage * (1.f - (soul_link_percent / 100.f));
   let split_damage = (*damage - damage_after) / static_cast<float>(valid_commanded_actors.size());
-  logger::info(
+  logd(
       "COM:Damage Before {} Damage After {} Split Damage {} SizeVector {} SoulLinkPercent {}"sv,
       *damage,
       damage_after,
@@ -62,7 +62,7 @@ auto soul_link_commander_actor(RE::Actor* target, float* damage, const Config& c
 
   for (const auto commanded_actor : valid_commanded_actors)
     {
-      logger::info("COM:Damage commanded actor {}"sv, commanded_actor->GetDisplayFullName());
+      logd("COM:Damage commanded actor {}"sv, commanded_actor->GetDisplayFullName());
       Core::damage_actor_value(
           *commanded_actor,
           RE::ActorValue::kHealth,
@@ -98,21 +98,21 @@ auto soul_link_commanded_actor(RE::Actor* target, float* damage, const Config& c
       let commanded_actor = Core::actor_from_actor_handle(&commanded_data.commandedActor);
       if (valid_commanded_actor(target, commanded_actor, config))
         {
-          logger::info("SUM:Add valid actor to vector {}"sv, commanded_actor->GetDisplayFullName());
+          logd("SUM:Add valid actor to vector {}"sv, commanded_actor->GetDisplayFullName());
           valid_commanded_actors.push_back(commanded_actor);
         }
     }
 
   if (valid_commanded_actors.empty())
     {
-      logger::info("SUM:Vector of valid actors is empty"sv);
+      logd("SUM:Vector of valid actors is empty"sv);
       return;
     }
 
   let split_damage = *damage / static_cast<float>(valid_commanded_actors.size());
   *damage = split_damage;
 
-  logger::info(
+  logd(
       "SUM:Damage {} Split Damage {} SizeVector {}"sv,
       *damage,
       split_damage,
@@ -120,7 +120,7 @@ auto soul_link_commanded_actor(RE::Actor* target, float* damage, const Config& c
 
   for (auto commanded_actor : valid_commanded_actors)
     {
-      logger::info("SUM:Damage commanded actor {}"sv, commanded_actor->GetDisplayFullName());
+      logd("SUM:Damage commanded actor {}"sv, commanded_actor->GetDisplayFullName());
       Core::damage_actor_value(
           *commanded_actor,
           RE::ActorValue::kHealth,
@@ -128,7 +128,7 @@ auto soul_link_commanded_actor(RE::Actor* target, float* damage, const Config& c
     }
 }
 
-auto allow_magic_shield_effect(const RE::ActiveEffect& active_effect, const Config& config) -> bool
+auto allow_soul_link_effect(const RE::ActiveEffect& active_effect, const Config& config) -> bool
 {
   if (!active_effect.effect || !active_effect.effect->baseEffect) { return false; }
   const auto base_effect = active_effect.effect->baseEffect;
@@ -146,16 +146,18 @@ auto modify_actor_value(
     const Config& config) -> void
 {
   if (Core::can_modify_actor_value(this_, actor, *value, av) &&
-      allow_magic_shield_effect(*this_, config))
+      allow_soul_link_effect(*this_, config))
     {
-      logger::info("soul link value before: {}"sv, *value);
+      logd("soul link value before: {}"sv, *value);
       *value = std::abs(*value);
       soul_link_commanded_actor(actor, value, config);
       soul_link_commander_actor(actor, value, config);
       *value = -*value;
-      logger::info("soul link value after: {}"sv, *value);
+      logd("soul link value after: {}"sv, *value);
     }
 }
+
+//TODO Overdamage handle
 
 auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& config) -> void
 {

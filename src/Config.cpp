@@ -5,6 +5,15 @@ namespace Reflyem
 {
 constexpr inline std::string_view PathToConfig = R"(Data\SKSE\Plugins\Reflyem.toml)";
 constexpr inline std::string_view Reflyem = "Reflyem";
+constexpr inline std::string_view MiscFixes = "MiscFixes";
+constexpr inline std::string_view RegenerationFix = "RegenerationFix";
+constexpr inline std::string_view EquipBoundFix = "EquipBoundFix";
+constexpr inline std::string_view DisableSprintCostInCombat = "DisableSprintCostInCombat";
+constexpr inline std::string_view DisableOverEncumbered = "DisableOverEncumbered";
+constexpr inline std::string_view NegativeSpeedMultFix = "NegativeSpeedMultFix";
+constexpr inline std::string_view SpeedMultCap = "SpeedMultCap";
+constexpr inline std::string_view EffectAllowOvercapKeyword = "EffectAllowOvercapKeyword";
+constexpr inline std::string_view EffectMutateCapKeyword = "EffectMutateCapKeyword";
 constexpr inline std::string_view ModName = "ModName";
 constexpr inline std::string_view SoulLink = "SoulLink";
 constexpr inline std::string_view DeathLoot = "DeathLoot";
@@ -25,6 +34,7 @@ constexpr inline std::string_view FormListKeywordItemId = "FormListKeywordItemId
 constexpr inline std::string_view FormListKeywordCapId = "FormListKeywordCapId";
 constexpr inline std::string_view Enable = "Enable";
 constexpr inline std::string_view PotionsDrinkLimit = "PotionsDrinkLimit";
+constexpr inline std::string_view UnblockableAttack = "UnblockableAttack";
 constexpr inline std::string_view EnableWeapon = "EnableWeapon";
 constexpr inline std::string_view ActorValueIndex = "ActorValueIndex";
 constexpr inline std::string_view MagicShield = "MagicShield";
@@ -122,6 +132,7 @@ constexpr inline std::string_view CastOnKill = "CastOnKill";
 constexpr inline std::string_view RegenDelay = "RegenDelay";
 constexpr inline std::string_view ResistTweaks = "ResistTweaks";
 constexpr inline std::string_view MaxResistKeywordId = "MaxResistKeywordId";
+constexpr inline std::string_view NegativeResistImmuneKeywordId = "NegativeResistImmuneKeywordId";
 constexpr inline std::string_view EnableCheckResistance = "EnableCheckResistance";
 constexpr inline std::string_view EnchGetNoAbsorb = "EnchGetNoAbsorb";
 constexpr inline std::string_view EnchIgnoreResistance = "EnchIgnoreResistance";
@@ -153,6 +164,9 @@ constexpr inline std::string_view ParryStaggerCount = "ParryStaggerCount";
 constexpr inline std::string_view ParryStaggerCountKeywordId = "ParryStaggerCountKeywordId";
 constexpr inline std::string_view ParryStaggerCountTimer = "ParryStaggerCountTimer";
 constexpr inline std::string_view BlockTimer = "BlockTimer";
+constexpr inline std::string_view AbsoluteUnblockKeywordId = "AbsoluteUnblockKeywordId";
+constexpr inline std::string_view TimingUnblockKeywordId = "TimingUnblockKeywordId";
+constexpr inline std::string_view JustUnblockKeywordId = "JustUnblockKeywordId";
 constexpr inline std::string_view LowEquipAbilityId = "LowEquipAbilityId";
 constexpr inline std::string_view MidEquipAbilityId = "MidEquipAbilityId";
 constexpr inline std::string_view HigEquipAbilityId = "HigEquipAbilityId";
@@ -833,6 +847,11 @@ Config::ResistTweaksConfig::ResistTweaksConfig(
       max_resist_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(
           max_resist_keyword_form_id.value(),
           config.mod_name());
+      const auto negative_resist_immune_keyword_form_id =
+          tbl[ResistTweaks][NegativeResistImmuneKeywordId].value<RE::FormID>();
+      negative_resist_immune_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(
+          negative_resist_immune_keyword_form_id.value(),
+          config.mod_name());
       low_ = tbl[ResistTweaks][Low].value_or(-100.f);
       no_double_resist_check_magick_ = tbl[ResistTweaks][NoDoubleResistCheckMagick].value_or(false);
       no_double_resist_check_poison_ = tbl[ResistTweaks][NoDoubleResistCheckPoison].value_or(false);
@@ -1111,6 +1130,64 @@ Config::PotionsDrinkLimitConfig::PotionsDrinkLimitConfig(
           data_handler.LookupForm<RE::BGSKeyword>(duration_keyword_id.value(), config.mod_name());
     }
 }
+Config::UnblockableAttackConfig::UnblockableAttackConfig(
+    toml::table& tbl,
+    RE::TESDataHandler& data_handler,
+    const Config& config)
+{
+  logger::info("config init: UnblockableAttack"sv);
+  enable_ = tbl[UnblockableAttack][Enable].value_or(false);
+  if (enable_)
+    {
+      const auto absolute_unblock_form_id =
+          tbl[UnblockableAttack][AbsoluteUnblockKeywordId].value<RE::FormID>();
+      const auto just_unblock_form_id =
+          tbl[UnblockableAttack][JustUnblockKeywordId].value<RE::FormID>();
+      const auto timing_unblock_form_id =
+          tbl[UnblockableAttack][TimingUnblockKeywordId].value<RE::FormID>();
+
+      absolute_unblock_ = data_handler.LookupForm<RE::BGSKeyword>(
+          absolute_unblock_form_id.value(),
+          config.mod_name());
+      just_block_unblock_ =
+          data_handler.LookupForm<RE::BGSKeyword>(just_unblock_form_id.value(), config.mod_name());
+      timing_block_unblock_ = data_handler.LookupForm<RE::BGSKeyword>(
+          timing_unblock_form_id.value(),
+          config.mod_name());
+    }
+}
+Config::SpeedMultCapConfig::SpeedMultCapConfig(
+    toml::table& tbl,
+    RE::TESDataHandler& data_handler,
+    const Config& config)
+{
+    logger::info("config init: SpeedMultCap"sv);
+    enable_ = tbl[SpeedMultCap][Enable].value_or(false);
+    if (enable_)
+    {
+        const auto allow_keyword_id =
+            tbl[SpeedMultCap][EffectAllowOvercapKeyword].value<RE::FormID>();
+        const auto cap_mutate_keyword_id =
+            tbl[SpeedMultCap][EffectMutateCapKeyword].value<RE::FormID>();
+
+        cap_base_ = tbl[SpeedMultCap][CapBase].value_or(100.f);
+        effect_allow_overcap_ = data_handler.LookupForm<RE::BGSKeyword>(
+            allow_keyword_id.value(),
+            config.mod_name());
+        effect_mutate_cap_ =
+            data_handler.LookupForm<RE::BGSKeyword>(cap_mutate_keyword_id.value(), config.mod_name());
+    }
+}
+
+Config::MiscFixesConfig::MiscFixesConfig(toml::table& tbl, RE::TESDataHandler&, const Config&)
+{
+  logger::info("config init: MiscFixesConfig"sv);
+  regeneration_fix_ = tbl[MiscFixes][RegenerationFix].value_or(false);
+  equip_bound_fix_ = tbl[MiscFixes][EquipBoundFix].value_or(false);
+  disable_sprint_cost_in_combat_ = tbl[MiscFixes][DisableSprintCostInCombat].value_or(false);
+  disable_over_encumbered_ = tbl[MiscFixes][DisableOverEncumbered].value_or(false);
+  negative_speed_mult_fix_ = tbl[MiscFixes][NegativeSpeedMultFix].value_or(false);
+}
 
 Config::Config()
 {
@@ -1146,7 +1223,10 @@ Config::Config()
   item_limit_ = ItemLimitConfig{tbl, *data_handler, *this};
   death_loot_ = DeathLootConfig{tbl, *data_handler, *this};
   soul_link_ = SoulLinkConfig{tbl, *data_handler, *this};
+  unblockable_attack_ = UnblockableAttackConfig(tbl, *data_handler, *this);
+  misc_fixes_ = MiscFixesConfig(tbl, *data_handler, *this);
   potions_drink_limit_ = PotionsDrinkLimitConfig{tbl, *data_handler, *this};
+  speed_mult_cap_config_ = SpeedMultCapConfig{tbl, *data_handler, *this};
 
   logger::info("finish init config"sv);
 }

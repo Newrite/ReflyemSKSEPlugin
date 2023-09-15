@@ -106,14 +106,14 @@ auto character_timer_map_handler(
 
 auto damage_actor_value(RE::Actor& actor, const RE::ActorValue av, float value) -> void
 {
-  logger::info("DamageActorValue: {} {}"sv, av, value);
+  logger::debug("DamageActorValue: {} {}"sv, av, value);
   if (value > 0.f) { value = value * -1.f; }
   actor.RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, av, value);
 }
 
 auto restore_actor_value(RE::Actor& actor, const RE::ActorValue av, const float value) -> void
 {
-  logger::info("RestoreActorValue: {} {}"sv, av, value);
+  logger::debug("RestoreActorValue: {} {}"sv, av, value);
   if (value <= 0.f) { return; }
 
   actor.RestoreActorValue(RE::ACTOR_VALUE_MODIFIER::kDamage, av, value);
@@ -273,21 +273,40 @@ auto set_av_regen_delay(RE::AIProcess* process, RE::ActorValue av, float time) -
 
 auto getting_damage_mult(RE::Actor& actor) -> float
 {
+  static auto ByPCDiffMap = std::map<std::int32_t, const char*>{
+      {0, "fDiffMultHPByPCVE"},
+      {1, "fDiffMultHPByPCE"},
+      {2, "fDiffMultHPByPCN"},
+      {3, "fDiffMultHPByPCH"},
+      {4, "fDiffMultHPByPCVH"},
+      {5, "fDiffMultHPByPCL"}};
+
+  static auto ToPCDiffMap = std::map<std::int32_t, const char*>{
+      {0, "fDiffMultHPToPCVE"},
+      {1, "fDiffMultHPToPCE"},
+      {2, "fDiffMultHPToPCN"},
+      {3, "fDiffMultHPToPCH"},
+      {4, "fDiffMultHPToPCVH"},
+      {5, "fDiffMultHPToPCL"}};
+
   const auto settings_collection = RE::GameSettingCollection::GetSingleton();
   const auto player = RE::PlayerCharacter::GetSingleton();
 
   if (!settings_collection || !player) { return 1.f; }
 
-  const auto f_diff_mult_hp_by_pcl = settings_collection->GetSetting("fDiffMultHPByPCL");
-  const auto f_diff_mult_hp_to_pcl = settings_collection->GetSetting("fDiffMultHPToPCL");
+  const auto f_diff_mult_hp_by_pc =
+      settings_collection->GetSetting(ByPCDiffMap[player->difficulty]);
+  const auto f_diff_mult_hp_to_pc =
+      settings_collection->GetSetting(ToPCDiffMap[player->difficulty]);
 
-  if (!f_diff_mult_hp_by_pcl || !f_diff_mult_hp_to_pcl) { return 1.f; }
+  if (!f_diff_mult_hp_by_pc || !f_diff_mult_hp_to_pc) { return 1.f; }
 
   if (actor.IsPlayer() || actor.IsPlayerTeammate() || !actor.IsHostileToActor(player))
     {
-      return f_diff_mult_hp_to_pcl->GetFloat();
+      return f_diff_mult_hp_to_pc->GetFloat();
     }
-  else { return f_diff_mult_hp_by_pcl->GetFloat(); }
+
+  return f_diff_mult_hp_by_pc->GetFloat();
 }
 
 auto actor_has_active_mgef_with_keyword(RE::Actor& actor, const RE::BGSKeyword& keyword) -> bool
@@ -322,25 +341,26 @@ auto try_actor_has_active_mgef_with_keyword(RE::Actor* actor, const RE::BGSKeywo
 
   auto active_effects = actor->GetActiveEffectList();
   if (!active_effects) { return false; }
-  logger::debug("Start search mgef wigh keyword"sv);
+  logd("Start search mgef wigh keyword"sv);
   for (const auto active_effect : *active_effects)
     {
       if (!active_effect || active_effect->flags.any(RE::ActiveEffect::Flag::kInactive) ||
           !active_effect->effect || !active_effect->effect->baseEffect)
         {
+          logd("Skip effect"sv);
           continue;
         }
       const auto base_effect = active_effect->effect->baseEffect;
 
-      logger::debug("Not null effect and active"sv);
+      logd("Not null effect and active"sv);
 
       if (base_effect->HasKeyword(keyword))
         {
-          logger::debug("Found keyword with id"sv);
+          logd("Found keyword with id"sv);
           return true;
         }
     }
-  logger::debug("Not found keyword with id"sv);
+  logd("Not found keyword with id"sv);
   return false;
 }
 
@@ -358,6 +378,72 @@ auto cast(RE::SpellItem& spell, RE::Actor& target, RE::Actor& caster) -> void
       caster.GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)
           ->CastSpellImmediate(&spell, true, &target_, 1.00f, false, 0.0f, &caster_);
     }
+}
+
+// template<typename FormType>
+// void get_data(RE::FormID form_id, std::string_view mod_name) {
+//   let data_handler = RE::TESDataHandler::GetSingleton();
+//   if (!data_handler) {
+//     logi("Data handler is null"sv);
+//     return;
+//   }
+//   return;
+//   return data_handler->LookupForm<FormType>(form_id, mod_name);
+// }
+
+auto cast_with_source(
+    RE::SpellItem* spell,
+    RE::Actor* target,
+    RE::Actor* caster,
+    const RE::MagicSystem::CastingSource casting_source) -> void
+{
+  if (!spell || !target || !caster) { return; }
+
+  let caster_ = false ? spell->HasKeyword(nullptr) ? target : caster : caster;
+  let target_ = false ? spell->HasKeyword(nullptr) ? caster : target : target;
+  if (spell->data.delivery == RE::MagicSystem::Delivery::kSelf)
+    {
+      caster->GetMagicCaster(casting_source)
+          ->CastSpellImmediate(spell, true, caster_, 1.00f, false, 0.0f, caster_);
+    }
+  else
+    {
+      caster->GetMagicCaster(casting_source)
+          ->CastSpellImmediate(spell, true, target_, 1.00f, false, 0.0f, caster_);
+    }
+}
+
+auto get_left_hand_equip_slot() -> RE::BGSEquipSlot*
+{
+  let object_manager = RE::BGSDefaultObjectManager::GetSingleton();
+  if (!object_manager) { return nullptr; }
+  return object_manager->objects[19]->As<RE::BGSEquipSlot>();
+}
+
+auto get_right_hand_equip_slot() -> RE::BGSEquipSlot*
+{
+  let object_manager = RE::BGSDefaultObjectManager::GetSingleton();
+  if (!object_manager) { return nullptr; }
+  return object_manager->objects[20]->As<RE::BGSEquipSlot>();
+}
+
+auto get_voice_equip_slot() -> RE::BGSEquipSlot*
+{
+  let object_manager = RE::BGSDefaultObjectManager::GetSingleton();
+  if (!object_manager) { return nullptr; }
+  return object_manager->objects[20]->As<RE::BGSEquipSlot>();
+}
+
+auto equip_slot_comparer(RE::BGSEquipSlot* first, RE::BGSEquipSlot* second) -> bool
+{
+  if (!first || !second)
+    {
+      logi("Some of equip slots is null"sv);
+      return false;
+    }
+
+  const REL::Relocation<decltype(&equip_slot_comparer)> func{RELOCATION_ID(23148, 0)};
+  return func(first, second);
 }
 
 auto cast_on_handle_formlists(
@@ -551,6 +637,17 @@ auto get_weapon(const RE::Actor& actor, const bool is_left_hand, RE::TESObjectWE
   return as_weapon;
 }
 
+auto get_float_game_setting(const char* setting_name) -> std::optional<float>
+{
+  let game_settings = RE::GameSettingCollection::GetSingleton();
+  if (!game_settings) { return std::nullopt; }
+
+  let setting = game_settings->GetSetting(setting_name);
+  if (!setting) { return std::nullopt; }
+
+  return setting->data.f;
+}
+
 auto form_has_keyword(const RE::TESForm* form, const RE::BGSKeyword* keyword) -> bool
 {
   if (!form || !keyword)
@@ -570,6 +667,12 @@ auto form_has_keyword(const RE::TESForm* form, const RE::BGSKeyword* keyword) ->
   return keyword_form->HasKeyword(keyword);
 }
 
+auto get_actor_value_owner_as_actor(RE::ActorValueOwner* actor_value_owner) -> RE::Actor*
+{
+  const auto actor = (RE::Actor*)((char*)&actor_value_owner - 0xB0);
+  if (!actor) { return nullptr; }
+  return actor;
+}
 
 auto is_dual_wielding(const RE::Actor* actor) -> bool
 {

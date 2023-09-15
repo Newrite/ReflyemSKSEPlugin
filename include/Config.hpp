@@ -687,6 +687,10 @@ private:
 
     [[nodiscard]] bool enable_check_resistance() const { return enable_check_resistance_; }
     [[nodiscard]] RE::BGSKeyword* max_resist_keyword() const { return max_resist_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* negative_resist_immune_keyword() const
+    {
+      return negative_resist_immune_keyword_;
+    }
     [[nodiscard]] float low() const { return low_; }
 
     [[nodiscard]] bool no_double_resist_check_magick() const
@@ -736,6 +740,7 @@ private:
     bool enable_;
     bool enable_check_resistance_;
     RE::BGSKeyword* max_resist_keyword_;
+    RE::BGSKeyword* negative_resist_immune_keyword_;
     float low_;
     bool no_double_resist_check_magick_;
     bool no_double_resist_check_poison_;
@@ -996,6 +1001,107 @@ private:
     // RE::TESGlobal* used_potions_;
   };
 
+  struct UnblockableAttackConfig final
+  {
+    [[nodiscard]] bool enable() const { return enable_; }
+    [[nodiscard]] RE::BGSKeyword* absolute_unblock() const { return absolute_unblock_; }
+    [[nodiscard]] RE::BGSKeyword* just_block_unblock() const { return just_block_unblock_; }
+    [[nodiscard]] RE::BGSKeyword* timing_block_unblock() const { return timing_block_unblock_; }
+
+    UnblockableAttackConfig(
+        toml::table& tbl,
+        RE::TESDataHandler& data_handler,
+        const Config& config);
+    UnblockableAttackConfig() = default;
+
+private:
+    bool enable_;
+    RE::BGSKeyword* absolute_unblock_;
+    RE::BGSKeyword* just_block_unblock_;
+    RE::BGSKeyword* timing_block_unblock_;
+  };
+
+  struct DamageReductionSystemConfig final
+  {
+    DamageReductionSystemConfig(
+        toml::table& tbl,
+        RE::TESDataHandler& data_handler,
+        const Config& config);
+    DamageReductionSystemConfig() = default;
+
+public:
+    [[nodiscard]] bool enable() const { return enable_; }
+    [[nodiscard]] RE::ActorValue general_damage_reduction() const
+    {
+      return general_damage_reduction_;
+    }
+    [[nodiscard]] RE::ActorValue general_damage_reduction_bypass() const
+    {
+      return general_damage_reduction_bypass_;
+    }
+    [[nodiscard]] RE::BGSKeyword* damage_reduction_effect() const
+    {
+      return damage_reduction_effect_;
+    }
+    [[nodiscard]] RE::BGSKeyword* damage_reduction_bypass_effect() const
+    {
+      return damage_reduction_bypass_effect_;
+    }
+    [[nodiscard]] std::string damage_reduction_keyword() const { return damage_reduction_keyword_; }
+    [[nodiscard]] std::string damage_reduction_bypass_keyword() const
+    {
+      return damage_reduction_bypass_keyword_;
+    }
+
+private:
+    bool enable_;
+    RE::ActorValue general_damage_reduction_;
+    RE::ActorValue general_damage_reduction_bypass_;
+    RE::BGSKeyword* damage_reduction_effect_;
+    RE::BGSKeyword* damage_reduction_bypass_effect_;
+    std::string damage_reduction_keyword_;
+    std::string damage_reduction_bypass_keyword_;
+  };
+
+  struct SpeedMultCapConfig final
+  {
+    [[nodiscard]] bool enable() const { return enable_; }
+    [[nodiscard]] float cap_base() const { return cap_base_; }
+    [[nodiscard]] RE::BGSKeyword* effect_allow_overcap() const { return effect_allow_overcap_; }
+    [[nodiscard]] RE::BGSKeyword* effect_mutate_cap() const { return effect_mutate_cap_; }
+
+    SpeedMultCapConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
+    SpeedMultCapConfig() = default;
+
+private:
+    bool enable_;
+    float cap_base_;
+    RE::BGSKeyword* effect_allow_overcap_;
+    RE::BGSKeyword* effect_mutate_cap_;
+  };
+
+  struct MiscFixesConfig final
+  {
+    [[nodiscard]] bool regeneration_fix() const { return regeneration_fix_; }
+    [[nodiscard]] bool equip_bound_fix() const { return equip_bound_fix_; }
+    [[nodiscard]] bool disable_sprint_cost_in_combat() const
+    {
+      return disable_sprint_cost_in_combat_;
+    }
+    [[nodiscard]] bool disable_over_encumbered() const { return disable_over_encumbered_; }
+    [[nodiscard]] bool negative_speed_mult_fix() const { return negative_speed_mult_fix_; }
+
+    MiscFixesConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
+    MiscFixesConfig() = default;
+
+private:
+    bool regeneration_fix_;
+    bool equip_bound_fix_;
+    bool disable_sprint_cost_in_combat_;
+    bool disable_over_encumbered_;
+    bool negative_speed_mult_fix_;
+  };
+
   struct AbsorbShieldConfig final
   {
 private:
@@ -1144,8 +1250,19 @@ private:
   // soul link
   SoulLinkConfig soul_link_;
 
+  // ublockable attack
+  UnblockableAttackConfig unblockable_attack_;
+
+  // misc fixes
+  MiscFixesConfig misc_fixes_;
+
   // potions drink limit
   PotionsDrinkLimitConfig potions_drink_limit_;
+
+  // potions drink limit
+  DamageReductionSystemConfig damage_reduction_system_;
+  
+  SpeedMultCapConfig speed_mult_cap_config_;
 
   public:
   [[nodiscard]] static auto get_singleton() noexcept -> const Config&;
@@ -1153,6 +1270,11 @@ private:
   [[nodiscard]] auto mod_name() const -> const std::string_view& { return mod_name_; }
 
   [[nodiscard]] const MagicShieldConfig& magic_shield() const { return magic_shield_; }
+
+  [[nodiscard]] const DamageReductionSystemConfig& damage_reduction_system() const
+  {
+    return damage_reduction_system_;
+  }
 
   [[nodiscard]] const StaminaShieldConfig& stamina_shield() const { return stamina_shield_; }
 
@@ -1215,9 +1337,21 @@ private:
 
   [[nodiscard]] const SoulLinkConfig& soul_link() const { return soul_link_; }
 
+  [[nodiscard]] const UnblockableAttackConfig& unblockable_attack() const
+  {
+    return unblockable_attack_;
+  }
+
+  [[nodiscard]] const MiscFixesConfig& misc_fixes() const { return misc_fixes_; }
+
   [[nodiscard]] const PotionsDrinkLimitConfig& potions_drink_limit() const
   {
     return potions_drink_limit_;
+  }
+
+  [[nodiscard]] const SpeedMultCapConfig& speed_mult_cap_config() const
+  {
+    return speed_mult_cap_config_;
   }
 };
 

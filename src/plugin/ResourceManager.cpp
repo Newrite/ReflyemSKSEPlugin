@@ -20,83 +20,63 @@ auto spend_actor_value(RE::Actor& actor, const RE::ActorValue av, float value) -
 
 auto regeneration_actor_value(
     RE::Actor& actor,
-    const RE::ActorValue av,
     const RE::ActorValue regen_av,
-    const RE::ActorValue regen_av_mult,
-    const float delta) -> float
+    const RE::ActorValue regen_av_mult) -> float
 {
   auto mult = 1.f + (actor.GetActorValue(regen_av_mult) / 100.f);
   if (mult < 0.f) { mult = 1.f; }
 
   const auto flat_regen = [&]() -> float
   {
-    // if actor is bleeding out and regen_av health (like HealRate) is 0 in race
-    // (by default in races in my modpack) they can't give up (becouse have 0 health regen)
-    // so it hack fix this moment
-    if (actor.IsPlayerRef() || av != RE::ActorValue::kHealth || !actor.IsBleedingOut() ||
-        actor.IsInCombat())
-      {
-        return actor.GetActorValue(regen_av) * mult;
-      }
-
-    auto regen = actor.GetActorValue(regen_av);
-    if (regen <= 0.f) { regen = 5.f; }
-
+    let regen = actor.GetActorValue(regen_av);
     return regen * mult;
   }();
 
-  const auto regeneration_value = flat_regen * delta;
-  logger::debug(
-      "MultRegen {} RegenValue {} FlatRegenBase {}",
-      mult,
-      regeneration_value,
-      flat_regen);
-
-  return regeneration_value;
+  return flat_regen;
 }
 
-auto regeneration_stamina(RE::Actor& actor, const float delta) -> float
-{
-  auto constexpr av = RE::ActorValue::kStamina;
-  auto constexpr regen_av = RE::ActorValue::kStaminaRate;
-  auto constexpr regen_av_mult = RE::ActorValue::kStaminaRateMult;
-  return regeneration_actor_value(actor, av, regen_av, regen_av_mult, delta);
-}
-
-auto regeneration_health(RE::Actor& actor, const float delta) -> float
-{
-  auto constexpr av = RE::ActorValue::kHealth;
-  auto constexpr regen_av = RE::ActorValue::kHealRate;
-  auto constexpr regen_av_mult = RE::ActorValue::kHealRateMult;
-  return regeneration_actor_value(actor, av, regen_av, regen_av_mult, delta);
-}
-
-auto regeneration_magicka(RE::Actor& actor, const float delta) -> float
-{
-  auto constexpr av = RE::ActorValue::kMagicka;
-  auto constexpr regen_av = RE::ActorValue::kMagickaRate;
-  auto constexpr regen_av_mult = RE::ActorValue::kMagickaRateMult;
-  return regeneration_actor_value(actor, av, regen_av, regen_av_mult, delta);
-}
-
-auto regeneration(RE::Actor& actor, const RE::ActorValue av, const float delta) -> float
-{
-  switch (av)
-    {
-      case RE::ActorValue::kHealth: {
-        return regeneration_health(actor, delta);
-      }
-      case RE::ActorValue::kStamina: {
-        return regeneration_stamina(actor, delta);
-      }
-      case RE::ActorValue::kMagicka: {
-        return regeneration_magicka(actor, delta);
-      }
-      default: {
-        return 0.0;
-      }
-    }
-}
+// auto regeneration_stamina(RE::Actor& actor, const float delta) -> float
+// {
+//   auto constexpr av = RE::ActorValue::kStamina;
+//   auto constexpr regen_av = RE::ActorValue::kStaminaRate;
+//   auto constexpr regen_av_mult = RE::ActorValue::kStaminaRateMult;
+//   return regeneration_actor_value(actor, av, regen_av, regen_av_mult, delta);
+// }
+// 
+// auto regeneration_health(RE::Actor& actor, const float delta) -> float
+// {
+//   auto constexpr av = RE::ActorValue::kHealth;
+//   auto constexpr regen_av = RE::ActorValue::kHealRate;
+//   auto constexpr regen_av_mult = RE::ActorValue::kHealRateMult;
+//   return regeneration_actor_value(actor, av, regen_av, regen_av_mult, delta);
+// }
+// 
+// auto regeneration_magicka(RE::Actor& actor, const float delta) -> float
+// {
+//   auto constexpr av = RE::ActorValue::kMagicka;
+//   auto constexpr regen_av = RE::ActorValue::kMagickaRate;
+//   auto constexpr regen_av_mult = RE::ActorValue::kMagickaRateMult;
+//   return regeneration_actor_value(actor, av, regen_av, regen_av_mult, delta);
+// }
+// 
+// auto regeneration(RE::Actor& actor, const RE::ActorValue av, const float delta) -> float
+// {
+//   switch (av)
+//     {
+//       case RE::ActorValue::kHealth: {
+//         return regeneration_health(actor, delta);
+//       }
+//       case RE::ActorValue::kStamina: {
+//         return regeneration_stamina(actor, delta);
+//       }
+//       case RE::ActorValue::kMagicka: {
+//         return regeneration_magicka(actor, delta);
+//       }
+//       default: {
+//         return 0.0;
+//       }
+//     }
+// }
 
 auto weap_actor_mask_multiply(const FormMask& matrix1, const ActorMask& matrix2)
     -> std::unique_ptr<FormMask>
