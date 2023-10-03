@@ -37,6 +37,8 @@ constexpr inline std::string_view PotionsDrinkLimit = "PotionsDrinkLimit";
 constexpr inline std::string_view UnblockableAttack = "UnblockableAttack";
 constexpr inline std::string_view EnableWeapon = "EnableWeapon";
 constexpr inline std::string_view ActorValueIndex = "ActorValueIndex";
+constexpr inline std::string_view ActorValueIndexPhysic = "ActorValueIndexPhysic";
+constexpr inline std::string_view ActorValueIndexMagick = "ActorValueIndexMagick";
 constexpr inline std::string_view MagicShield = "MagicShield";
 constexpr inline std::string_view StaminaShield = "StaminaShield";
 constexpr inline std::string_view Vampirism = "Vampirism";
@@ -256,7 +258,8 @@ Config::PetrifiedBloodConfig::PetrifiedBloodConfig(
   enable_ = tbl[PetrifiedBlood][Enable].value_or(false);
   if (enable_)
     {
-      av_ = static_cast<RE::ActorValue>(tbl[PetrifiedBlood][ActorValueIndex].value_or(120));
+      av_physic_ = static_cast<RE::ActorValue>(tbl[PetrifiedBlood][ActorValueIndexPhysic].value_or(120));
+      av_magick_ = static_cast<RE::ActorValue>(tbl[PetrifiedBlood][ActorValueIndexMagick].value_or(120));
 
       const auto blood_spell_form_id = tbl[PetrifiedBlood][SpellId].value<RE::FormID>();
       blood_spell_ =
@@ -1161,21 +1164,23 @@ Config::SpeedMultCapConfig::SpeedMultCapConfig(
     RE::TESDataHandler& data_handler,
     const Config& config)
 {
-    logger::info("config init: SpeedMultCap"sv);
-    enable_ = tbl[SpeedMultCap][Enable].value_or(false);
-    if (enable_)
+  logger::info("config init: SpeedMultCap"sv);
+  enable_ = tbl[SpeedMultCap][Enable].value_or(false);
+  if (enable_)
     {
-        const auto allow_keyword_id =
-            tbl[SpeedMultCap][EffectAllowOvercapKeyword].value<RE::FormID>();
-        const auto cap_mutate_keyword_id =
-            tbl[SpeedMultCap][EffectMutateCapKeyword].value<RE::FormID>();
+      const auto allow_keyword_id =
+          tbl[SpeedMultCap][EffectAllowOvercapKeyword].value<RE::FormID>();
+      const auto cap_mutate_keyword_id =
+          tbl[SpeedMultCap][EffectMutateCapKeyword].value<RE::FormID>();
+      const auto exclusive_keyword_id = tbl[SpeedMultCap][ExclusiveKeywordId].value<RE::FormID>();
 
-        cap_base_ = tbl[SpeedMultCap][CapBase].value_or(100.f);
-        effect_allow_overcap_ = data_handler.LookupForm<RE::BGSKeyword>(
-            allow_keyword_id.value(),
-            config.mod_name());
-        effect_mutate_cap_ =
-            data_handler.LookupForm<RE::BGSKeyword>(cap_mutate_keyword_id.value(), config.mod_name());
+      cap_base_ = tbl[SpeedMultCap][CapBase].value_or(100.f);
+      effect_allow_overcap_ =
+          data_handler.LookupForm<RE::BGSKeyword>(allow_keyword_id.value(), config.mod_name());
+      effect_mutate_cap_ =
+          data_handler.LookupForm<RE::BGSKeyword>(cap_mutate_keyword_id.value(), config.mod_name());
+      exclusive_keyword_ =
+          data_handler.LookupForm<RE::BGSKeyword>(exclusive_keyword_id.value(), config.mod_name());
     }
 }
 

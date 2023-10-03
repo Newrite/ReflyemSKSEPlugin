@@ -42,7 +42,7 @@ auto regeneration_actor_value(
 //   auto constexpr regen_av_mult = RE::ActorValue::kStaminaRateMult;
 //   return regeneration_actor_value(actor, av, regen_av, regen_av_mult, delta);
 // }
-// 
+//
 // auto regeneration_health(RE::Actor& actor, const float delta) -> float
 // {
 //   auto constexpr av = RE::ActorValue::kHealth;
@@ -50,7 +50,7 @@ auto regeneration_actor_value(
 //   auto constexpr regen_av_mult = RE::ActorValue::kHealRateMult;
 //   return regeneration_actor_value(actor, av, regen_av, regen_av_mult, delta);
 // }
-// 
+//
 // auto regeneration_magicka(RE::Actor& actor, const float delta) -> float
 // {
 //   auto constexpr av = RE::ActorValue::kMagicka;
@@ -58,7 +58,7 @@ auto regeneration_actor_value(
 //   auto constexpr regen_av_mult = RE::ActorValue::kMagickaRateMult;
 //   return regeneration_actor_value(actor, av, regen_av, regen_av_mult, delta);
 // }
-// 
+//
 // auto regeneration(RE::Actor& actor, const RE::ActorValue av, const float delta) -> float
 // {
 //   switch (av)
@@ -423,18 +423,26 @@ auto ranged_spend_handler(RE::Character& character, const Config& config) -> voi
 auto get_weapon_or_shield(const RE::Actor& actor) -> std::optional<WeaponOrArmor>
 {
   logger::debug("get weapon or shield start"sv);
-  const auto form = actor.GetEquippedObject(false);
-  if (!form) { return std::nullopt; }
+  let form_right = actor.GetEquippedObject(false);
+  let form_left = actor.GetEquippedObject(true);
+  if (!form_right && !form_left) { return std::nullopt; }
 
-  if (const auto weapon = form->As<RE::TESObjectWEAP>())
+  if (form_right)
     {
-      auto either = Reflyem::Core::Either<RE::TESObjectWEAP*, RE::TESObjectARMO*>(weapon);
-      return {either};
+      if (const auto weapon = form_right->As<RE::TESObjectWEAP>())
+        {
+          auto either = Reflyem::Core::Either<RE::TESObjectWEAP*, RE::TESObjectARMO*>(weapon);
+          return {either};
+        }
     }
-  if (const auto armo = form->As<RE::TESObjectARMO>())
+
+  if (form_left)
     {
-      auto either = Reflyem::Core::Either<RE::TESObjectWEAP*, RE::TESObjectARMO*>(armo);
-      return {either};
+      if (const auto armo = form_left->As<RE::TESObjectARMO>())
+        {
+          auto either = Reflyem::Core::Either<RE::TESObjectWEAP*, RE::TESObjectARMO*>(armo);
+          return {either};
+        }
     }
 
   return std::nullopt;
@@ -622,7 +630,16 @@ auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& confi
 
   logger::debug("on_weapon_hit blocked hit"sv);
 
-  const auto form = target->GetEquippedObject(false);
+  let weapon_or_shield = get_weapon_or_shield(*target);
+  let form = [&]() -> RE::TESForm*
+  {
+    if (weapon_or_shield.has_value())
+      {
+        if (weapon_or_shield.value().is_l) { return weapon_or_shield.value().left; }
+        return weapon_or_shield.value().right;
+      }
+    return nullptr;
+  }();
   if (!form) { return; }
 
   logger::debug("success get form"sv);

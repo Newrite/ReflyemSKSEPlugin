@@ -669,7 +669,7 @@ auto form_has_keyword(const RE::TESForm* form, const RE::BGSKeyword* keyword) ->
 
 auto get_actor_value_owner_as_actor(RE::ActorValueOwner* actor_value_owner) -> RE::Actor*
 {
-  const auto actor = (RE::Actor*)((char*)&actor_value_owner - 0xB0);
+  const auto actor = (RE::Actor*)((char*)actor_value_owner - 0xB0);
   if (!actor) { return nullptr; }
   return actor;
 }

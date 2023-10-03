@@ -1639,11 +1639,12 @@ auto OnActorValueOwner::get_actor_value_npc(RE::ActorValueOwner* this_, RE::Acto
 
   if (av == RE::ActorValue::kSpeedMult)
     {
-      let speed_mult =
-          config.speed_mult_cap_config().enable()
-              ? Reflyem::SpeedMultCap::get_actor_value(*this_, av, get_actor_value_npc_)
-                    .value_or(get_actor_value_npc_(this_, av))
-              : get_actor_value_npc_(this_, av);
+      let default_speed_mult = get_actor_value_npc_(this_, av);
+
+      let speed_mult = config.speed_mult_cap_config().enable()
+                           ? Reflyem::SpeedMultCap::get_actor_value(this_, default_speed_mult)
+                                 .value_or(default_speed_mult)
+                           : default_speed_mult;
 
       if (config.misc_fixes().negative_speed_mult_fix())
         {
@@ -1701,26 +1702,27 @@ auto OnActorValueOwner::get_actor_value_pc(RE::ActorValueOwner* this_, RE::Actor
   letr config = Reflyem::Config::get_singleton();
 
   if (config.equip_load().enable() && av == RE::ActorValue::kInventoryWeight)
-  {
-    return Reflyem::EquipLoad::get_actor_value(*this_, av)
-        .value_or(get_actor_value_pc_(this_, av));
-  }
-
-  if (av == RE::ActorValue::kSpeedMult)
-  {
-    let speed_mult =
-        config.speed_mult_cap_config().enable()
-            ? Reflyem::SpeedMultCap::get_actor_value(*this_, av, get_actor_value_pc_)
-                  .value_or(get_actor_value_pc_(this_, av))
-            : get_actor_value_pc_(this_, av);
-
-    if (config.misc_fixes().negative_speed_mult_fix())
     {
-      if (speed_mult < 1.f) return 1.f;
+      return Reflyem::EquipLoad::get_actor_value(*this_, av)
+          .value_or(get_actor_value_pc_(this_, av));
     }
 
-    return speed_mult;
-  }
+  if (av == RE::ActorValue::kSpeedMult)
+    {
+      let default_speed_mult = get_actor_value_pc_(this_, av);
+
+      let speed_mult = config.speed_mult_cap_config().enable()
+                           ? Reflyem::SpeedMultCap::get_actor_value(this_, default_speed_mult)
+                                 .value_or(default_speed_mult)
+                           : default_speed_mult;
+
+      if (config.misc_fixes().negative_speed_mult_fix())
+        {
+          if (speed_mult < 1.f) return 1.f;
+        }
+
+      return speed_mult;
+    }
 
   return get_actor_value_pc_(this_, av);
 }

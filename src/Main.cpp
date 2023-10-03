@@ -10,6 +10,7 @@
 #include "plugin/ItemLimit.hpp"
 #include "plugin/KillEventHandler.hpp"
 #include "plugin/MenuEventHandler.hpp"
+#include "plugin/PapyrusExtender.hpp"
 #include "plugin/ParryBash.hpp"
 
 auto init_logger() -> void
@@ -105,12 +106,6 @@ auto initialize_messaging() -> void
     }
 }
 
-auto register_papyrus_functions(RE::BSScript::IVirtualMachine* vm) -> bool
-{
-  vm->RegisterFunction("UpdateItems", "ItemLimit", Reflyem::ItemLimit::UpdateItems);
-  return true;
-}
-
 SKSEPluginLoad(const SKSE::LoadInterface* skse)
 {
   init_logger();
@@ -121,7 +116,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
   Init(skse);
 
   const auto papyrus_vm = SKSE::GetPapyrusInterface();
-  if (!papyrus_vm || !papyrus_vm->Register(register_papyrus_functions))
+  if (!papyrus_vm || !papyrus_vm->Register(Reflyem::PapyrusExtender::register_functions))
     {
       logger::info("papyrus_vm is null or can't register papyrus functions"sv);
       return false;

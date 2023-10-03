@@ -77,7 +77,8 @@ private:
 
     [[nodiscard]] RE::BGSKeyword* mgef_keyword() const { return mgef_keyword_; }
 
-    [[nodiscard]] RE::ActorValue av() const { return av_; }
+    [[nodiscard]] RE::ActorValue av_physic() const { return av_physic_; }
+    [[nodiscard]] RE::ActorValue av_magick() const { return av_magick_; }
 
     [[nodiscard]] RE::SpellItem* blood_spell() const { return blood_spell_; }
 
@@ -90,7 +91,8 @@ private:
     bool magick_;
     bool must_be_or_not_be_;
     RE::BGSKeyword* mgef_keyword_;
-    RE::ActorValue av_;
+    RE::ActorValue av_physic_;
+    RE::ActorValue av_magick_;
     RE::SpellItem* blood_spell_;
   };
 
@@ -1069,6 +1071,7 @@ private:
     [[nodiscard]] float cap_base() const { return cap_base_; }
     [[nodiscard]] RE::BGSKeyword* effect_allow_overcap() const { return effect_allow_overcap_; }
     [[nodiscard]] RE::BGSKeyword* effect_mutate_cap() const { return effect_mutate_cap_; }
+    [[nodiscard]] RE::BGSKeyword* exclusive_keyword() const { return exclusive_keyword_; }
 
     SpeedMultCapConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     SpeedMultCapConfig() = default;
@@ -1078,6 +1081,7 @@ private:
     float cap_base_;
     RE::BGSKeyword* effect_allow_overcap_;
     RE::BGSKeyword* effect_mutate_cap_;
+    RE::BGSKeyword* exclusive_keyword_;
   };
 
   struct MiscFixesConfig final
