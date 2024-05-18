@@ -1,0 +1,18 @@
+{
+  "name": "reflyem",
+  "version-string": "1.0.0",
+  "description": "Here should be description",
+  "homepage": "https://github.com/Ryan-rsm-McKenzie/ExamplePlugin-CommonLibSSE",
+  "license": "MIT",
+  "dependencies": [
+    "boost-atomic",
+    "boost-stl-interfaces",
+    "glm",
+		"magic-enum",
+    "rsm-binary-io",
+    "simpleini",
+    "span-lite",
+    "spdlog",
+    "xbyak"
+  ]
+}

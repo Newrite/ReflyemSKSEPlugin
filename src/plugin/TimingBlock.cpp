@@ -3,6 +3,8 @@
 namespace Reflyem::TimingBlock
 {
 
+constexpr static auto EXP_TIMING_BLOCK = 10.f;
+
 auto place_form_at_me(RE::TESObjectREFR* node, RE::TESForm* form) -> RE::TESObjectREFR*
 {
   if (!node || !form) { return nullptr; }
@@ -61,19 +63,22 @@ auto is_allow_timing_parry(
     const Core::ActorsCache::Data& actor_data,
     const Config& config) -> bool
 {
-  if (!Core::has_absolute_keyword(target, *config.timing_block().parry_keyword())) { return false; }
+  if (!Core::try_has_absolute_keyword(&target, config.timing_block().parry_keyword()))
+    {
+      return false;
+    }
 
-  if (Core::has_absolute_keyword(attacker, *config.timing_block().parry_immun_keyword()))
+  if (Core::try_has_absolute_keyword(&attacker, config.timing_block().parry_immun_keyword()))
     {
       return false;
     }
 
   const auto timing_effects =
-      Core::get_effects_by_keyword(target, *config.timing_block().parry_timing_keyword());
+      Core::try_get_effects_by_keyword(&target, config.timing_block().parry_timing_keyword());
   const auto parry_timing = config.timing_block().parry_timing() +
                             Core::get_effects_magnitude_sum(timing_effects).value_or(0.f);
 
-  const auto diff = BLOCK_DELAY - actor_data.timing_block_timer();
+  const auto diff = config.timing_block().block_delay() - actor_data.timing_block_timer();
   if (diff > parry_timing) { return false; }
 
   return true;
@@ -85,24 +90,24 @@ auto is_allow_timing_block(
     const Core::ActorsCache::Data& actor_data,
     const Config& config) -> bool
 {
-  if (!Core::has_absolute_keyword(target, *config.timing_block().block_keyword()))
+  if (!Core::try_has_absolute_keyword(&target, config.timing_block().block_keyword()))
     {
       logger::debug("Target has no keyword"sv);
       return false;
     }
 
-  if (Core::has_absolute_keyword(attacker, *config.timing_block().block_immun_keyword()))
+  if (Core::try_has_absolute_keyword(&attacker, config.timing_block().block_immun_keyword()))
     {
       logger::debug("Attacker has immun keyword"sv);
       return false;
     }
 
   const auto timing_effects =
-      Core::get_effects_by_keyword(target, *config.timing_block().block_timing_keyword());
+      Core::try_get_effects_by_keyword(&target, config.timing_block().block_timing_keyword());
   const auto block_timing = config.timing_block().block_timing() +
                             Core::get_effects_magnitude_sum(timing_effects).value_or(0.f);
 
-  const auto diff = BLOCK_DELAY - actor_data.timing_block_timer();
+  const auto diff = config.timing_block().block_delay() - actor_data.timing_block_timer();
   logger::debug(
       "BlockTiming eval: {} BlockTiming config: {} Diff: {}"sv,
       block_timing,
@@ -123,8 +128,9 @@ auto parry_stagger_handler(
     Core::ActorsCache::Data& actor_data,
     const Config& config) -> void
 {
-  const auto parry_count_effects =
-      Core::get_effects_by_keyword(target, *config.timing_block().parry_stagger_count_keyword());
+  const auto parry_count_effects = Core::try_get_effects_by_keyword(
+      &target,
+      config.timing_block().parry_stagger_count_keyword());
   const auto need_parry_count =
       config.timing_block().parry_stagger_count() +
       static_cast<int32_t>(Core::get_effects_magnitude_sum(parry_count_effects).value_or(0.f));
@@ -185,6 +191,12 @@ auto on_weapon_hit(RE::Actor& target, RE::HitData& hit_data, const Config& confi
       actor_data.timing_parry_counter_timer(config.timing_block().parry_stagger_count_timer());
       hit_data.totalDamage = 0.f;
       parry_stagger_handler(*aggressor, target, actor_data, config);
+      if (target.IsPlayerRef())
+        {
+          RE::PlayerCharacter::GetSingleton()->AddSkillExperience(
+              RE::ActorValue::kBlock,
+              EXP_TIMING_BLOCK);
+        }
       return;
     }
 
@@ -194,6 +206,12 @@ auto on_weapon_hit(RE::Actor& target, RE::HitData& hit_data, const Config& confi
       cast_on_timing_block(*aggressor, target, config);
       spawn_sparks(target, config, hit_data.flags.any(RE::HitData::Flag::kBlockWithWeapon), false);
       Core::play_sound(config.timing_block().block_sound(), &target);
+      if (target.IsPlayerRef())
+        {
+          RE::PlayerCharacter::GetSingleton()->AddSkillExperience(
+              RE::ActorValue::kBlock,
+              EXP_TIMING_BLOCK);
+        }
       hit_data.totalDamage = 0.f;
     }
 }

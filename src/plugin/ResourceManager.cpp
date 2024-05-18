@@ -130,17 +130,17 @@ auto get_form_mask(const RE::BGSKeywordForm& form, const Config& config)
   FormMask f_mask{{{0, 0, 0}}};
   logger::debug("start get weapon keyword"sv);
   f_mask.at(0).at(0) = 1;
-  if (form.HasKeyword(config.resource_manager().health_kw()))
+  if (config.resource_manager().health_kw() && Core::try_keyword_form_has_keyword(&form, config.resource_manager().health_kw()))
     {
       f_mask.at(0).at(0) = 0;
       f_mask.at(0).at(1) = 1;
     }
-  if (form.HasKeyword(config.resource_manager().magicka_kw()))
+  if (config.resource_manager().magicka_kw() && Core::try_keyword_form_has_keyword(&form, config.resource_manager().magicka_kw()))
     {
       f_mask.at(0).at(0) = 0;
       f_mask.at(0).at(2) = 1;
     }
-  if (form.HasKeyword(config.resource_manager().stamina_kw())) { f_mask.at(0).at(0) = 1; }
+  if (config.resource_manager().stamina_kw() && Core::try_keyword_form_has_keyword(&form, config.resource_manager().stamina_kw())) { f_mask.at(0).at(0) = 1; }
   logger::debug("end get weapon keyword"sv);
   return std::make_unique<FormMask>(f_mask);
 }
@@ -173,22 +173,22 @@ auto get_drain_value(
     }
 
   const auto stamina_to_health =
-      Core::has_absolute_keyword(actor, *config.resource_manager().convert_stamina_health_kw());
+      Core::try_has_absolute_keyword(&actor, config.resource_manager().convert_stamina_health_kw());
   logger::debug("key conversion1"sv);
   const auto stamina_to_magicka =
-      Core::has_absolute_keyword(actor, *config.resource_manager().convert_stamina_magicka_kw());
+      Core::try_has_absolute_keyword(&actor, config.resource_manager().convert_stamina_magicka_kw());
   logger::debug("key conversion2"sv);
   const auto health_to_stamina =
-      Core::has_absolute_keyword(actor, *config.resource_manager().convert_health_stamina_kw());
+      Core::try_has_absolute_keyword(&actor, config.resource_manager().convert_health_stamina_kw());
   logger::debug("key conversion3"sv);
   const auto health_to_magicka =
-      Core::has_absolute_keyword(actor, *config.resource_manager().convert_health_magicka_kw());
+      Core::try_has_absolute_keyword(&actor, config.resource_manager().convert_health_magicka_kw());
   logger::debug("key conversion4"sv);
   const auto magicka_to_stamina =
-      Core::has_absolute_keyword(actor, *config.resource_manager().convert_magicka_stamina_kw());
+      Core::try_has_absolute_keyword(&actor, config.resource_manager().convert_magicka_stamina_kw());
   logger::debug("key conversion5"sv);
   const auto magicka_to_health =
-      Core::has_absolute_keyword(actor, *config.resource_manager().convert_magicka_health_kw());
+      Core::try_has_absolute_keyword(&actor, config.resource_manager().convert_magicka_health_kw());
   logger::debug("end get conversions"sv);
 
   ActorMask a_mask{{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}};
@@ -377,7 +377,6 @@ auto melee_weapon_spend(
   logger::debug("end drain value"sv);
   drain_value->drain(actor);
   logger::debug("end drain"sv);
-  return;
 }
 
 auto bash_spend(

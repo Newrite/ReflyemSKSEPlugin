@@ -9,11 +9,15 @@ constexpr auto SCRIPT_NAMESPACE = "ReflyemPapyrus"sv;
 // Papyrus Function
 auto ActorEquippedWeaponEnchantmentHasKeyword(
     RE::StaticFunctionTag*,
-    const RE::Actor* actor,
+    const RE::TESObjectREFR* object,
     const RE::BGSKeyword* keyword,
     const bool left_hand) -> bool
 {
-  if (!keyword || !actor) { return false; }
+  if (!keyword || !object) { return false; }
+
+  let actor = object->As<RE::Actor>();
+
+  if (!actor) { return false; }
 
   let weapon = actor->GetEquippedEntryData(left_hand);
 
@@ -28,10 +32,10 @@ auto ActorEquippedWeaponEnchantmentHasKeyword(
 
 auto register_functions(RE::BSScript::IVirtualMachine* vm) -> bool
 {
-  vm->RegisterFunction(SCRIPT_NAMESPACE, "ItemLimit", ItemLimit::UpdateItems, vm);
+  vm->RegisterFunction("ItemLimit", SCRIPT_NAMESPACE, ItemLimit::UpdateItems, vm);
   vm->RegisterFunction(
-      SCRIPT_NAMESPACE,
       "ActorEquippedWeaponEnchantmentHasKeyword",
+      SCRIPT_NAMESPACE,
       ActorEquippedWeaponEnchantmentHasKeyword,
       vm);
   return true;

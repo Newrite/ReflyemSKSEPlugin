@@ -44,10 +44,10 @@ auto mgef_vampirism(
     RE::Actor& target,
     RE::Actor& aggressor,
     const float damage_value,
-    const RE::BGSKeyword& key,
+    const RE::BGSKeyword* key,
     const RE::ActorValue av) -> void
 {
-  const auto effects = Core::get_effects_by_keyword(aggressor, key);
+  const auto effects = Core::try_get_effects_by_keyword(&aggressor, key);
   const auto vampirism_percent = Core::get_effects_magnitude_sum(effects).value_or(0.f);
 
   vampirism(target, aggressor, damage_value, av, vampirism_percent);
@@ -59,9 +59,9 @@ auto allow_vampirism_effect(const RE::ActiveEffect& active_effect, const Config&
   const auto base_effect = active_effect.effect->baseEffect;
   if (config.magic_vampirism().must_be_or_not_be())
     {
-      return base_effect->HasKeyword(config.magic_vampirism().mgef_keyword());
+      return Core::try_form_has_keyword(base_effect, config.magic_vampirism().mgef_keyword());
     }
-  return !base_effect->HasKeyword(config.magic_vampirism().mgef_keyword());
+  return !Core::try_form_has_keyword(base_effect, config.magic_vampirism().mgef_keyword());
 }
 
 auto modify_actor_value(
@@ -90,7 +90,7 @@ auto modify_actor_value(
               *actor,
               *aggressor,
               value,
-              *config.magic_vampirism().mgef_health_keyword(),
+              config.magic_vampirism().mgef_health_keyword(),
               RE::ActorValue::kHealth);
         }
 
@@ -100,7 +100,7 @@ auto modify_actor_value(
               *actor,
               *aggressor,
               value,
-              *config.magic_vampirism().mgef_stamina_keyword(),
+              config.magic_vampirism().mgef_stamina_keyword(),
               RE::ActorValue::kStamina);
         }
 
@@ -110,7 +110,7 @@ auto modify_actor_value(
               *actor,
               *aggressor,
               value,
-              *config.magic_vampirism().mgef_magicka_keyword(),
+              config.magic_vampirism().mgef_magicka_keyword(),
               RE::ActorValue::kMagicka);
         }
     }
@@ -133,7 +133,7 @@ auto on_weapon_hit(RE::Actor* target, const RE::HitData& hit_data, const Config&
           *target,
           *aggressor,
           hit_data.totalDamage,
-          *config.vampirism().mgef_health_keyword(),
+          config.vampirism().mgef_health_keyword(),
           RE::ActorValue::kHealth);
     }
 
@@ -143,7 +143,7 @@ auto on_weapon_hit(RE::Actor* target, const RE::HitData& hit_data, const Config&
           *target,
           *aggressor,
           hit_data.totalDamage,
-          *config.vampirism().mgef_stamina_keyword(),
+          config.vampirism().mgef_stamina_keyword(),
           RE::ActorValue::kStamina);
     }
 
@@ -153,7 +153,7 @@ auto on_weapon_hit(RE::Actor* target, const RE::HitData& hit_data, const Config&
           *target,
           *aggressor,
           hit_data.totalDamage,
-          *config.vampirism().mgef_magicka_keyword(),
+          config.vampirism().mgef_magicka_keyword(),
           RE::ActorValue::kMagicka);
     }
 }

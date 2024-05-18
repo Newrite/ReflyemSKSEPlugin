@@ -61,9 +61,9 @@ auto allow_petrified_blood_effect(const RE::ActiveEffect& active_effect, const C
   const auto base_effect = active_effect.effect->baseEffect;
   if (config.petrified_blood().must_be_or_not_be())
     {
-      return base_effect->HasKeyword(config.petrified_blood().mgef_keyword());
+    return Core::try_form_has_keyword(base_effect, config.petrified_blood().mgef_keyword());
     }
-  return !base_effect->HasKeyword(config.petrified_blood().mgef_keyword());
+  return !Core::try_form_has_keyword(base_effect, config.petrified_blood().mgef_keyword());
 }
 
 auto modify_actor_value(

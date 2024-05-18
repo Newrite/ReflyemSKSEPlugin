@@ -1,9 +1,10 @@
 #pragma once
 
-#include <toml++/toml.h>
+#include "GigaWidgetAPI.hpp"
 
-namespace Reflyem
-{
+#include <toml.hpp>
+
+namespace Reflyem {
 struct Config final
 {
   private:
@@ -349,10 +350,7 @@ private:
 
     [[nodiscard]] RE::BGSListForm* formlist_needkw() const { return formlist_needkw_; }
 
-    CastOnBlockParryConfig(
-        toml::table& tbl,
-        RE::TESDataHandler& data_handler,
-        const Config& config);
+    CastOnBlockParryConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     CastOnBlockParryConfig() = default;
 
 private:
@@ -369,10 +367,7 @@ private:
 
     [[nodiscard]] RE::BGSListForm* formlist_needkw() const { return formlist_needkw_; }
 
-    CastOnTimingBlockConfig(
-        toml::table& tbl,
-        RE::TESDataHandler& data_handler,
-        const Config& config);
+    CastOnTimingBlockConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     CastOnTimingBlockConfig() = default;
 
 private:
@@ -445,10 +440,7 @@ private:
 
     [[nodiscard]] RE::SpellItem* spell_block_attack() const { return spell_block_attack_; }
 
-    [[nodiscard]] RE::SpellItem* spell_block_power_attack() const
-    {
-      return spell_block_power_attack_;
-    }
+    [[nodiscard]] RE::SpellItem* spell_block_power_attack() const { return spell_block_power_attack_; }
 
     [[nodiscard]] RE::SpellItem* spell_block_bash() const { return spell_block_bash_; }
 
@@ -472,35 +464,17 @@ private:
 
     [[nodiscard]] RE::BGSKeyword* magicka_kw() const { return magicka_kw_; }
 
-    [[nodiscard]] RE::BGSKeyword* convert_stamina_health_kw() const
-    {
-      return convert_stamina_health_kw_;
-    }
+    [[nodiscard]] RE::BGSKeyword* convert_stamina_health_kw() const { return convert_stamina_health_kw_; }
 
-    [[nodiscard]] RE::BGSKeyword* convert_stamina_magicka_kw() const
-    {
-      return convert_stamina_magicka_kw_;
-    }
+    [[nodiscard]] RE::BGSKeyword* convert_stamina_magicka_kw() const { return convert_stamina_magicka_kw_; }
 
-    [[nodiscard]] RE::BGSKeyword* convert_magicka_health_kw() const
-    {
-      return convert_magicka_health_kw_;
-    }
+    [[nodiscard]] RE::BGSKeyword* convert_magicka_health_kw() const { return convert_magicka_health_kw_; }
 
-    [[nodiscard]] RE::BGSKeyword* convert_magicka_stamina_kw() const
-    {
-      return convert_magicka_stamina_kw_;
-    }
+    [[nodiscard]] RE::BGSKeyword* convert_magicka_stamina_kw() const { return convert_magicka_stamina_kw_; }
 
-    [[nodiscard]] RE::BGSKeyword* convert_health_stamina_kw() const
-    {
-      return convert_health_stamina_kw_;
-    }
+    [[nodiscard]] RE::BGSKeyword* convert_health_stamina_kw() const { return convert_health_stamina_kw_; }
 
-    [[nodiscard]] RE::BGSKeyword* convert_health_magicka_kw() const
-    {
-      return convert_health_magicka_kw_;
-    }
+    [[nodiscard]] RE::BGSKeyword* convert_health_magicka_kw() const { return convert_health_magicka_kw_; }
 
     ResourceManagerConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     ResourceManagerConfig() = default;
@@ -558,10 +532,7 @@ private:
 
     [[nodiscard]] float iframe_duration() const { return iframe_duration_; }
 
-    [[nodiscard]] RE::BGSKeyword* iframe_duration_mgef_kw() const
-    {
-      return iframe_duration_mgef_kw_;
-    }
+    [[nodiscard]] RE::BGSKeyword* iframe_duration_mgef_kw() const { return iframe_duration_mgef_kw_; }
 
     [[nodiscard]] float gamepad_treshold() const { return gamepad_treshold_; }
 
@@ -569,15 +540,9 @@ private:
 
     [[nodiscard]] bool block_dodge_when_attack() const { return block_dodge_when_attack_; }
 
-    [[nodiscard]] RE::BGSKeyword* block_dodge_when_attack_keyword() const
-    {
-      return block_dodge_when_attack_keyword_;
-    }
+    [[nodiscard]] RE::BGSKeyword* block_dodge_when_attack_keyword() const { return block_dodge_when_attack_keyword_; }
 
-    [[nodiscard]] bool block_dodge_when_power_attack() const
-    {
-      return block_dodge_when_power_attack_;
-    }
+    [[nodiscard]] bool block_dodge_when_power_attack() const { return block_dodge_when_power_attack_; }
 
     [[nodiscard]] RE::BGSKeyword* block_dodge_when_power_attack_keyword() const
     {
@@ -586,10 +551,7 @@ private:
 
     [[nodiscard]] bool block_dodge_when_casting() const { return block_dodge_when_casting_; }
 
-    [[nodiscard]] RE::BGSKeyword* block_dodge_when_casting_keyword() const
-    {
-      return block_dodge_when_casting_keyword_;
-    }
+    [[nodiscard]] RE::BGSKeyword* block_dodge_when_casting_keyword() const { return block_dodge_when_casting_keyword_; }
 
     [[nodiscard]] float key_up_delay() const { return key_up_delay_; }
 
@@ -689,33 +651,18 @@ private:
 
     [[nodiscard]] bool enable_check_resistance() const { return enable_check_resistance_; }
     [[nodiscard]] RE::BGSKeyword* max_resist_keyword() const { return max_resist_keyword_; }
-    [[nodiscard]] RE::BGSKeyword* negative_resist_immune_keyword() const
-    {
-      return negative_resist_immune_keyword_;
-    }
+    [[nodiscard]] RE::BGSKeyword* negative_resist_immune_keyword() const { return negative_resist_immune_keyword_; }
     [[nodiscard]] float low() const { return low_; }
 
-    [[nodiscard]] bool no_double_resist_check_magick() const
-    {
-      return no_double_resist_check_magick_;
-    }
+    [[nodiscard]] bool no_double_resist_check_magick() const { return no_double_resist_check_magick_; }
 
-    [[nodiscard]] bool no_double_resist_check_poison() const
-    {
-      return no_double_resist_check_poison_;
-    }
+    [[nodiscard]] bool no_double_resist_check_poison() const { return no_double_resist_check_poison_; }
 
-    [[nodiscard]] bool no_av_damage_resist_penetration() const
-    {
-      return no_av_damage_resist_penetration_;
-    }
+    [[nodiscard]] bool no_av_damage_resist_penetration() const { return no_av_damage_resist_penetration_; }
 
     [[nodiscard]] bool enable_damage_resist_tweak() const { return enable_damage_resist_tweak_; }
 
-    [[nodiscard]] bool no_double_damage_resist_check() const
-    {
-      return no_double_damage_resist_check_;
-    }
+    [[nodiscard]] bool no_double_damage_resist_check() const { return no_double_damage_resist_check_; }
 
     [[nodiscard]] bool enable_resist_penetration() const { return enable_resist_penetration_; }
 
@@ -770,6 +717,8 @@ private:
 
     [[nodiscard]] float parry_timing() const { return parry_timing_; }
 
+    [[nodiscard]] float block_delay() const { return block_delay_; }
+
     [[nodiscard]] float block_timing() const { return block_timing_; }
 
     [[nodiscard]] bool enable_sparks() const { return enable_sparks_; }
@@ -786,10 +735,7 @@ private:
 
     [[nodiscard]] RE::BGSKeyword* parry_timing_keyword() const { return parry_timing_keyword_; }
 
-    [[nodiscard]] RE::BGSKeyword* parry_stagger_count_keyword() const
-    {
-      return parry_stagger_count_keyword_;
-    }
+    [[nodiscard]] RE::BGSKeyword* parry_stagger_count_keyword() const { return parry_stagger_count_keyword_; }
 
     [[nodiscard]] RE::BGSKeyword* block_keyword() const { return block_keyword_; }
 
@@ -816,6 +762,7 @@ private:
     int32_t parry_stagger_count_;
     float parry_stagger_count_timer_;
     float parry_timing_;
+    float block_delay_;
     RE::BGSKeyword* block_keyword_;
     RE::BGSKeyword* block_immun_keyword_;
     RE::BGSKeyword* block_timing_keyword_;
@@ -871,6 +818,8 @@ private:
 
     [[nodiscard]] bool enable_weapon_swing() const { return enable_weapon_swing_; }
 
+    [[nodiscard]] bool enable_precision_weapon_collide() const { return enable_precision_weapon_collide_; }
+
     [[nodiscard]] float parry_timing() const { return parry_timing_; }
 
     [[nodiscard]] float pre_hit_frame_penalty() const { return pre_hit_frame_penalty_; }
@@ -892,6 +841,7 @@ private:
     float pre_hit_frame_penalty_;
     bool enable_pre_hit_frame_;
     bool enable_weapon_swing_;
+    bool enable_precision_weapon_collide_;
     RE::BGSKeyword* parry_keyword_;
     RE::BGSKeyword* parry_immun_keyword_;
     RE::BGSKeyword* parry_timing_keyword_;
@@ -912,15 +862,9 @@ private:
 
     [[nodiscard]] bool enable_auto_restore() const { return enable_auto_restore_; }
 
-    [[nodiscard]] RE::BGSKeyword* auto_restore_block_keyword() const
-    {
-      return auto_restore_block_keyword_;
-    }
+    [[nodiscard]] RE::BGSKeyword* auto_restore_block_keyword() const { return auto_restore_block_keyword_; }
 
-    [[nodiscard]] RE::BGSKeyword* exclusive_restore_keyword() const
-    {
-      return exclusive_restore_keyword_;
-    }
+    [[nodiscard]] RE::BGSKeyword* exclusive_restore_keyword() const { return exclusive_restore_keyword_; }
 
     ItemLimitConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     ItemLimitConfig() = default;
@@ -977,27 +921,66 @@ private:
   struct PotionsDrinkLimitConfig final
   {
     [[nodiscard]] bool enable() const { return enable_; }
-    [[nodiscard]] std::int32_t cap_base() const { return cap_base_; }
-    [[nodiscard]] float duration_base() const { return duration_base_; }
+    [[nodiscard]] bool other_enable() const { return other_enable_; }
+    [[nodiscard]] std::int32_t other_cap_base() const { return other_cap_base_; }
+    [[nodiscard]] float other_duration_base() const { return other_duration_base_; }
     [[nodiscard]] std::string notify() const { return notify_; }
-    [[nodiscard]] RE::BGSKeyword* exclusive_keyword() const { return exclusive_keyword_; }
-    [[nodiscard]] RE::BGSKeyword* cap_keyword() const { return cap_keyword_; }
-    [[nodiscard]] RE::BGSKeyword* duration_keyword() const { return duration_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* other_exclusive_keyword() const { return other_exclusive_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* other_cap_keyword() const { return other_cap_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* other_duration_keyword() const { return other_duration_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* no_remove_keyword() const { return no_remove_keyword_; }
+    [[nodiscard]] bool other_revert_exclusive() const { return other_revert_exclusive_; }
+    [[nodiscard]] bool health_enable() const { return health_enable_; }
+    [[nodiscard]] RE::BGSKeyword* health_cap_keyword() const { return health_cap_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* health_duration_keyword() const { return health_duration_keyword_; }
+    [[nodiscard]] std::int32_t health_cap_base() const { return health_cap_base_; }
+    [[nodiscard]] float health_duration_base() const { return health_duration_base_; }
+    [[nodiscard]] bool stamina_enable() const { return stamina_enable_; }
+    [[nodiscard]] RE::BGSKeyword* stamina_cap_keyword() const { return stamina_cap_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* stamina_duration_keyword() const { return stamina_duration_keyword_; }
+    [[nodiscard]] std::int32_t stamina_cap_base() const { return stamina_cap_base_; }
+    [[nodiscard]] float stamina_duration_base() const { return stamina_duration_base_; }
+    [[nodiscard]] bool magicka_enable() const { return magicka_enable_; }
+    [[nodiscard]] RE::BGSKeyword* magicka_cap_keyword() const { return magicka_cap_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* magicka_duration_keyword() const { return magicka_duration_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* health_keyword() const { return health_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* stamina_keyword() const { return stamina_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* magicka_keyword() const { return magicka_keyword_; }
+    [[nodiscard]] std::int32_t magicka_cap_base() const { return magicka_cap_base_; }
+    [[nodiscard]] float magicka_duration_base() const { return magicka_duration_base_; }
 
-    PotionsDrinkLimitConfig(
-        toml::table& tbl,
-        RE::TESDataHandler& data_handler,
-        const Config& config);
+    PotionsDrinkLimitConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     PotionsDrinkLimitConfig() = default;
 
 private:
     bool enable_;
-    std::int32_t cap_base_;
-    float duration_base_;
+    bool other_enable_;
+    std::int32_t other_cap_base_;
+    float other_duration_base_;
     std::string notify_;
-    RE::BGSKeyword* exclusive_keyword_;
-    RE::BGSKeyword* cap_keyword_;
-    RE::BGSKeyword* duration_keyword_;
+    RE::BGSKeyword* other_exclusive_keyword_;
+    RE::BGSKeyword* other_cap_keyword_;
+    RE::BGSKeyword* other_duration_keyword_;
+    RE::BGSKeyword* no_remove_keyword_;
+    bool other_revert_exclusive_;
+    bool health_enable_;
+    std::int32_t health_cap_base_;
+    float health_duration_base_;
+    RE::BGSKeyword* health_cap_keyword_;
+    RE::BGSKeyword* health_duration_keyword_;
+    RE::BGSKeyword* health_keyword_;
+    bool stamina_enable_;
+    std::int32_t stamina_cap_base_;
+    float stamina_duration_base_;
+    RE::BGSKeyword* stamina_cap_keyword_;
+    RE::BGSKeyword* stamina_duration_keyword_;
+    RE::BGSKeyword* stamina_keyword_;
+    bool magicka_enable_;
+    std::int32_t magicka_cap_base_;
+    float magicka_duration_base_;
+    RE::BGSKeyword* magicka_cap_keyword_;
+    RE::BGSKeyword* magicka_duration_keyword_;
+    RE::BGSKeyword* magicka_keyword_;
 
     // RE::TESGlobal* max_potions_;
     // RE::TESGlobal* used_potions_;
@@ -1010,10 +993,7 @@ private:
     [[nodiscard]] RE::BGSKeyword* just_block_unblock() const { return just_block_unblock_; }
     [[nodiscard]] RE::BGSKeyword* timing_block_unblock() const { return timing_block_unblock_; }
 
-    UnblockableAttackConfig(
-        toml::table& tbl,
-        RE::TESDataHandler& data_handler,
-        const Config& config);
+    UnblockableAttackConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     UnblockableAttackConfig() = default;
 
 private:
@@ -1025,35 +1005,17 @@ private:
 
   struct DamageReductionSystemConfig final
   {
-    DamageReductionSystemConfig(
-        toml::table& tbl,
-        RE::TESDataHandler& data_handler,
-        const Config& config);
+    DamageReductionSystemConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     DamageReductionSystemConfig() = default;
 
 public:
     [[nodiscard]] bool enable() const { return enable_; }
-    [[nodiscard]] RE::ActorValue general_damage_reduction() const
-    {
-      return general_damage_reduction_;
-    }
-    [[nodiscard]] RE::ActorValue general_damage_reduction_bypass() const
-    {
-      return general_damage_reduction_bypass_;
-    }
-    [[nodiscard]] RE::BGSKeyword* damage_reduction_effect() const
-    {
-      return damage_reduction_effect_;
-    }
-    [[nodiscard]] RE::BGSKeyword* damage_reduction_bypass_effect() const
-    {
-      return damage_reduction_bypass_effect_;
-    }
+    [[nodiscard]] RE::ActorValue general_damage_reduction() const { return general_damage_reduction_; }
+    [[nodiscard]] RE::ActorValue general_damage_reduction_bypass() const { return general_damage_reduction_bypass_; }
+    [[nodiscard]] RE::BGSKeyword* damage_reduction_effect() const { return damage_reduction_effect_; }
+    [[nodiscard]] RE::BGSKeyword* damage_reduction_bypass_effect() const { return damage_reduction_bypass_effect_; }
     [[nodiscard]] std::string damage_reduction_keyword() const { return damage_reduction_keyword_; }
-    [[nodiscard]] std::string damage_reduction_bypass_keyword() const
-    {
-      return damage_reduction_bypass_keyword_;
-    }
+    [[nodiscard]] std::string damage_reduction_bypass_keyword() const { return damage_reduction_bypass_keyword_; }
 
 private:
     bool enable_;
@@ -1084,16 +1046,135 @@ private:
     RE::BGSKeyword* exclusive_keyword_;
   };
 
+  struct ProjectileBlockConfig final
+  {
+    [[nodiscard]] bool enable() const { return enable_; }
+    [[nodiscard]] bool enable_block() const { return enable_block_; }
+    [[nodiscard]] bool enable_timing_block() const { return enable_timing_block_; }
+    [[nodiscard]] float block_timing() const { return block_timing_; }
+    [[nodiscard]] float base_flat_cost() const { return base_flat_cost_; }
+    [[nodiscard]] float base_percent_cost() const { return base_percent_cost_; }
+    [[nodiscard]] bool enable_block_magick_for_magick() const { return enable_block_magick_for_magick_; }
+    [[nodiscard]] bool enable_arrow() const { return enable_arrow_; }
+    [[nodiscard]] bool enable_missile() const { return enable_missile_; }
+    [[nodiscard]] bool enable_cone() const { return enable_cone_; }
+    [[nodiscard]] bool enable_flame() const { return enable_flame_; }
+    [[nodiscard]] bool enable_beam() const { return enable_beam_; }
+    [[nodiscard]] bool enable_sparks() const { return enable_sparks_; }
+    [[nodiscard]] bool enable_sound() const { return enable_sound_; }
+    [[nodiscard]] RE::BGSKeyword* enable_block_keyword() const { return enable_block_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* enable_timing_block_keyword() const { return enable_timing_block_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* timing_block_timer_keyword() const { return timing_block_timer_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* block_cost_keyword() const { return block_cost_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* enable_arrow_block_keyword() const { return enable_arrow_block_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* enable_magick_block_keyword() const { return enable_magick_block_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* enable_arrow_timing_block_keyword() const
+    {
+      return enable_arrow_timing_block_keyword_;
+    }
+    [[nodiscard]] RE::BGSKeyword* enable_magick_timing_block_keyword() const
+    {
+      return enable_magick_timing_block_keyword_;
+    }
+    [[nodiscard]] RE::BGSKeyword* exclusive_keyword() const { return exclusive_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* exclusive_timing_keyword() const { return exclusive_timing_keyword_; }
+    [[nodiscard]] RE::BGSSoundDescriptorForm* block_sound() const { return block_sound_; }
+    [[nodiscard]] RE::TESObjectACTI* blank_activator() const { return blank_activator_; }
+    [[nodiscard]] RE::Explosion* spark() const { return spark_; }
+    [[nodiscard]] RE::Explosion* spark_flare() const { return spark_flare_; }
+    [[nodiscard]] RE::Explosion* spark_halo() const { return spark_halo_; }
+
+    ProjectileBlockConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
+    ProjectileBlockConfig() = default;
+
+private:
+    bool enable_;
+    bool enable_block_;
+    bool enable_timing_block_;
+    float block_timing_;
+    float base_flat_cost_;
+    float base_percent_cost_;
+    bool enable_block_magick_for_magick_;
+    bool enable_arrow_;
+    bool enable_missile_;
+    bool enable_cone_;
+    bool enable_flame_;
+    bool enable_beam_;
+    bool enable_sparks_;
+    bool enable_sound_;
+    RE::BGSKeyword* enable_block_keyword_;
+    RE::BGSKeyword* enable_timing_block_keyword_;
+    RE::BGSKeyword* timing_block_timer_keyword_;         // модификатор тайминга
+    RE::BGSKeyword* block_cost_keyword_;                 // мультипликатор стоимости
+    RE::BGSKeyword* enable_arrow_block_keyword_;         // только если enable_arrow_ = true
+    RE::BGSKeyword* enable_magick_block_keyword_;        // missile + cone + flame + beam, смотря что
+                                                         // включено в конфиге
+    RE::BGSKeyword* enable_arrow_timing_block_keyword_;  // только если enable_arrow_ = true
+    RE::BGSKeyword* enable_magick_timing_block_keyword_; // missile + cone + flame + beam, смотря что
+    // включено в конфиге
+    RE::BGSKeyword* exclusive_keyword_;        // Если на акторе - его проджектайлы не блочатся, если на
+                                               // заклинании то с него тоже не блочатся
+    RE::BGSKeyword* exclusive_timing_keyword_; // Если на акторе - его проджектайлы не блочатся таймингово, если
+                                               // на заклинании то с него тоже не блочатся таймингово
+    RE::BGSSoundDescriptorForm* block_sound_;
+    RE::TESObjectACTI* blank_activator_;
+    RE::Explosion* spark_;
+    RE::Explosion* spark_flare_;
+    RE::Explosion* spark_halo_;
+  };
+
+  struct CastOnProjectileBlockConfig final
+  {
+    [[nodiscard]] bool enable() const { return enable_; }
+
+    [[nodiscard]] RE::BGSListForm* formlist_spells() const { return formlist_spells_; }
+
+    [[nodiscard]] RE::BGSListForm* formlist_needkw() const { return formlist_needkw_; }
+
+    CastOnProjectileBlockConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
+    CastOnProjectileBlockConfig() = default;
+
+private:
+    bool enable_;
+    RE::BGSListForm* formlist_spells_;
+    RE::BGSListForm* formlist_needkw_;
+  };
+
+  struct CastOnProjectileTimingBlockConfig final
+  {
+    [[nodiscard]] bool enable() const { return enable_; }
+
+    [[nodiscard]] RE::BGSListForm* formlist_spells() const { return formlist_spells_; }
+
+    [[nodiscard]] RE::BGSListForm* formlist_needkw() const { return formlist_needkw_; }
+
+    CastOnProjectileTimingBlockConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
+    CastOnProjectileTimingBlockConfig() = default;
+
+private:
+    bool enable_;
+    RE::BGSListForm* formlist_spells_;
+    RE::BGSListForm* formlist_needkw_;
+  };
+
+  struct JoshuaSawyerArmorSystemConfig final
+  {
+private:
+    bool enable_;
+    RE::BGSKeyword* reduction_keyword_;
+    RE::BGSKeyword* penetration_keyword_;
+    std::map<RE::ActorValue, RE::ActorValue> reduction_map_;
+    std::map<RE::ActorValue, RE::ActorValue> penetration_map_;
+  };
+
   struct MiscFixesConfig final
   {
     [[nodiscard]] bool regeneration_fix() const { return regeneration_fix_; }
     [[nodiscard]] bool equip_bound_fix() const { return equip_bound_fix_; }
-    [[nodiscard]] bool disable_sprint_cost_in_combat() const
-    {
-      return disable_sprint_cost_in_combat_;
-    }
+    [[nodiscard]] bool disable_sprint_cost_in_combat() const { return disable_sprint_cost_in_combat_; }
     [[nodiscard]] bool disable_over_encumbered() const { return disable_over_encumbered_; }
     [[nodiscard]] bool negative_speed_mult_fix() const { return negative_speed_mult_fix_; }
+    [[nodiscard]] bool no_sneak_requirement_for_sneak_attack() const { return no_sneak_requirement_for_sneak_attack_; }
 
     MiscFixesConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     MiscFixesConfig() = default;
@@ -1104,6 +1185,49 @@ private:
     bool disable_sprint_cost_in_combat_;
     bool disable_over_encumbered_;
     bool negative_speed_mult_fix_;
+    bool no_sneak_requirement_for_sneak_attack_;
+  };
+
+  struct PoisonReworkConfig final
+  {
+    [[nodiscard]] bool enable() const { return enable_; }
+    [[nodiscard]] std::string notify() const { return notify_; }
+    [[nodiscard]] std::int32_t cap_base() const { return cap_base_; }
+    [[nodiscard]] float duration_base() const { return duration_base_; }
+    [[nodiscard]] bool revert_exclusive() const { return revert_exclusive_; }
+    [[nodiscard]] bool apply_on_both_weapon() const { return apply_on_both_weapon_; }
+    [[nodiscard]] RE::BGSKeyword* cap_keyword() const { return cap_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* duration_keyword() const { return duration_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* exclusive_keyword() const { return exclusive_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* no_remove_keyword() const { return no_remove_keyword_; }
+
+    PoisonReworkConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
+    PoisonReworkConfig() = default;
+
+private:
+    bool enable_;
+    std::string notify_;
+    std::int32_t cap_base_;
+    float duration_base_;
+    bool revert_exclusive_;
+    bool apply_on_both_weapon_;
+    RE::BGSKeyword* cap_keyword_;
+    RE::BGSKeyword* duration_keyword_;
+    RE::BGSKeyword* exclusive_keyword_;
+    RE::BGSKeyword* no_remove_keyword_;
+    
+  };
+
+  struct MagickToStaminaConfig final
+  {
+    [[nodiscard]] bool enable() const { return enable_; }
+
+    MagickToStaminaConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
+    MagickToStaminaConfig() = default;
+
+  private:
+    bool enable_;
+    
   };
 
   struct AbsorbShieldConfig final
@@ -1167,6 +1291,7 @@ private:
     RE::BGSKeyword* exclusive_keyword_;
   };
 
+  private:
   Config();
 
   // general
@@ -1264,21 +1389,30 @@ private:
   PotionsDrinkLimitConfig potions_drink_limit_;
 
   // potions drink limit
+  ProjectileBlockConfig projectile_block_;
+
+  // potions drink limit
   DamageReductionSystemConfig damage_reduction_system_;
   
-  SpeedMultCapConfig speed_mult_cap_config_;
+  PoisonReworkConfig poison_rework_;
+  
+  MagickToStaminaConfig magicka_to_stamina_;
 
-  public:
-  [[nodiscard]] static auto get_singleton() noexcept -> const Config&;
+  SpeedMultCapConfig speed_mult_cap_;
+  CastOnProjectileBlockConfig cast_on_projectile_block_;
+  CastOnProjectileTimingBlockConfig cast_on_projectile_timing_block_;
+
+public:
+
+  [[nodiscard]] static auto get_singleton() noexcept -> Config&;
+
+  auto load() -> void;
 
   [[nodiscard]] auto mod_name() const -> const std::string_view& { return mod_name_; }
 
   [[nodiscard]] const MagicShieldConfig& magic_shield() const { return magic_shield_; }
 
-  [[nodiscard]] const DamageReductionSystemConfig& damage_reduction_system() const
-  {
-    return damage_reduction_system_;
-  }
+  [[nodiscard]] const DamageReductionSystemConfig& damage_reduction_system() const { return damage_reduction_system_; }
 
   [[nodiscard]] const StaminaShieldConfig& stamina_shield() const { return stamina_shield_; }
 
@@ -1297,25 +1431,24 @@ private:
   [[nodiscard]] const MagickCritConfig& magick_crit() const { return magick_crit_; }
 
   [[nodiscard]] const CastOnCritConfig& cast_on_crit() const { return cast_on_crit_; }
+  [[nodiscard]] const CastOnProjectileBlockConfig& cast_on_projectile_block() const
+  {
+    return cast_on_projectile_block_;
+  }
+  [[nodiscard]] const CastOnProjectileTimingBlockConfig& cast_on_projectile_timing_block() const
+  {
+    return cast_on_projectile_timing_block_;
+  }
 
   [[nodiscard]] const CastOnHitConfig& cast_on_hit() const { return cast_on_hit_; }
 
   [[nodiscard]] const CastOnBlockConfig& cast_on_block() const { return cast_on_block_; }
 
-  [[nodiscard]] const CastOnBlockParryConfig& cast_on_block_parry() const
-  {
-    return cast_on_block_parry_;
-  }
+  [[nodiscard]] const CastOnBlockParryConfig& cast_on_block_parry() const { return cast_on_block_parry_; }
 
-  [[nodiscard]] const CastOnTimingBlockConfig& cast_on_timing_block() const
-  {
-    return cast_on_timing_block_;
-  }
+  [[nodiscard]] const CastOnTimingBlockConfig& cast_on_timing_block() const { return cast_on_timing_block_; }
 
-  [[nodiscard]] const CastOnParryBashConfig& cast_on_parry_bash() const
-  {
-    return cast_on_parry_bash_;
-  }
+  [[nodiscard]] const CastOnParryBashConfig& cast_on_parry_bash() const { return cast_on_parry_bash_; }
 
   [[nodiscard]] const CastOnKillConfig& cast_on_kill() const { return cast_on_kill_; }
 
@@ -1341,22 +1474,19 @@ private:
 
   [[nodiscard]] const SoulLinkConfig& soul_link() const { return soul_link_; }
 
-  [[nodiscard]] const UnblockableAttackConfig& unblockable_attack() const
-  {
-    return unblockable_attack_;
-  }
+  [[nodiscard]] const UnblockableAttackConfig& unblockable_attack() const { return unblockable_attack_; }
 
   [[nodiscard]] const MiscFixesConfig& misc_fixes() const { return misc_fixes_; }
+  
+  [[nodiscard]] const PoisonReworkConfig& poison_rework() const { return poison_rework_; }
 
-  [[nodiscard]] const PotionsDrinkLimitConfig& potions_drink_limit() const
-  {
-    return potions_drink_limit_;
-  }
+  [[nodiscard]] const PotionsDrinkLimitConfig& potions_drink_limit() const { return potions_drink_limit_; }
 
-  [[nodiscard]] const SpeedMultCapConfig& speed_mult_cap_config() const
-  {
-    return speed_mult_cap_config_;
-  }
+  [[nodiscard]] const ProjectileBlockConfig& projectile_block() const { return projectile_block_; }
+
+  [[nodiscard]] const SpeedMultCapConfig& speed_mult_cap() const { return speed_mult_cap_; }
+  
+  [[nodiscard]] const MagickToStaminaConfig& magicka_to_stamina() const { return magicka_to_stamina_; }
 };
 
 } // namespace Reflyem

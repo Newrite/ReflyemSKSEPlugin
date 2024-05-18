@@ -16,20 +16,20 @@ auto is_allow_parry_bash(RE::Actor* attacker, RE::Actor* target, const Config& c
 
   const auto& target_data = Core::ActorsCache::get_singleton().get_or_add(target->formID).get();
 
-  if (!Core::has_absolute_keyword(*attacker, *config.parry_bash().parry_keyword()))
+  if (!Core::try_has_absolute_keyword(attacker, config.parry_bash().parry_keyword()))
     {
       logger::debug("Attacker has no keyword"sv);
       return false;
     }
 
-  if (Core::has_absolute_keyword(*target, *config.parry_bash().parry_immun_keyword()))
+  if (Core::try_has_absolute_keyword(target, config.parry_bash().parry_immun_keyword()))
     {
       logger::debug("Target has immun"sv);
       return false;
     }
 
   const auto timing_effects =
-      Core::get_effects_by_keyword(*attacker, *config.parry_bash().parry_timing_keyword());
+      Core::try_get_effects_by_keyword(attacker, config.parry_bash().parry_timing_keyword());
   const auto parry_timing = config.parry_bash().parry_timing() +
                             Core::get_effects_magnitude_sum(timing_effects).value_or(0.f);
 
@@ -103,6 +103,37 @@ auto precision_pre_hit_callback(const PRECISION_API::PrecisionHitData& hit_data)
     {
       if (hit_data.attacker && Core::is_bashing(hit_data.attacker)) { result.bIgnoreHit = true; }
     }
+
+  return result;
+}
+
+auto precision_weapons_collide_callback(const PRECISION_API::PrecisionHitData& hit_data)
+    -> PRECISION_API::WeaponCollisionCallbackReturn
+{
+  PRECISION_API::WeaponCollisionCallbackReturn result;
+  result.bIgnoreHit = false;
+  const auto& config = Config::get_singleton();
+  if (!hit_data.target || !hit_data.attacker || !config.parry_bash().enable() || !config.parry_bash().enable_precision_weapon_collide()) { return result; }
+
+  const auto& attacker_data =
+      Core::ActorsCache::get_singleton().get_or_add(hit_data.attacker->formID).get();
+  if (attacker_data.bash_parry_timer_no_hit() > 0.f)
+  {
+    result.bIgnoreHit = true;
+    return result;
+  }
+
+  const auto target = hit_data.target->As<RE::Actor>();
+  if (is_allow_parry_bash(hit_data.attacker, target, config))
+  {
+    auto& target_data = Core::ActorsCache::get_singleton().get_or_add(target->formID).get();
+    target_data.bash_parry_timer_no_hit(0.5f);
+    parry_bash_handler(*target, *hit_data.attacker, config);
+  }
+  else
+  {
+    if (hit_data.attacker && Core::is_bashing(hit_data.attacker)) { result.bIgnoreHit = true; }
+  }
 
   return result;
 }

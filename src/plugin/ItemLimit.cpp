@@ -65,7 +65,7 @@ auto is_limited_item(const RE::TESBoundObject* item, const Config& config)
 
       const auto keyword = keyword_ptr->As<RE::BGSKeyword>();
 
-      if (Core::form_has_keyword(item, keyword))
+      if (Core::try_form_has_keyword(item, keyword))
         {
           logger::debug("Found limit keyword: {} index: {}"sv, item->GetName(), index);
           return {index, keyword};
@@ -148,7 +148,7 @@ auto get_storage_limited_items(
       const auto& item = pair.second;
       auto count = pair.first;
 
-      if (Core::form_has_keyword(item->object, config.item_limit().exclusive_restore_keyword()))
+      if (Core::try_form_has_keyword(item->object, config.item_limit().exclusive_restore_keyword()))
         {
           continue;
         }

@@ -5,7 +5,8 @@
 
 namespace Reflyem::TimingBlock
 {
-constexpr static auto BLOCK_DELAY = 0.65f;
+
+auto place_form_at_me(RE::TESObjectREFR* node, RE::TESForm* form) -> RE::TESObjectREFR*;
 
 auto is_allow_timing_parry(
     RE::Actor& attacker,
@@ -18,6 +19,12 @@ auto is_allow_timing_block(
     RE::Actor& target,
     const Core::ActorsCache::Data& actor_data,
     const Config& config) -> bool;
+
+auto spawn_sparks(
+    RE::Actor& target,
+    const Config& config,
+    const bool weapon_block,
+    const bool parry) -> void;
 
 auto apply_spells_from_attack(
     RE::Actor& attacker,

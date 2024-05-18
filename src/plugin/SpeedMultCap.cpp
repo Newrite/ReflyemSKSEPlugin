@@ -17,11 +17,11 @@ auto get_max_speed_mult(RE::Actor* actor, const Config& config) -> float
   let max_speed_mult_effects_mutate_sum =
       Core::get_effects_magnitude_sum(Core::try_get_effects_by_keyword(
                                           actor,
-                                          config.speed_mult_cap_config().effect_mutate_cap()))
+                                          config.speed_mult_cap().effect_mutate_cap()))
           .value_or(0.f);
 
 
-  return config.speed_mult_cap_config().cap_base() + max_speed_mult_effects_mutate_sum;
+  return config.speed_mult_cap().cap_base() + max_speed_mult_effects_mutate_sum;
 }
 
 auto eval_speed_mult(RE::Actor* actor, const float speed_mult_value) -> std::optional<float>
@@ -34,8 +34,8 @@ auto eval_speed_mult(RE::Actor* actor, const float speed_mult_value) -> std::opt
 
   letr config = Config::get_singleton();
 
-  if (config.speed_mult_cap_config().exclusive_keyword() &&
-      actor->HasKeyword(config.speed_mult_cap_config().exclusive_keyword()))
+  if (config.speed_mult_cap().exclusive_keyword() &&
+      actor->HasKeyword(config.speed_mult_cap().exclusive_keyword()))
     {
       return std::nullopt;
     }
@@ -45,7 +45,7 @@ auto eval_speed_mult(RE::Actor* actor, const float speed_mult_value) -> std::opt
     let value =
         Core::get_effects_magnitude_sum(Core::try_get_effects_by_keyword(
                                             actor,
-                                            config.speed_mult_cap_config().effect_allow_overcap()))
+                                            config.speed_mult_cap().effect_allow_overcap()))
             .value_or(0.f);
 
     if (value < 0.f) { return 0.f; }

@@ -1,4 +1,5 @@
 ﻿#include "plugin/MenuEventHandler.hpp"
+#include "Config.hpp"
 
 namespace Reflyem
 {
@@ -20,9 +21,15 @@ auto MenuEventHandler::Register() -> void
 }
 
 auto MenuEventHandler::ProcessEvent(
-    const RE::MenuOpenCloseEvent*,
+    const RE::MenuOpenCloseEvent* menu_event,
     RE::BSTEventSource<RE::MenuOpenCloseEvent>*) -> RE::BSEventNotifyControl
 {
+  if (menu_event && !menu_event->opening) {
+    if (menu_event->menuName == RE::JournalMenu::MENU_NAME) {
+      auto config = Config::get_singleton();
+      config.load();
+    }
+  }
   return RE::BSEventNotifyControl::kContinue;
 }
 
