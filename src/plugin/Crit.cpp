@@ -1,6 +1,7 @@
 #include "plugin/Crit.hpp"
 
 #include "Core.hpp"
+#include "SlowTime.hpp"
 
 namespace Reflyem::Crit {
 
@@ -22,12 +23,12 @@ auto is_critical(RE::Actor& aggressor, const RE::ActorValue crit_chance_av) -> b
 
 auto cast_on_crit(RE::Actor& aggressor, RE::Actor& target, const Config& config) -> void
 {
-  const auto length_kw = config.cast_on_crit().formlist_needkw()->forms.size();
-  const auto length_sp = config.cast_on_crit().formlist_spells()->forms.size();
+  const auto length_kw = config.cast_on_crit().weapon_formlist_needkw()->forms.size();
+  const auto length_sp = config.cast_on_crit().weapon_formlist_spells()->forms.size();
 
   for (std::uint32_t index = 0u; index < length_kw && index < length_sp; index++) {
-    Core::cast_on_handle(config.cast_on_crit().formlist_needkw()->forms[index],
-                         config.cast_on_crit().formlist_spells()->forms[index],
+    Core::cast_on_handle(config.cast_on_crit().weapon_formlist_needkw()->forms[index],
+                         config.cast_on_crit().weapon_formlist_spells()->forms[index],
                          target,
                          aggressor);
   }
@@ -53,7 +54,7 @@ auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& confi
 {
   const auto aggressor = hit_data.aggressor.get();
 
-  if (!aggressor || target->IsDead() || Core::has_absolute_keyword(*target, *config.weapon_crit().keyword_immun())) {
+  if (!aggressor || target->IsDead() || Core::try_has_absolute_keyword(target, config.weapon_crit().keyword_immun())) {
     return;
   }
 
@@ -64,16 +65,19 @@ auto on_weapon_hit(RE::Actor* target, RE::HitData& hit_data, const Config& confi
 
     if (config.cast_on_crit().enable()) {
       Core::cast_on_handle_formlists(
-          config.cast_on_crit().formlist_needkw(), config.cast_on_crit().formlist_spells(), *aggressor, *target);
+          config.cast_on_crit().weapon_formlist_needkw(), config.cast_on_crit().weapon_formlist_spells(), *aggressor, *target);
     }
 
+    if (aggressor->IsPlayerRef() && config.slow_time().enable_on_weapon_crit()) {
+      SlowTime::start_slow_time(config);
+    }
     crit(*aggressor, hit_data.totalDamage, config.weapon_crit().damage_av(), config.weapon_crit().high());
   }
 }
 
 auto allow_magic_crit(const RE::ActiveEffect& active_effect, const Config& config, RE::Actor& target) -> bool
 {
-  if (Core::has_absolute_keyword(target, *config.magick_crit().keyword_immun())) {
+  if (Core::try_has_absolute_keyword(&target, config.magick_crit().keyword_immun())) {
     return false;
   }
   if (!active_effect.effect || !active_effect.effect->baseEffect) {
@@ -116,9 +120,12 @@ auto modify_actor_value(const RE::ValueModifierEffect* this_,
     if (is_critical(*caster, config.magick_crit().chance_av())) {
       if (is_allow_cast_on_crit(caster->formID)) {
         Core::cast_on_handle_formlists(
-            config.cast_on_crit().formlist_needkw(), config.cast_on_crit().formlist_spells(), *caster, *actor);
+            config.cast_on_crit().magick_formlist_needkw(), config.cast_on_crit().magick_formlist_spells(), *caster, *actor);
       }
 
+      if (caster->IsPlayerRef() && config.slow_time().enable_on_magick_crit()) {
+        SlowTime::start_slow_time(config);
+      }
       crit(*caster, value, config.magick_crit().damage_av(), config.magick_crit().high());
     }
 

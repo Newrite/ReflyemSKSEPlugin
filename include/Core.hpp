@@ -1,12 +1,12 @@
 #pragma once
+#include "Config.hpp"
 
 namespace Reflyem::Core {
 
-enum ActorValueMain
+enum CastExtraInfo
 {
-  kHealth,
-  kMagick,
-  kStamina
+  kNone = 0,
+  kCastWithManacost = 1
 };
 
 template<typename L, typename R>
@@ -70,6 +70,7 @@ struct ActorsCache final
 
 private:
     float last_delta_update_{0.f};
+    float slow_time_duration_{0.f};
 
     float cast_on_crit_delay_{0.f};
 
@@ -115,12 +116,56 @@ private:
 public:
     // mods
     auto mod_timing_parry_counter(const int32_t count) -> void { mod(timing_parry_counter_, count); }
+    
+    auto mod_slow_time_duration(const float delta) -> void { mod(slow_time_duration_, delta); }
 
     auto mod_potions_cooldown_timers(const float delta) -> void
     {
-      for (int32_t index : views::iota(0, POTIONS_ARRAY_SIZE)) {
+
+      let debug_print_array = [this, delta]() -> void {
+        for (int32_t index : views::iota(INDEX_HEALTH_START, INDEX_POISON_END)) {
+          let duration = potions_cooldown_timers[index].duration;
+          if (duration > 0.f) {
+            logi("DPA: DELTA [{}] INDEX [{}] DURATION [{}]"sv, delta, index, duration);
+          }
+        }
+      };
+
+      let handle_array_chunk = [this, delta](int start_index, int end_index) -> void {
+        int32_t index_to_mod = -1;
+        float cooldown = FLT_MAX;
+        for (int32_t index : views::iota(start_index, end_index)) {
+          let duration = potions_cooldown_timers[index].duration;
+          if (duration > 0.f && duration < cooldown) {
+            cooldown = duration;
+            index_to_mod = index;
+          }
+        }
+        if (index_to_mod >= 0) {
+          mod(potions_cooldown_timers[index_to_mod].duration, delta);
+        }
+      };
+
+      // debug_print_array();
+
+      for (int32_t index : views::iota(INDEX_POISON_START, INDEX_POISON_END)) {
         mod(potions_cooldown_timers[index].duration, delta);
       }
+
+      let one_cooldown = Config::get_singleton().potions_drink_limit().enable_one_cooldown();
+      if (one_cooldown) {
+        handle_array_chunk(INDEX_HEALTH_START, INDEX_HEALTH_END);
+        handle_array_chunk(INDEX_STAMINA_START, INDEX_STAMINA_END);
+        handle_array_chunk(INDEX_MAGICKA_START, INDEX_MAGICKA_END);
+        handle_array_chunk(INDEX_OTHER_START, INDEX_OTHER_END);
+        // debug_print_array();
+        return;
+      }
+
+      for (int32_t index : views::iota(0, INDEX_POISON_START)) {
+        mod(potions_cooldown_timers[index].duration, delta);
+      }
+      // debug_print_array();
     }
 
     auto mod_timing_parry_counter_timer(const float delta) -> void
@@ -206,6 +251,10 @@ public:
     [[nodiscard]] float cast_on_crit_delay() const { return cast_on_crit_delay_; }
 
     void cast_on_crit_delay(const float cast_on_crit_delay) { set(cast_on_crit_delay_, cast_on_crit_delay); }
+
+    [[nodiscard]] float slow_time_duration() const { return slow_time_duration_; }
+
+    void slow_time_duration(const float slow_time_duration) { set(slow_time_duration_, slow_time_duration); }
 
     [[nodiscard]] float timing_block_timer() const { return timing_block_timer_; }
 
@@ -305,6 +354,7 @@ public:
     {
       const auto negative_delta = -std::abs(delta);
       mod_bash_parry_timer(negative_delta);
+      // mod_slow_time_duration(negative_delta);
       mod_bash_parry_timer_no_hit(negative_delta);
       mod_cast_on_crit_delay(negative_delta);
       mod_timing_block_timer(negative_delta);
@@ -324,7 +374,7 @@ public:
   std::mutex mutex_;
   static constexpr uint32_t LABEL = 'ACCA';
   // ReSharper disable once CppVariableCanBeMadeConstexpr
-  static const int32_t SERIALIZATION_VERSION = 7;
+  static const int32_t SERIALIZATION_VERSION = 8;
 
   [[nodiscard]] static auto is_garbage(const Data& data) -> bool
   {
@@ -555,7 +605,7 @@ auto get_second_av(const RE::ActiveEffect& active_effect) -> RE::ActorValue;
 
 auto getting_damage_mult(RE::Actor& actor) -> float;
 
-auto cast(RE::SpellItem& spell, RE::Actor& target, RE::Actor& caster) -> void;
+auto cast(RE::SpellItem& spell, RE::Actor& target, RE::Actor& caster, CastExtraInfo extra = kNone) -> void;
 
 // template<typename FormType>
 // void get_data(RE::FormID form_id, std::string_view mod_name);
@@ -583,10 +633,17 @@ auto get_voice_equip_slot() -> RE::BGSEquipSlot*;
 
 auto equip_slot_comparer(RE::BGSEquipSlot* first, RE::BGSEquipSlot* second) -> bool;
 
-auto cast_on_handle_formlists(RE::BGSListForm* keywords, RE::BGSListForm* spells, RE::Actor& caster, RE::Actor& target)
-    -> void;
+auto cast_on_handle_formlists(RE::BGSListForm* keywords,
+                              RE::BGSListForm* spells,
+                              RE::Actor& caster,
+                              RE::Actor& target,
+                              CastExtraInfo extra = kNone) -> void;
 
-auto cast_on_handle(RE::TESForm* keyword, RE::TESForm* spell, RE::Actor& target, RE::Actor& caster) -> void;
+auto cast_on_handle(RE::TESForm* keyword,
+                    RE::TESForm* spell,
+                    RE::Actor& target,
+                    RE::Actor& caster,
+                    CastExtraInfo extra = kNone) -> void;
 
 auto is_power_attacking(RE::Actor& actor) -> bool;
 
@@ -616,6 +673,8 @@ auto apply_all_combat_spells_from_attack(RE::Character* attacker,
                                          RE::Actor* target) -> void;
 
 auto get_poison(RE::InventoryEntryData* _this) -> RE::AlchemyItem*;
+
+auto set_global_time_multiplier(float mult, bool a3) -> void;
 
 auto poison_object(RE::InventoryEntryData* data, RE::AlchemyItem* poison, int count) -> void;
 

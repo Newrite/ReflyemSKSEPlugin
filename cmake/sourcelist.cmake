@@ -32,6 +32,7 @@ set(SOURCES
     include/plugin/TKDodge.hpp
     include/plugin/Vampirism.hpp
     include/plugin/PoisonRework.hpp
+    include/plugin/SlowTime.hpp
     include/Config.hpp
     include/Core.hpp
     include/Hooks.hpp
@@ -72,6 +73,7 @@ set(SOURCES
     src/plugin/TKDodge.cpp
     src/plugin/Vampirism.cpp
     src/plugin/PoisonRework.cpp
+    src/plugin/SlowTime.cpp
     src/Config.cpp
     src/Core.cpp
     src/Hooks.cpp

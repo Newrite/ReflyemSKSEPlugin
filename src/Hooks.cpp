@@ -1,6 +1,7 @@
 #include "Hooks.hpp"
 #include "Core.hpp"
 #include "PoisonRework.hpp"
+#include "SlowTime.hpp"
 #include "plugin/AnimationEventHandler.hpp"
 #include "plugin/CastOnBlock.hpp"
 #include "plugin/CastOnHit.hpp"
@@ -68,6 +69,10 @@ auto update_actor(RE::Character& character, const float delta, const Reflyem::Co
 
   actor_data.last_delta_update(player_last_delta);
   actor_data.update_handler(player_last_delta);
+  
+  if (character.IsPlayerRef() && config.slow_time().enable()) {
+    Reflyem::SlowTime::update_actor(character, delta, config);
+  }
 
   if (config.timing_block().enable() || config.projectile_block().enable()) {
     if (character.IsBlocking()) {
@@ -170,6 +175,7 @@ auto update_actor(RE::Character& character, const float delta, const Reflyem::Co
     if (character.IsPlayerRef() && config.item_limit().enable()) {
       Reflyem::ItemLimit::update_actor(character, delta, config);
     }
+    
   }
 }
 
@@ -1499,6 +1505,10 @@ auto OnWeaponHit::weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void
 
   if (config.cast_on_block().enable()) {
     Reflyem::CastOnBlock::on_weapon_hit(target, hit_data, config);
+  }
+  
+  if (config.slow_time().enable()) {
+    Reflyem::SlowTime::on_weapon_hit(target, hit_data, config);
   }
 
   if (config.cheat_death().enable() && config.cheat_death().physical()) {

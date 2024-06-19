@@ -1,5 +1,6 @@
 ﻿#include "plugin/ParryBash.hpp"
 #include "Core.hpp"
+#include "SlowTime.hpp"
 #include "plugin/AnimationEventHandler.hpp"
 
 namespace Reflyem::ParryBash
@@ -70,6 +71,9 @@ auto cast_on_parry_bash(RE::Actor& target, RE::Actor& caster, const Config& conf
 
 auto parry_bash_handler(RE::Actor& target, RE::Actor& attacker, const Config& config) -> void
 {
+  if (attacker.IsPlayerRef() && config.slow_time().enable_on_parry_bash()) {
+    SlowTime::start_slow_time(config);
+  }
   cast_on_parry_bash(target, attacker, config);
   Core::play_sound(config.parry_bash().parry_sound(), &attacker);
   target.SetGraphVariableFloat("StaggerMagnitude", 5.f);

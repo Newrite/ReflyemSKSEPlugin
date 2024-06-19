@@ -26,7 +26,7 @@ auto MenuEventHandler::ProcessEvent(
 {
   if (menu_event && !menu_event->opening) {
     if (menu_event->menuName == RE::JournalMenu::MENU_NAME) {
-      auto config = Config::get_singleton();
+      auto& config = Config::get_singleton();
       config.load();
     }
   }

@@ -16,6 +16,20 @@ constexpr inline std::string_view ProjectileBlock = "ProjectileBlock";
 constexpr inline std::string_view EffectAllowOvercapKeyword = "EffectAllowOvercapKeyword";
 constexpr inline std::string_view PoisonRework = "PoisonRework";
 constexpr inline std::string_view MagickToStamina = "MagickToStamina";
+constexpr inline std::string_view SlowTime = "SlowTime";
+constexpr inline std::string_view EnableOnBlock = "EnableOnBlock";
+constexpr inline std::string_view EnableOnTimingBlock = "EnableOnTimingBlock";
+constexpr inline std::string_view EnableOnParryBlock = "EnableOnParryBlock";
+constexpr inline std::string_view EnableOnParryBash = "EnableOnParryBash";
+constexpr inline std::string_view EnableOnKill = "EnableOnKill";
+constexpr inline std::string_view EnableOnProjectileBlock = "EnableOnProjectileBlock";
+constexpr inline std::string_view EnableOnProjectileTimingBlock = "EnableOnProjectileTimingBlock";
+constexpr inline std::string_view EnableOnWeaponCrit = "EnableOnWeaponCrit";
+constexpr inline std::string_view EnableOnMagickCrit = "EnableOnMagickCrit";
+constexpr inline std::string_view EnableOnVanillaWeaponCrit = "EnableOnVanillaWeaponCrit";
+constexpr inline std::string_view EnableOnSneakAttack = "EnableOnSneakAttack";
+constexpr inline std::string_view SlowDuration = "SlowDuration";
+constexpr inline std::string_view SlowPower = "SlowPower";
 constexpr inline std::string_view EffectMutateCapKeyword = "EffectMutateCapKeyword";
 constexpr inline std::string_view ModName = "ModName";
 constexpr inline std::string_view SoulLink = "SoulLink";
@@ -30,6 +44,7 @@ constexpr inline std::string_view AutoLoot = "AutoLoot";
 constexpr inline std::string_view OtherExclusiveKeywordId = "OtherExclusiveKeywordId";
 constexpr inline std::string_view HealthEnable = "HealthEnable";
 constexpr inline std::string_view OtherEnable = "OtherEnable";
+constexpr inline std::string_view EnableOneCooldown = "EnableOneCooldown";
 constexpr inline std::string_view HealthCapBase = "HealthCapBase";
 constexpr inline std::string_view HealthDurationBase = "HealthDurationBase";
 constexpr inline std::string_view HealthKeywordId = "HealthKeywordId";
@@ -55,6 +70,7 @@ constexpr inline std::string_view EnableEnderal = "EnableEnderal";
 constexpr inline std::string_view FormListKeywordItemId = "FormListKeywordItemId";
 constexpr inline std::string_view FormListKeywordCapId = "FormListKeywordCapId";
 constexpr inline std::string_view Enable = "Enable";
+constexpr inline std::string_view EnableForNpc = "EnableForNpc";
 constexpr inline std::string_view CapBase = "CapBase";
 constexpr inline std::string_view DurationBase = "DurationBase";
 constexpr inline std::string_view CapKeywordId = "CapKeywordId";
@@ -94,7 +110,11 @@ constexpr inline std::string_view ActorValueIndexCritChance = "ActorValueIndexCr
 constexpr inline std::string_view ActorValueIndexCritDamage = "ActorValueIndexCritDamage";
 constexpr inline std::string_view CastOnCrit = "CastOnCrit";
 constexpr inline std::string_view FormListSpellsId = "FormListSpellsId";
+constexpr inline std::string_view WeaponCritFormListSpellsId = "WeaponCritFormListSpellsId";
+constexpr inline std::string_view MagickCritFormListSpellsId = "MagickCritFormListSpellsId";
 constexpr inline std::string_view FormListKeywordId = "FormListKeywordId";
+constexpr inline std::string_view WeaponCritFormListKeywordId = "WeaponCritFormListKeywordId";
+constexpr inline std::string_view MagickCritFormListKeywordId = "MagickCritFormListKeywordId";
 constexpr inline std::string_view CastOnHit = "CastOnHit";
 constexpr inline std::string_view ResourceManager = "ResourceManager";
 constexpr inline std::string_view EnableInfamy = "EnableInfamy";
@@ -171,6 +191,7 @@ constexpr inline std::string_view EnableCheckResistance = "EnableCheckResistance
 constexpr inline std::string_view EnchGetNoAbsorb = "EnchGetNoAbsorb";
 constexpr inline std::string_view EnchIgnoreResistance = "EnchIgnoreResistance";
 constexpr inline std::string_view ResistWeight = "ResistWeight";
+constexpr inline std::string_view CastOnIsCostKeyword = "CastOnIsCostKeyword";
 constexpr inline std::string_view NpcMaxResistance = "NpcMaxResistance";
 constexpr inline std::string_view NoDoubleResistCheckMagick = "NoDoubleResistCheckMagick";
 constexpr inline std::string_view NoDoubleResistCheckPoison = "NoDoubleResistCheckPoison";
@@ -468,10 +489,19 @@ Config::CastOnCritConfig::CastOnCritConfig(toml::table& tbl, RE::TESDataHandler&
     magick_ = tbl[CastOnCrit][Magick].value_or(false);
     magick_cooldawn_ = tbl[CastOnCrit][MagickCritCooldawn].value_or(1.0f);
 
-    const auto form_keywords_form_id = tbl[CastOnCrit][FormListKeywordId].value<RE::FormID>();
-    const auto form_spells_form_id = tbl[CastOnCrit][FormListSpellsId].value<RE::FormID>();
-    formlist_needkw_ = data_handler.LookupForm<RE::BGSListForm>(form_keywords_form_id.value(), config.mod_name());
-    formlist_spells_ = data_handler.LookupForm<RE::BGSListForm>(form_spells_form_id.value(), config.mod_name());
+    const auto weapon_form_keywords_form_id = tbl[CastOnCrit][WeaponCritFormListKeywordId].value<RE::FormID>();
+    const auto weapon_form_spells_form_id = tbl[CastOnCrit][WeaponCritFormListSpellsId].value<RE::FormID>();
+    weapon_formlist_needkw_ =
+        data_handler.LookupForm<RE::BGSListForm>(weapon_form_keywords_form_id.value(), config.mod_name());
+    weapon_formlist_spells_ =
+        data_handler.LookupForm<RE::BGSListForm>(weapon_form_spells_form_id.value(), config.mod_name());
+
+    const auto magick_form_keywords_form_id = tbl[CastOnCrit][MagickCritFormListKeywordId].value<RE::FormID>();
+    const auto magick_form_spells_form_id = tbl[CastOnCrit][MagickCritFormListSpellsId].value<RE::FormID>();
+    magick_formlist_needkw_ =
+        data_handler.LookupForm<RE::BGSListForm>(magick_form_keywords_form_id.value(), config.mod_name());
+    magick_formlist_spells_ =
+        data_handler.LookupForm<RE::BGSListForm>(magick_form_spells_form_id.value(), config.mod_name());
   }
 }
 
@@ -807,6 +837,7 @@ Config::EquipLoadConfig::EquipLoadConfig(toml::table& tbl, RE::TESDataHandler& d
 {
   enable_ = tbl[EquipLoad][Enable].value_or(false);
   if (enable_) {
+    enable_for_npc_ = tbl[EquipLoad][EnableForNpc].value_or(false);
     equip_weight_mult_ = tbl[EquipLoad][EquipWeightMult].value_or(1.f);
     armor_weight_mult_ = tbl[EquipLoad][ArmorWeightMult].value_or(1.f);
     weapon_weight_mult_ = tbl[EquipLoad][WeaponWeightMult].value_or(1.f);
@@ -915,6 +946,7 @@ Config::PotionsDrinkLimitConfig::PotionsDrinkLimitConfig(toml::table& tbl,
   logger::info("config init: potions drink limit"sv);
   enable_ = tbl[PotionsDrinkLimit][Enable].value_or(false);
   if (enable_) {
+    enable_one_cooldown_ = tbl[PotionsDrinkLimit][EnableOneCooldown].value_or(false);
     other_enable_ = tbl[PotionsDrinkLimit][OtherEnable].value_or(false);
     other_cap_base_ = tbl[PotionsDrinkLimit][OtherCapBase].value_or(7);
     other_duration_base_ = tbl[PotionsDrinkLimit][OtherDurationBase].value_or(15.f);
@@ -926,45 +958,50 @@ Config::PotionsDrinkLimitConfig::PotionsDrinkLimitConfig(toml::table& tbl,
     const auto other_duration_keyword_id = tbl[PotionsDrinkLimit][OtherDurationKeywordId].value<RE::FormID>();
     const auto no_remove_keyword_id = tbl[PotionsDrinkLimit][NoRemoveKeywordId].value<RE::FormID>();
 
-    other_exclusive_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(other_exclusive_keyword_id.value(), config.mod_name());
+    other_exclusive_keyword_ =
+        data_handler.LookupForm<RE::BGSKeyword>(other_exclusive_keyword_id.value(), config.mod_name());
     other_cap_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(other_cap_keyword_id.value(), config.mod_name());
-    other_duration_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(other_duration_keyword_id.value(), config.mod_name());
+    other_duration_keyword_ =
+        data_handler.LookupForm<RE::BGSKeyword>(other_duration_keyword_id.value(), config.mod_name());
     no_remove_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(no_remove_keyword_id.value(), config.mod_name());
 
     health_enable_ = tbl[PotionsDrinkLimit][HealthEnable].value_or(false);
     health_duration_base_ = tbl[PotionsDrinkLimit][HealthDurationBase].value_or(15.f);
     health_cap_base_ = tbl[PotionsDrinkLimit][HealthCapBase].value_or(7);
-    
+
     const auto health_cap_keyword_id = tbl[PotionsDrinkLimit][HealthCapKeywordId].value<RE::FormID>();
     const auto health_duration_keyword_id = tbl[PotionsDrinkLimit][HealthDurationKeywordId].value<RE::FormID>();
     const auto health_keyword_id = tbl[PotionsDrinkLimit][HealthKeywordId].value<RE::FormID>();
 
     health_cap_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(health_cap_keyword_id.value(), config.mod_name());
-    health_duration_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(health_duration_keyword_id.value(), config.mod_name());
+    health_duration_keyword_ =
+        data_handler.LookupForm<RE::BGSKeyword>(health_duration_keyword_id.value(), config.mod_name());
     health_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(health_keyword_id.value(), config.mod_name());
-    
+
     stamina_enable_ = tbl[PotionsDrinkLimit][StaminaEnable].value_or(false);
     stamina_duration_base_ = tbl[PotionsDrinkLimit][StaminaDurationBase].value_or(15.f);
     stamina_cap_base_ = tbl[PotionsDrinkLimit][StaminaCapBase].value_or(7);
-    
+
     const auto stamina_cap_keyword_id = tbl[PotionsDrinkLimit][StaminaCapKeywordId].value<RE::FormID>();
     const auto stamina_duration_keyword_id = tbl[PotionsDrinkLimit][StaminaDurationKeywordId].value<RE::FormID>();
     const auto stamina_keyword_id_ = tbl[PotionsDrinkLimit][StaminaKeywordId].value<RE::FormID>();
 
     stamina_cap_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(stamina_cap_keyword_id.value(), config.mod_name());
-    stamina_duration_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(stamina_duration_keyword_id.value(), config.mod_name());
+    stamina_duration_keyword_ =
+        data_handler.LookupForm<RE::BGSKeyword>(stamina_duration_keyword_id.value(), config.mod_name());
     stamina_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(stamina_keyword_id_.value(), config.mod_name());
-    
+
     magicka_enable_ = tbl[PotionsDrinkLimit][MagickaEnable].value_or(false);
     magicka_duration_base_ = tbl[PotionsDrinkLimit][MagickaDurationBase].value_or(15.f);
     magicka_cap_base_ = tbl[PotionsDrinkLimit][MagickaCapBase].value_or(7);
-    
+
     const auto magicka_cap_keyword_id = tbl[PotionsDrinkLimit][MagickaCapKeywordId].value<RE::FormID>();
     const auto magicka_duration_keyword_id = tbl[PotionsDrinkLimit][MagickaDurationKeywordId].value<RE::FormID>();
     const auto magicka_keyword_id = tbl[PotionsDrinkLimit][MagickaKeywordId].value<RE::FormID>();
 
     magicka_cap_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(magicka_cap_keyword_id.value(), config.mod_name());
-    magicka_duration_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(magicka_duration_keyword_id.value(), config.mod_name());
+    magicka_duration_keyword_ =
+        data_handler.LookupForm<RE::BGSKeyword>(magicka_duration_keyword_id.value(), config.mod_name());
     magicka_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(magicka_keyword_id.value(), config.mod_name());
   }
 }
@@ -1073,7 +1110,6 @@ Config::ProjectileBlockConfig::ProjectileBlockConfig(toml::table& tbl,
 
     const auto spark_halo_form_id = tbl[ProjectileBlock][SparkHaloId].value<RE::FormID>();
     spark_halo_ = data_handler.LookupForm<RE::Explosion>(spark_halo_form_id.value(), config.mod_name());
-   
   }
 }
 
@@ -1138,12 +1174,30 @@ Config::PoisonReworkConfig::PoisonReworkConfig(toml::table& tbl, RE::TESDataHand
   }
 }
 
-Config::MagickToStaminaConfig::MagickToStaminaConfig(toml::table& tbl,
-                                                     RE::TESDataHandler&,
-                                                     const Config&)
+Config::MagickToStaminaConfig::MagickToStaminaConfig(toml::table& tbl, RE::TESDataHandler&, const Config&)
 {
   logger::info("config init: MagickToStamina"sv);
   enable_ = tbl[MagickToStamina][Enable].value_or(false);
+}
+Config::SlowTimeConfig::SlowTimeConfig(toml::table& tbl, RE::TESDataHandler&, const Config&)
+{
+  logger::info("config init: SlowTime"sv);
+  enable_ = tbl[SlowTime][Enable].value_or(false);
+  if (enable_) {
+    enable_on_block_ = tbl[SlowTime][EnableOnBlock].value_or(false);
+    enable_on_kill_ = tbl[SlowTime][EnableOnKill].value_or(false);
+    enable_on_magick_crit_ = tbl[SlowTime][EnableOnMagickCrit].value_or(false);
+    enable_on_projectile_block_ = tbl[SlowTime][EnableOnProjectileBlock].value_or(false);
+    enable_on_projectile_timing_block_ = tbl[SlowTime][EnableOnProjectileTimingBlock].value_or(false);
+    enable_on_timing_block_ = tbl[SlowTime][EnableOnTimingBlock].value_or(false);
+    enable_on_parry_timing_block_ = tbl[SlowTime][EnableOnParryBlock].value_or(false);
+    enable_on_weapon_crit_ = tbl[SlowTime][EnableOnWeaponCrit].value_or(false);
+    enable_on_weapon_vanilla_crit_ = tbl[SlowTime][EnableOnVanillaWeaponCrit].value_or(false);
+    enable_on_sneak_attack_ = tbl[SlowTime][EnableOnSneakAttack].value_or(false);
+    enable_on_parry_bash_ = tbl[SlowTime][EnableOnParryBash].value_or(false);
+    slow_duration_ = tbl[SlowTime][SlowDuration].value_or(0.2f);
+    slow_power_ = tbl[SlowTime][SlowPower].value_or(0.3f);
+  }
 }
 
 auto Config::load() -> void
@@ -1154,6 +1208,9 @@ auto Config::load() -> void
   const auto data_handler = RE::TESDataHandler::GetSingleton();
 
   mod_name_ = tbl[Reflyem][ModName].value_or("Skyrim.esm"sv);
+  let cast_on_is_cost_id = tbl[Reflyem][CastOnIsCostKeyword].value_or(0x700);
+  cast_on_is_cost_ = data_handler->LookupForm<RE::BGSKeyword>(cast_on_is_cost_id, mod_name_);
+
   magic_shield_ = MagicShieldConfig{tbl, *data_handler, *this};
   stamina_shield_ = StaminaShieldConfig{tbl, *data_handler, *this};
   petrified_blood_ = PetrifiedBloodConfig{tbl, *data_handler, *this};
@@ -1190,6 +1247,7 @@ auto Config::load() -> void
   poison_rework_ = PoisonReworkConfig{tbl, *data_handler, *this};
   cast_on_projectile_timing_block_ = CastOnProjectileTimingBlockConfig{tbl, *data_handler, *this};
   magicka_to_stamina_ = MagickToStaminaConfig{tbl, *data_handler, *this};
+  slow_time_ = SlowTimeConfig{tbl, *data_handler, *this};
 
   logger::info("finish load config"sv);
 }

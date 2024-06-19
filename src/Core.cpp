@@ -117,7 +117,6 @@ auto get_current_equip_weapon(RE::AIProcess* process, const bool is_left) -> RE:
   return func(process, is_left);
 }
 
-
 auto character_timer_map_handler(const ULONGLONG now_time, std::map<std::uintptr_t, ULONGLONG>& character_timer_map)
     -> void
 {
@@ -260,6 +259,15 @@ auto try_get_effects_by_keyword(RE::Actor* actor, const RE::BGSKeyword* keyword)
   std::vector<RE::ActiveEffect*> effects = {};
 
   if (!actor || !keyword) {
+    if (!keyword && actor) {
+      logd("GetEffects: keyword null for: {}"sv, actor->GetDisplayFullName());
+    }
+    if (keyword && !actor) {
+      logd("GetEffects: actor null for: {}"sv, keyword->formEditorID);
+    }
+    if (!actor && !keyword) {
+      logd("GetEffect: Actor and Keyword is null"sv);
+    }
     return effects;
   }
 
@@ -275,8 +283,8 @@ auto try_get_effects_by_keyword(RE::Actor* actor, const RE::BGSKeyword* keyword)
     }
 
     const auto effect = active_effect->effect;
-
-    if (const auto base_effect = effect->baseEffect; !base_effect->HasKeywordID(keyword->formID)) {
+    
+    if (const auto base_effect = effect->baseEffect; !base_effect->HasKeyword(keyword)) {
       continue;
     }
 
@@ -415,10 +423,18 @@ auto try_actor_has_active_mgef_with_keyword(RE::Actor* actor, const RE::BGSKeywo
   return false;
 }
 
-auto cast(RE::SpellItem& spell, RE::Actor& target, RE::Actor& caster) -> void
+auto cast(RE::SpellItem& spell, RE::Actor& target, RE::Actor& caster, CastExtraInfo extra) -> void
 {
   auto& caster_ = false ? spell.HasKeyword(nullptr) ? target : caster : caster;
   auto& target_ = false ? spell.HasKeyword(nullptr) ? caster : target : target;
+  if (extra == CastExtraInfo::kCastWithManacost) {
+    let manacost = spell.CalculateMagickaCost(&caster);
+    if (manacost > caster.GetActorValue(RE::ActorValue::kMagicka)) {
+      flash_hud_meter(RE::ActorValue::kMagicka);
+      return;
+    }
+    damage_actor_value(caster, RE::ActorValue::kMagicka, manacost);
+  }
   if (spell.data.delivery == RE::MagicSystem::Delivery::kSelf) {
     caster.GetMagicCaster(RE::MagicSystem::CastingSource::kInstant)
         ->CastSpellImmediate(&spell, true, &caster_, 1.00f, false, 0.0f, &caster_);
@@ -495,8 +511,11 @@ auto equip_slot_comparer(RE::BGSEquipSlot* first, RE::BGSEquipSlot* second) -> b
   return func(first, second);
 }
 
-auto cast_on_handle_formlists(RE::BGSListForm* keywords, RE::BGSListForm* spells, RE::Actor& caster, RE::Actor& target)
-    -> void
+auto cast_on_handle_formlists(RE::BGSListForm* keywords,
+                              RE::BGSListForm* spells,
+                              RE::Actor& caster,
+                              RE::Actor& target,
+                              CastExtraInfo extra) -> void
 {
   if (!keywords || !spells) {
     return;
@@ -507,11 +526,12 @@ auto cast_on_handle_formlists(RE::BGSListForm* keywords, RE::BGSListForm* spells
   logger::debug("LKW LSP: {} {}", length_kw, length_sp);
   for (std::uint32_t index = 0u; index < length_kw && index < length_sp; index++) {
     logger::debug("LKW LSP index: {}", index);
-    cast_on_handle(keywords->forms[index], spells->forms[index], target, caster);
+    cast_on_handle(keywords->forms[index], spells->forms[index], target, caster, extra);
   }
 }
 
-auto cast_on_handle(RE::TESForm* keyword, RE::TESForm* spell, RE::Actor& target, RE::Actor& caster) -> void
+auto cast_on_handle(RE::TESForm* keyword, RE::TESForm* spell, RE::Actor& target, RE::Actor& caster, CastExtraInfo extra)
+    -> void
 {
   if (!spell) {
     return;
@@ -541,8 +561,12 @@ auto cast_on_handle(RE::TESForm* keyword, RE::TESForm* spell, RE::Actor& target,
     return;
   }
 
+  if (try_form_has_keyword(spell, Config::get_singleton().cast_on_is_cost())) {
+    extra = CastExtraInfo::kCastWithManacost;
+  }
+
   logger::debug("Cast_On_Handle before call cast");
-  cast(*spell_ptr, target, caster);
+  cast(*spell_ptr, target, caster, extra);
 }
 
 auto is_power_attacking(RE::Actor& actor) -> bool
@@ -674,6 +698,13 @@ auto get_poison(RE::InventoryEntryData* _this) -> RE::AlchemyItem*
 {
   const REL::Relocation<decltype(&get_poison)> func{RELOCATION_ID(15761, 0)};
   return func(_this);
+}
+
+auto set_global_time_multiplier(float mult, bool a3) -> void
+{
+  const REL::Relocation<void*> time_manager{ REL::ID(523657) };
+  const REL::Relocation<void(*)(void*, float, bool)> func{RELOCATION_ID(66988, 0)};
+  return func(time_manager.get(), mult, a3);
 }
 
 auto poison_object(RE::InventoryEntryData* data, RE::AlchemyItem* poison, int count) -> void

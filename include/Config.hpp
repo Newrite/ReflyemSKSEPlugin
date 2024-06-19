@@ -291,9 +291,13 @@ private:
 
     [[nodiscard]] float magick_cooldawn() const { return magick_cooldawn_; }
 
-    [[nodiscard]] RE::BGSListForm* formlist_spells() const { return formlist_spells_; }
+    [[nodiscard]] RE::BGSListForm* weapon_formlist_spells() const { return weapon_formlist_spells_; }
 
-    [[nodiscard]] RE::BGSListForm* formlist_needkw() const { return formlist_needkw_; }
+    [[nodiscard]] RE::BGSListForm* weapon_formlist_needkw() const { return weapon_formlist_needkw_; }
+
+    [[nodiscard]] RE::BGSListForm* magick_formlist_spells() const { return magick_formlist_spells_; }
+
+    [[nodiscard]] RE::BGSListForm* magick_formlist_needkw() const { return magick_formlist_needkw_; }
 
     CastOnCritConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     CastOnCritConfig() = default;
@@ -304,8 +308,10 @@ private:
     bool physical_;
     bool magick_;
     float magick_cooldawn_;
-    RE::BGSListForm* formlist_spells_;
-    RE::BGSListForm* formlist_needkw_;
+    RE::BGSListForm* weapon_formlist_spells_;
+    RE::BGSListForm* weapon_formlist_needkw_;
+    RE::BGSListForm* magick_formlist_spells_;
+    RE::BGSListForm* magick_formlist_needkw_;
   };
 
   struct CastOnHitConfig final
@@ -778,6 +784,8 @@ private:
   struct EquipLoadConfig final
   {
     [[nodiscard]] bool enable() const { return enable_; }
+    
+    [[nodiscard]] bool enable_for_npc() const { return enable_for_npc_; }
 
     [[nodiscard]] RE::SpellItem* low_equip_spell() const { return low_equip_spell_; }
 
@@ -800,6 +808,7 @@ private:
 
 private:
     bool enable_;
+    bool enable_for_npc_;
     RE::SpellItem* low_equip_spell_;
     RE::SpellItem* med_equip_spell_;
     RE::SpellItem* hig_equip_spell_;
@@ -921,6 +930,7 @@ private:
   struct PotionsDrinkLimitConfig final
   {
     [[nodiscard]] bool enable() const { return enable_; }
+    [[nodiscard]] bool enable_one_cooldown() const { return enable_one_cooldown_; }
     [[nodiscard]] bool other_enable() const { return other_enable_; }
     [[nodiscard]] std::int32_t other_cap_base() const { return other_cap_base_; }
     [[nodiscard]] float other_duration_base() const { return other_duration_base_; }
@@ -954,6 +964,7 @@ private:
 
 private:
     bool enable_;
+    bool enable_one_cooldown_;
     bool other_enable_;
     std::int32_t other_cap_base_;
     float other_duration_base_;
@@ -1230,6 +1241,44 @@ private:
     
   };
 
+  struct SlowTimeConfig final
+  {
+
+    [[nodiscard]] bool enable() const { return enable_; }
+    [[nodiscard]] bool enable_on_block() const { return enable_on_block_; }
+    [[nodiscard]] bool enable_on_timing_block() const { return enable_on_timing_block_; }
+    [[nodiscard]] bool enable_on_parry_timing_block() const { return enable_on_parry_timing_block_; }
+    [[nodiscard]] bool enable_on_parry_bash() const { return enable_on_parry_bash_; }
+    [[nodiscard]] bool enable_on_kill() const { return enable_on_kill_; }
+    [[nodiscard]] bool enable_on_projectile_block() const { return enable_on_projectile_block_; }
+    [[nodiscard]] bool enable_on_projectile_timing_block() const { return enable_on_projectile_timing_block_; }
+    [[nodiscard]] bool enable_on_weapon_crit() const { return enable_on_weapon_crit_; }
+    [[nodiscard]] bool enable_on_magick_crit() const { return enable_on_magick_crit_; }
+    [[nodiscard]] bool enable_on_weapon_vanilla_crit() const { return enable_on_weapon_vanilla_crit_; }
+    [[nodiscard]] bool enable_on_sneak_attack() const { return enable_on_sneak_attack_; }
+    [[nodiscard]] float slow_duration() const { return slow_duration_; }
+    [[nodiscard]] float slow_power() const { return slow_power_; }
+
+    SlowTimeConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
+    SlowTimeConfig() = default;
+
+  private:
+    bool enable_;
+    bool enable_on_block_;
+    bool enable_on_timing_block_;
+    bool enable_on_parry_timing_block_;
+    bool enable_on_parry_bash_;
+    bool enable_on_kill_;
+    bool enable_on_projectile_block_;
+    bool enable_on_projectile_timing_block_;
+    bool enable_on_weapon_crit_;
+    bool enable_on_magick_crit_;
+    bool enable_on_weapon_vanilla_crit_;
+    bool enable_on_sneak_attack_;
+    float slow_duration_;
+    float slow_power_;
+  };
+
   struct AbsorbShieldConfig final
   {
 private:
@@ -1296,6 +1345,7 @@ private:
 
   // general
   std::string_view mod_name_;
+  RE::BGSKeyword* cast_on_is_cost_;
 
   // magic shield
   MagicShieldConfig magic_shield_;
@@ -1397,6 +1447,8 @@ private:
   PoisonReworkConfig poison_rework_;
   
   MagickToStaminaConfig magicka_to_stamina_;
+  
+  SlowTimeConfig slow_time_;
 
   SpeedMultCapConfig speed_mult_cap_;
   CastOnProjectileBlockConfig cast_on_projectile_block_;
@@ -1409,6 +1461,8 @@ public:
   auto load() -> void;
 
   [[nodiscard]] auto mod_name() const -> const std::string_view& { return mod_name_; }
+  
+  [[nodiscard]] auto cast_on_is_cost() const -> RE::BGSKeyword* { return cast_on_is_cost_; }
 
   [[nodiscard]] const MagicShieldConfig& magic_shield() const { return magic_shield_; }
 
@@ -1487,6 +1541,8 @@ public:
   [[nodiscard]] const SpeedMultCapConfig& speed_mult_cap() const { return speed_mult_cap_; }
   
   [[nodiscard]] const MagickToStaminaConfig& magicka_to_stamina() const { return magicka_to_stamina_; }
+  
+  [[nodiscard]] const SlowTimeConfig& slow_time() const { return slow_time_; }
 };
 
 } // namespace Reflyem
