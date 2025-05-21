@@ -10,6 +10,46 @@ static constexpr float MAX_TIME_EMULATE_TDM_DODGE = 0.25f;
 static float current_time_emulate_tdm_dodge = 0.f;
 static bool emulating_tdm_dodge_flag = false;
 
+auto get_actor_value_map(RE::ActorValueOwner* owner) -> std::map<RE::ActorValue, std::map<RE::ActorValue, float>>
+{
+
+  auto result = std::map<RE::ActorValue, std::map<RE::ActorValue, float>>{};
+
+  letr config = Config::get_singleton();
+  let actor = Core::get_actor_value_owner_as_actor(owner);
+  if (actor && config.special_techniques().keyword_actor_value_to_actor_value() && config.special_techniques().enable()) {
+    let effects =
+        Core::try_get_effects_by_keyword(actor, config.special_techniques().keyword_actor_value_to_actor_value());
+    for (const auto effect : effects) {
+
+      if (!effect) {
+        continue;
+      }
+
+      let primary_av = Core::get_av_from_effect(*effect);
+      let second_av = Core::get_second_av_from_effect(*effect);
+      let weight = Core::get_second_av_weight_from_effect(*effect);
+
+      if (primary_av == RE::ActorValue::kNone || second_av == RE::ActorValue::kNone || weight <= 0.f) {
+        continue;
+      }
+      
+      if (result.contains(primary_av)) {
+        auto& map = result[primary_av];
+        if (map.contains(second_av)) {
+          map[second_av] = map[second_av] + weight;
+        } else {
+          map[second_av] = weight;
+        }
+        continue;
+      }
+
+      result[primary_av] = {{second_av, weight}};
+    }
+  }
+  return result;
+}
+
 auto rotate_blocker(RE::Actor* target, const RE::TESObjectREFR* attacker, const Config& config) -> void
 {
 
@@ -97,9 +137,9 @@ auto normalize_attack(RE::HitData& hit_data, const Config& config, const bool is
 
 auto update(RE::Character* character, const float delta) -> void
 {
-  
+
   letr config = Config::get_singleton();
-  
+
   if (character && character->IsPlayerRef() && emulating_tdm_dodge_flag) {
     if (current_time_emulate_tdm_dodge >= MAX_TIME_EMULATE_TDM_DODGE) {
       character->SetGraphVariableBool(TDM_DODGE, false);
@@ -109,7 +149,6 @@ auto update(RE::Character* character, const float delta) -> void
       current_time_emulate_tdm_dodge += delta;
     }
   }
-
 
   if (character) {
 

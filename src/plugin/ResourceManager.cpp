@@ -505,9 +505,9 @@ auto calculate_attack_cost(const ResourceFormsContext& forms_context,
 
   if (is_power) {
     if (is_bash) {
-      cost = cost * fPowerAttackStaminaPenalty;
-    } else {
       cost = cost * fPowerBashStaminaPenalty;
+    } else {
+      cost = cost * fPowerAttackStaminaPenalty;
     }
   }
   if (is_bash) {

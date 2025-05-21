@@ -1,11 +1,15 @@
 #include "Hooks.hpp"
 
 #include "AbsorbShield.hpp"
+#include "CastOnDrink.hpp"
 #include "CastOnGetHit.hpp"
 #include "CastOnMagicProjectileGetHit.hpp"
 #include "CastOnMagicProjectileHit.hpp"
+#include "ComboSeries.hpp"
 #include "Core.hpp"
+#include "CritRevised.hpp"
 #include "DeclutteredLoot.hpp"
+#include "FollowersSummonsApplySpell.hpp"
 #include "GameSettingsHandler.hpp"
 #include "KiEnergyPower.hpp"
 #include "LeechEffect.hpp"
@@ -15,6 +19,7 @@
 #include "RecoupEffect.hpp"
 #include "SlowTime.hpp"
 #include "SpecialTechniques.hpp"
+#include "SpellStrikeEffect.hpp"
 #include "StaggerSystem.hpp"
 #include "plugin/AnimationEventHandler.hpp"
 #include "plugin/CastOnBlock.hpp"
@@ -39,8 +44,6 @@
 #include "plugin/TKDodge.hpp"
 #include "plugin/TimingBlock.hpp"
 #include "plugin/Vampirism.hpp"
-
-#include <numbers>
 #include <plugin/ProjectileBlock.hpp>
 
 namespace Hooks {
@@ -139,8 +142,20 @@ auto update_actor(RE::Character& character, const float delta, const Reflyem::Co
     }
   }
 
+  if (config.followers_summons_apply_spell().enable()) {
+    Reflyem::FollowersSummonsApplySpell::update(&character);
+  }
+
   if (config.stagger_system().enable()) {
     Reflyem::StaggerSystem::update(&character, delta);
+  }
+
+  if (config.crit_revised().enable()) {
+    Reflyem::CritRevised::update(&character, delta);
+  }
+
+  if (config.combo_series().enable()) {
+    Reflyem::ComboSeries::update(&character, delta);
   }
 
   if (config.caster_additions().enable() && config.caster_additions().enable_rally_manacost()) {
@@ -417,6 +432,10 @@ auto on_modify_actor_value(RE::ValueModifierEffect* this_, RE::Actor* actor, flo
 
   if (config.magick_crit().enable()) {
     Reflyem::Crit::modify_actor_value(this_, actor, value, av, config);
+  }
+
+  if (config.crit_revised().enable() && config.crit_revised().enable_magick_crit()) {
+    Reflyem::CritRevised::modify_actor_value(this_, actor, value, av, config);
   }
 
   if (config.cheat_death().enable() && config.cheat_death().magick()) {
@@ -1405,11 +1424,23 @@ auto OnDrinkPotion::drink_potion(RE::Actor* this_, RE::AlchemyItem* potion, RE::
 
   letr config = Reflyem::Config::get_singleton();
   if (config.potions_drink_limit().enable()) {
-    return Reflyem::PotionsDrinkLimit::drink_potion(this_, potion, extra_data_list, config) &&
-           drink_potion_(this_, potion, extra_data_list);
+    let limit_drink_result = Reflyem::PotionsDrinkLimit::drink_potion(this_, potion, extra_data_list, config);
+    if (!limit_drink_result) {
+      return false;
+    }
+    let result = drink_potion_(this_, potion, extra_data_list);
+    if (config.cast_on_drink().enable() && result && limit_drink_result) {
+      Reflyem::CastOnDrink::drink_potion(this_, potion, extra_data_list, config);
+    }
+    return limit_drink_result && result;
   }
 
-  return drink_potion_(this_, potion, extra_data_list);
+  let result = drink_potion_(this_, potion, extra_data_list);
+  if (config.cast_on_drink().enable() && result) {
+    Reflyem::CastOnDrink::drink_potion(this_, potion, extra_data_list, config);
+  }
+
+  return result;
 }
 auto OnShoutHandler::process_button(RE::ShoutHandler* handler,
                                     RE::ButtonEvent* button_event,
@@ -1997,6 +2028,14 @@ auto OnMagicHit::on_magic_hit_01(RE::MagicCaster* magic_caster,
     Reflyem::StaggerSystem::on_magic_hit(projectile, refr_target);
   }
 
+  if (config.crit_revised().enable() && config.crit_revised().enable_magick_crit()) {
+    Reflyem::CritRevised::on_magic_hit(projectile, refr_target);
+  }
+
+  if (config.combo_series().enable()) {
+    Reflyem::ComboSeries::on_magic_hit(projectile, refr_target);
+  }
+
   if (Reflyem::ProjectileBlock::on_magic_hit(magic_caster, ni_point3, projectile, refr_target, a5, a6, a7, a8)) {
     return;
   }
@@ -2026,6 +2065,14 @@ auto OnMagicHit::on_magic_hit_02(RE::MagicCaster* magic_caster,
     Reflyem::StaggerSystem::on_magic_hit(projectile, refr_target);
   }
 
+  if (config.crit_revised().enable() && config.crit_revised().enable_magick_crit()) {
+    Reflyem::CritRevised::on_magic_hit(projectile, refr_target);
+  }
+
+  if (config.combo_series().enable()) {
+    Reflyem::ComboSeries::on_magic_hit(projectile, refr_target);
+  }
+
   if (Reflyem::ProjectileBlock::on_magic_hit(magic_caster, ni_point3, projectile, refr_target, a5, a6, a7, a8)) {
     return;
   }
@@ -2045,6 +2092,24 @@ auto OnActorIsOverEncumbered::is_actor_on_mount(RE::Actor* actor) -> bool
     return true;
   }
   return is_actor_on_mount_(actor);
+}
+
+auto OnNumberEnchantAllowed::number_enchant(RE::CraftingSubMenus::EnchantConstructMenu* menu) -> void
+{
+  logi("Number enchant");
+  if (menu && menu->craftItemPreview && menu->craftItemPreview->object) {
+    logi("SetNumberCraft for: {} - {}",
+         menu->craftItemPreview->object->GetFormEditorID(),
+         menu->craftItemPreview->object->GetName());
+    menu->selected.numEnchantmentsAllowed = 3;
+  }
+  if (menu && menu->selected.item && menu->selected.item->data && menu->selected.item->data->object) {
+    logi("SetNumberSelect for: {} - {}",
+         menu->selected.item->data->object->GetFormEditorID(),
+         menu->selected.item->data->object->GetName());
+    menu->selected.numEnchantmentsAllowed = 3;
+  }
+  number_enchant_(menu);
 }
 
 auto OnGetCombatStyleForCheckOffensiveMult::get_combat_style(RE::Character* character) -> RE::TESCombatStyle*
@@ -2388,6 +2453,86 @@ auto OnRegenerationPermanentValue::calculate_regeneration_value_stamina(RE::Acto
   return calculate_regeneration_value_stamina_(actor, delta);
 }
 
+auto OnIsSneakingDetection::is_sneaking_update(RE::Actor* actor) -> bool
+{
+
+  if (!actor) {
+    return is_sneaking_update_(actor);
+  }
+
+  if (!actor->IsPlayerRef()) {
+    return is_sneaking_update_(actor);
+  }
+
+  letr config = Reflyem::Config::get_singleton();
+  if (config.special_techniques().enable() &&
+      Reflyem::Core::try_has_absolute_keyword(actor, config.special_techniques().keyword_always_sneak())) {
+    return true;
+  }
+  return is_sneaking_update_(actor);
+}
+
+auto OnIsSneakingDetection::is_sneaking_check_flag01(RE::ActorState* actor_state, std::uint16_t flag) -> bool
+{
+
+  let player = RE::PlayerCharacter::GetSingleton();
+  letr config = Reflyem::Config::get_singleton();
+  if (player && config.special_techniques().enable() &&
+      Reflyem::Core::try_has_absolute_keyword(player, config.special_techniques().keyword_always_sneak())) {
+    return true;
+  }
+
+  return is_sneaking_check_flag01_(actor_state, flag);
+}
+
+auto OnIsSneakingDetection::is_sneaking_check_flag02(RE::ActorState* actor_state, std::uint16_t flag) -> bool
+{
+  let player = RE::PlayerCharacter::GetSingleton();
+  letr config = Reflyem::Config::get_singleton();
+  if (player && config.special_techniques().enable() &&
+      Reflyem::Core::try_has_absolute_keyword(player, config.special_techniques().keyword_always_sneak())) {
+    return true;
+  }
+
+  return is_sneaking_check_flag02_(actor_state, flag);
+}
+
+auto OnIsSneakingDetection::is_sneaking_detection_calc01(RE::Actor* actor) -> bool
+{
+  if (!actor) {
+    return is_sneaking_detection_calc01_(actor);
+  }
+
+  if (!actor->IsPlayerRef()) {
+    return is_sneaking_detection_calc01_(actor);
+  }
+
+  letr config = Reflyem::Config::get_singleton();
+  if (config.special_techniques().enable() &&
+      Reflyem::Core::try_has_absolute_keyword(actor, config.special_techniques().keyword_always_sneak())) {
+    return true;
+  }
+  return is_sneaking_detection_calc01_(actor);
+}
+
+auto OnIsSneakingDetection::is_sneaking_detection_calc02(RE::Actor* actor) -> bool
+{
+  if (!actor) {
+    return is_sneaking_detection_calc02_(actor);
+  }
+
+  if (!actor->IsPlayerRef()) {
+    return is_sneaking_detection_calc02_(actor);
+  }
+
+  letr config = Reflyem::Config::get_singleton();
+  if (config.special_techniques().enable() &&
+      Reflyem::Core::try_has_absolute_keyword(actor, config.special_techniques().keyword_always_sneak())) {
+    return true;
+  }
+  return is_sneaking_detection_calc02_(actor);
+}
+
 auto OnRegenerationPermanentValue::calculate_regeneration_value_health(RE::Character* character, RE::ActorValue av)
     -> float
 {
@@ -2411,6 +2556,38 @@ auto OnArrowCallHit::arrow_call_hit(RE::Character* attacker,
                                     bool is_left) -> void
 {
   return arrow_call_hit_(attacker, target, projectile, is_left);
+}
+
+auto OnCalculateCritChancePerkEntry::get_base_crit_chance(RE::ActorValueOwner* owner, RE::TESObjectWEAP* weapon, int a3)
+    -> float
+{
+  let result = get_base_crit_chance_(owner, weapon, a3);
+  letr config = Reflyem::Config::get_singleton();
+  if (config.crit_revised().enable() && config.crit_revised().enable_weapon_crit()) {
+    return -1000.f;
+  }
+  return result;
+}
+
+auto OnEffectElapsedTimeReset::effect_elapsed_time_reset(RE::ActiveEffect* active_effect) -> void
+{
+  logi("OnEffectElapsedTimeReset HooK");
+  if (active_effect && active_effect->spell && active_effect->caster && active_effect->effect &&
+      active_effect->effect->baseEffect) {
+    logi("SpellEffectName: {} : EffectName: {} Caster: {} EditorSpell: {} EditorEffect: {} EditorCaster: {}",
+         active_effect->spell->GetFullName(),
+         active_effect->effect->baseEffect->GetFullName(),
+         active_effect->caster.get()->GetDisplayFullName(),
+         active_effect->spell->GetFormEditorID(),
+         active_effect->effect->baseEffect->GetFormEditorID(),
+         active_effect->caster.get()->GetFormEditorID());
+  }
+  if (active_effect) {
+    logi("OnEffectElapsedTimeReset: Pad86 {} Pad8C {} ", active_effect->pad86, active_effect->pad8C);
+    active_effect->pad86 = active_effect->pad86 + 1;
+    active_effect->pad8C = active_effect->pad8C + 1;
+  }
+  return effect_elapsed_time_reset_(active_effect);
 }
 
 auto OnAttackIsBlocked::is_blocked(RE::Actor* target,
@@ -2802,12 +2979,20 @@ auto OnWeaponHit::weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void
     Reflyem::CastOnGetHit::on_weapon_hit(target, hit_data, config);
   }
 
+  if (config.combo_series().enable()) {
+    Reflyem::ComboSeries::on_weapon_hit(hit_data, target);
+  }
+
   if (config.magic_weapon().enable()) {
     Reflyem::MagicWeapon::on_weapon_hit(*target, hit_data);
   }
 
   if (config.weapon_crit().enable()) {
     Reflyem::Crit::on_weapon_hit(target, hit_data, config);
+  }
+
+  if (config.crit_revised().enable() && config.crit_revised().enable_weapon_crit()) {
+    Reflyem::CritRevised::on_weapon_hit(hit_data, target);
   }
 
   if (config.resource_manager().enable() && config.resource_manager().block_spend_enable() &&
@@ -2866,6 +3051,10 @@ auto OnWeaponHit::weapon_hit(RE::Actor* target, RE::HitData& hit_data) -> void
   }
 
   Reflyem::Vampirism::on_weapon_hit(target, hit_data, config);
+
+  if (config.spell_strike_effect().enable()) {
+    Reflyem::SpellStrikeEffect::on_weapon_hit(target, hit_data, config);
+  }
 
   if (config.leech_effect().enable()) {
     Reflyem::LeechEffect::on_weapon_hit(target, hit_data, config);
@@ -3316,8 +3505,17 @@ auto OnActorValueOwner::get_actor_value_npc(RE::ActorValueOwner* this_, RE::Acto
     return Reflyem::EquipLoad::get_actor_value(*this_, av).value_or(get_actor_value_npc_(this_, av));
   }
 
+  get_av_call_count = 0;
+  auto map = Reflyem::SpecialTechniques::get_actor_value_map(this_);
+
   if (av == RE::ActorValue::kSpeedMult) {
-    let default_speed_mult = get_actor_value_npc_(this_, av);
+    auto default_speed_mult = get_actor_value_npc_(this_, av);
+
+    if (config.special_techniques().enable()) {
+      if (map.contains(av)) {
+        default_speed_mult = get_map_av(av, actor, map, false) + default_speed_mult;
+      }
+    }
 
     let speed_mult =
         config.speed_mult_cap().enable()
@@ -3341,12 +3539,18 @@ auto OnActorValueOwner::get_actor_value_npc(RE::ActorValueOwner* this_, RE::Acto
     return speed_mult;
   }
 
-  if (av == RE::ActorValue::kDamageResist && config.special_techniques().enable() &&
-      config.special_techniques().keyword_add_speed_mult_to_damage_resist() && actor) {
-    let speed_mult = actor->GetActorValue(RE::ActorValue::kSpeedMult);
-    if (speed_mult > 0.f && config.special_techniques().add_speed_mult_to_damage_resist_mult() > 0.f) {
-      return (speed_mult * config.special_techniques().add_speed_mult_to_damage_resist_mult()) +
-             get_actor_value_npc_(this_, av);
+  // if (av == RE::ActorValue::kDamageResist && config.special_techniques().enable() &&
+  //     config.special_techniques().keyword_add_speed_mult_to_damage_resist() && actor) {
+  //   let speed_mult = actor->GetActorValue(RE::ActorValue::kSpeedMult);
+  //   if (speed_mult > 0.f && config.special_techniques().add_speed_mult_to_damage_resist_mult() > 0.f) {
+  //     return (speed_mult * config.special_techniques().add_speed_mult_to_damage_resist_mult()) +
+  //            get_actor_value_npc_(this_, av);
+  //   }
+  // }
+
+  if (config.special_techniques().enable()) {
+    if (map.contains(av)) {
+      return get_map_av(av, actor, map, false) + get_actor_value_npc_(this_, av);
     }
   }
 
@@ -3396,8 +3600,17 @@ auto OnActorValueOwner::get_actor_value_pc(RE::ActorValueOwner* this_, RE::Actor
     return Reflyem::EquipLoad::get_actor_value(*this_, av).value_or(get_actor_value_pc_(this_, av));
   }
 
+  get_av_call_count = 0;
+  auto map = Reflyem::SpecialTechniques::get_actor_value_map(this_);
+
   if (av == RE::ActorValue::kSpeedMult) {
-    let default_speed_mult = get_actor_value_pc_(this_, av);
+    auto default_speed_mult = get_actor_value_pc_(this_, av);
+
+    if (config.special_techniques().enable()) {
+      if (map.contains(av)) {
+        default_speed_mult = get_map_av(av, actor, map, true) + default_speed_mult;
+      }
+    }
 
     let speed_mult =
         config.speed_mult_cap().enable()
@@ -3421,12 +3634,18 @@ auto OnActorValueOwner::get_actor_value_pc(RE::ActorValueOwner* this_, RE::Actor
     return speed_mult;
   }
 
-  if (av == RE::ActorValue::kDamageResist && config.special_techniques().enable() &&
-      config.special_techniques().keyword_add_speed_mult_to_damage_resist() && actor) {
-    let speed_mult = actor->GetActorValue(RE::ActorValue::kSpeedMult);
-    if (speed_mult > 0.f && config.special_techniques().add_speed_mult_to_damage_resist_mult() > 0.f) {
-      return (speed_mult * config.special_techniques().add_speed_mult_to_damage_resist_mult()) +
-             get_actor_value_npc_(this_, av);
+  // if (av == RE::ActorValue::kDamageResist && config.special_techniques().enable() &&
+  //     config.special_techniques().keyword_add_speed_mult_to_damage_resist() && actor) {
+  //   let speed_mult = actor->GetActorValue(RE::ActorValue::kSpeedMult);
+  //   if (speed_mult > 0.f && config.special_techniques().add_speed_mult_to_damage_resist_mult() > 0.f) {
+  //     return (speed_mult * config.special_techniques().add_speed_mult_to_damage_resist_mult()) +
+  //            get_actor_value_npc_(this_, av);
+  //   }
+  // }
+
+  if (config.special_techniques().enable()) {
+    if (map.contains(av)) {
+      return get_map_av(av, actor, map, true) + get_actor_value_pc_(this_, av);
     }
   }
 
@@ -3596,11 +3815,15 @@ auto install_hooks() -> void
   OnActorEquipManagerEquipSpell::install_hook(trampoline);
   OnCalculateCurrentCost::install_hook(trampoline);
   OnApplyVoiceAbility::install_hook(trampoline);
+  // OnNumberEnchantAllowed::install_hook(trampoline);
   OnActorEquipManagerEquipShout::install_hook(trampoline);
   // OnEquipSpellMenu::install_hook(trampoline);
   OnEquipSpell47C5D7::install_hook(trampoline);
   OnHealthMagickaStaminaRegeneration::install_hook(trampoline);
   OnApplySpellsFromAttack::install_hook(trampoline);
+  OnEffectElapsedTimeReset::install_hook(trampoline);
+  OnCalculateCritChancePerkEntry::install_hook(trampoline);
+  OnIsSneakingDetection::install_hook(trampoline);
   // OnFillCasterEnchantData::install_hook(trampoline);
   OnActorAddRemoveItems::install_hook();
   // OnShoutHandler::install_hook();

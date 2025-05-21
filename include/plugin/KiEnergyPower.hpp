@@ -31,6 +31,8 @@ auto CallKiSummonsHandle(RE::StaticFunctionTag*) -> void;
 
 auto ModifyKiEnergyCooldown(RE::StaticFunctionTag*, RE::Actor* actor, const float amount, const bool closest) -> void;
 
+auto SpendKiEnergy(RE::StaticFunctionTag*, RE::Actor* actor, const int cost) -> void;
+
 auto GetAvailableKiEnergy(RE::StaticFunctionTag*, RE::Actor* actor) -> int;
 
 } // namespace Reflyem::PotionsDrinkLimit

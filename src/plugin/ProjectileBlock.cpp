@@ -1,5 +1,8 @@
 ﻿#include "plugin/ProjectileBlock.hpp"
+
+#include "ComboSeries.hpp"
 #include "Core.hpp"
+#include "CritRevised.hpp"
 #include "JoshuaSawyerArmorSystem.hpp"
 #include "MagicBlocker.hpp"
 #include "ResourceManager.hpp"
@@ -997,6 +1000,14 @@ auto process_projectile_block(RE::Actor* blocker,
 
   if (result && config.stagger_system().enable()) {
     StaggerSystem::on_magic_hit(projectile, blocker);
+  }
+
+  if (result && config.crit_revised().enable() && config.crit_revised().enable_magick_crit()) {
+    CritRevised::on_magic_hit(projectile, blocker);
+  }
+
+  if (result && config.combo_series().enable()) {
+    ComboSeries::on_magic_hit(projectile, blocker);
   }
   
   return result;

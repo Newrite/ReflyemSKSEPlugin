@@ -72,6 +72,7 @@ struct ActorsCache final
     BaseCooldown ki_energy_cooldown_timers[KI_ENERGY_ARRAY_SIZE]{};
 
 private:
+    
     float last_delta_update_{0.f};
     float slow_time_duration_{0.f};
 
@@ -130,6 +131,12 @@ private:
     std::uint8_t poise_recovery_actions_{0};
     bool poise_in_recovery_{false};
 
+    float combo_series_points_{0.f};
+    float combo_series_timer_{0.f};
+
+    bool is_critical_frame_{false};
+    bool is_critical_casted_frame_{false};
+
     uint64_t last_tick_count_{GetTickCount64()};
 
     static constexpr auto mod(auto& value, const auto delta) -> void
@@ -164,6 +171,8 @@ public:
     auto mod_poise_recovery_time(const float delta) -> void { mod(poise_recovery_time_, delta); }
     
     auto mod_poise_damage_cooldown(const float delta) -> void { mod(poise_damage_cooldown_, delta); }
+    
+    auto mod_combo_series_timer(const float delta) -> void { mod(combo_series_timer_, delta); }
 
     auto mod_potions_cooldown_timers(const float delta) -> void
     {
@@ -376,6 +385,20 @@ public:
       slow_after_block_hit_flag_ = slow_after_block_hit_flag;
     }
 
+    [[nodiscard]] bool is_critical_frame() const { return is_critical_frame_; }
+
+    void is_critical_frame(const bool is_critical_frame)
+    {
+      is_critical_frame_ = is_critical_frame;
+    }
+
+    [[nodiscard]] bool is_critical_casted_frame() const { return is_critical_casted_frame_; }
+
+    void is_critical_casted_frame(const bool is_critical_casted_frame)
+    {
+      is_critical_casted_frame_ = is_critical_casted_frame;
+    }
+
     [[nodiscard]] float leech_accumulator() const { return leech_accumulator_; }
 
     void leech_accumulator(const float leech_accumulator)
@@ -476,6 +499,14 @@ public:
     void bash_parry_timer(const float bash_parry_timer) { set(bash_parry_timer_, bash_parry_timer); }
 
     [[nodiscard]] float bash_parry_timer_no_hit() const { return bash_parry_timer_no_hit_; }
+
+    void combo_series_timer(const float combo_series_timer) { set(combo_series_timer_, combo_series_timer); }
+
+    [[nodiscard]] float combo_series_timer() const { return combo_series_timer_; }
+
+    void combo_series_points(const float combo_series_points) { set(combo_series_points_, combo_series_points); }
+
+    [[nodiscard]] float combo_series_points() const { return combo_series_points_; }
     
     void rally_magicka_cost(const float rally_magicka_cost) { set(rally_magicka_cost_, rally_magicka_cost); }
 
@@ -520,7 +551,7 @@ public:
     void last_tick_count_refresh() { last_tick_count_ = GetTickCount64(); }
 
     // function
-    auto update_handler(RE::Character& character, const float delta) -> void
+    auto update_handler(RE::Character&, const float delta) -> void
     {
       const auto negative_delta = -std::abs(delta);
       mod_bash_parry_timer(negative_delta);
@@ -545,6 +576,7 @@ public:
       mod_absorb_shield_degen_delay(negative_delta);
       mod_poise_damage_cooldown(negative_delta);
       mod_poise_recovery_time(negative_delta);
+      mod_combo_series_timer(negative_delta);
     }
   };
 
@@ -556,7 +588,7 @@ public:
   std::mutex mutex_;
   static constexpr uint32_t LABEL = 'ACCA';
   // ReSharper disable once CppVariableCanBeMadeConstexpr
-  static const int32_t SERIALIZATION_VERSION = 15;
+  static const int32_t SERIALIZATION_VERSION = 17;
 
   [[nodiscard]] static auto is_garbage(const Data& data) -> bool
   {
@@ -755,6 +787,8 @@ auto bound_data_comparer(const RE::TESBoundObject::BOUND_DATA& bound_data, const
 
 auto get_random_int() -> int;
 
+auto get_random_float() -> float;
+
 auto actor_from_ni_pointer(const RE::NiPointer<RE::TESObjectREFR>* ni_actor) -> RE::Actor*;
 
 auto actor_from_actor_handle(const RE::ActorHandle* handle) -> RE::Actor*;
@@ -803,9 +837,11 @@ auto try_get_effects_by_keyword(RE::Actor* actor, const RE::BGSKeyword* keyword)
 
 auto is_menu_allow() -> bool;
 
-auto get_dual_value_mult(const RE::ValueModifierEffect& active_effect) -> float;
+auto get_second_av_weight_from_effect(const RE::ActiveEffect& active_effect) -> float;
 
-auto get_second_av(const RE::ActiveEffect& active_effect) -> RE::ActorValue;
+auto get_second_av_from_effect(const RE::ActiveEffect& active_effect) -> RE::ActorValue;
+
+auto get_av_from_effect(const RE::ActiveEffect& active_effect) -> RE::ActorValue;
 
 auto getting_damage_mult(RE::Actor& actor) -> float;
 
@@ -908,6 +944,8 @@ auto cast_on_handle_formlists(RE::BGSListForm* keywords,
                               CastExtraInfo extra = kNone, const float effect_mult = 1.f) -> void;
 
 auto is_blocking(RE::Actor* actor) -> bool;
+
+auto vector_keyword_form_exist(std::vector<RE::BGSKeyword*>* vector, const RE::BGSKeyword* value) -> bool;
 
 auto is_power_attacking(RE::Actor& actor) -> bool;
 

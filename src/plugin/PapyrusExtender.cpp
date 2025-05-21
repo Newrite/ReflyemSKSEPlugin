@@ -206,6 +206,7 @@ auto register_functions(RE::BSScript::IVirtualMachine* vm) -> bool
       "SetAbsorbShieldValueDegenDelay", SCRIPT_NAMESPACE, AbsorbShield::Papyrus::SetAbsorbShieldValueDegenDelay, vm);
   vm->RegisterFunction("GetAvailablePotions", SCRIPT_NAMESPACE, PotionsDrinkLimit::GetAvailablePotions, vm);
   vm->RegisterFunction("ModifyKiEnergyCooldown", SCRIPT_NAMESPACE, KiEnergyPower::ModifyKiEnergyCooldown, vm);
+  vm->RegisterFunction("SpendKiEnergy", SCRIPT_NAMESPACE, KiEnergyPower::SpendKiEnergy, vm);
   vm->RegisterFunction("CallKiSummonsHandle", SCRIPT_NAMESPACE, KiEnergyPower::CallKiSummonsHandle, vm);
   vm->RegisterFunction("GetMaxHealth", SCRIPT_NAMESPACE, GetMaxHealth, vm);
   vm->RegisterFunction("GetMaxStamina", SCRIPT_NAMESPACE, GetMaxStamina, vm);

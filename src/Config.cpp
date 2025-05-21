@@ -105,6 +105,7 @@ constexpr inline std::string_view MagickaCapKeywordId = "MagickaCapKeywordId";
 constexpr inline std::string_view MagickaDurationKeywordId = "MagickaDurationKeywordId";
 constexpr inline std::string_view OtherCapKeywordId = "OtherCapKeywordId";
 constexpr inline std::string_view OtherDurationKeywordId = "OtherDurationKeywordId";
+constexpr inline std::string_view SummonSplitNoCasterKeywordId = "SummonSplitNoCasterKeywordId";
 constexpr inline std::string_view SummonSplitKeywordId = "SummonSplitKeywordId";
 constexpr inline std::string_view StorageFormId = "StorageFormId";
 constexpr inline std::string_view EnableEnderal = "EnableEnderal";
@@ -276,6 +277,16 @@ constexpr inline std::string_view MGEFMagickaKeywordId = "MGEFMagickaKeywordId";
 constexpr inline std::string_view WeaponCrit = "WeaponCrit";
 constexpr inline std::string_view ActorValueIndexCritChance = "ActorValueIndexCritChance";
 constexpr inline std::string_view ActorValueIndexCritDamage = "ActorValueIndexCritDamage";
+constexpr inline std::string_view EnableDamageAv = "EnableDamageAv";
+constexpr inline std::string_view EnableChanceAv = "EnableChanceAv";
+constexpr inline std::string_view EnableWeaponCrit = "EnableWeaponCrit";
+constexpr inline std::string_view EnableMagickCrit = "EnableMagickCrit";
+constexpr inline std::string_view KeywordCritDamage = "KeywordCritDamage";
+constexpr inline std::string_view KeywordCritChance = "KeywordCritChance";
+constexpr inline std::string_view WeaponCritSound = "WeaponCritSound";
+constexpr inline std::string_view MagickCritSound = "MagickCritSound";
+constexpr inline std::string_view CastSpells = "CastSpells";
+constexpr inline std::string_view CastKeywords = "CastKeywords";
 constexpr inline std::string_view CastOnCrit = "CastOnCrit";
 constexpr inline std::string_view FormListSpellsId = "FormListSpellsId";
 constexpr inline std::string_view WeaponCritFormListSpellsId = "WeaponCritFormListSpellsId";
@@ -441,11 +452,13 @@ constexpr inline std::string_view MagicWeapon = "MagicWeapon";
 constexpr inline std::string_view KeywordId = "KeywordId";
 constexpr inline std::string_view MustBeOrNotBe = "MustBeOrNotBe";
 constexpr inline std::string_view MagickCrit = "MagickCrit";
+constexpr inline std::string_view CritRevised = "CritRevised";
 constexpr inline std::string_view CastOnBlock = "CastOnBlock";
 constexpr inline std::string_view CastOnTimingBlock = "CastOnTimingBlock";
 constexpr inline std::string_view CastOnBlockParry = "CastOnBlockParry";
 constexpr inline std::string_view CastOnParryBash = "CastOnParryBash";
 constexpr inline std::string_view CastOnKill = "CastOnKill";
+constexpr inline std::string_view CastOnDrink = "CastOnDrink";
 constexpr inline std::string_view CastOnSoulTrap = "CastOnSoulTrap";
 constexpr inline std::string_view Clairvoyance = "Clairvoyance";
 constexpr inline std::string_view ClairvoyanceKey = "ClairvoyanceKey";
@@ -541,11 +554,17 @@ constexpr inline std::string_view PreHitFramePenalty = "PreHitFramePenalty";
 constexpr inline std::string_view EnableParryBash = "EnableParryBash";
 constexpr inline std::string_view ParryBash = "ParryBash";
 constexpr inline std::string_view EnablePreHitFrame = "EnablePreHitFrame";
+constexpr inline std::string_view StaggerEventNPC = "StaggerEventNPC";
+constexpr inline std::string_view StaggerEventPC = "StaggerEventPC";
+constexpr inline std::string_view StaggerPowerNPC = "StaggerPowerNPC";
+constexpr inline std::string_view StaggerPowerPC = "StaggerPowerPC";
 constexpr inline std::string_view EnableBashBlock = "EnableBashBlock";
 constexpr inline std::string_view EnableBashBlockWithTimingParryBlock = "EnableBashBlockWithTimingParryBlock";
 constexpr inline std::string_view EnableWeaponSwing = "EnableWeaponSwing";
 constexpr inline std::string_view StaminaCostMult = "StaminaCostMult";
 constexpr inline std::string_view AllowCastWithoutStamina = "AllowCastWithoutStamina";
+constexpr inline std::string_view KeywordActorValueToActorValueId = "KeywordActorValueToActorValueId";
+constexpr inline std::string_view KeywordAlwaysSneak = "KeywordAlwaysSneak";
 
 constexpr inline std::string_view StaggerSystem = "StaggerSystem";
 constexpr inline std::string_view PoiseRecoveryTimeId = "PoiseRecoveryTimeId";
@@ -582,6 +601,27 @@ constexpr inline std::string_view ListLargestSpellsRangedId = "ListLargestSpells
 constexpr inline std::string_view ListLargestKeywordsMagickId = "ListLargestKeywordsMagickId";
 constexpr inline std::string_view ListLargestKeywordsMeleeId = "ListLargestKeywordsMeleeId";
 constexpr inline std::string_view ListLargestKeywordsRangedId = "ListLargestKeywordsRangedId";
+
+constexpr inline std::string_view FollowersSummonsApplySpell = "FollowersSummonsApplySpell";
+constexpr inline std::string_view KeywordsToPlayerFromSummonsId = "KeywordsToPlayerFromSummonsId";
+constexpr inline std::string_view KeywordsToPlayerFromFollowersId = "KeywordsToPlayerFromFollowersId";
+constexpr inline std::string_view SpellsToPlayerFromSummonsId = "SpellsToPlayerFromSummonsId";
+constexpr inline std::string_view SpellsToPlayerFromFollowersId = "SpellsToPlayerFromFollowersId";
+constexpr inline std::string_view KeywordsFromPlayerToSummonsId = "KeywordsFromPlayerToSummonsId";
+constexpr inline std::string_view KeywordsFromPlayerToFollowersId = "KeywordsFromPlayerToFollowersId";
+constexpr inline std::string_view SpellsFromPlayerToSummonsId = "SpellsFromPlayerToSummonsId";
+constexpr inline std::string_view SpellsFromPlayerToFollowersId = "SpellsFromPlayerToFollowersId";
+
+constexpr inline std::string_view ComboSeries = "ComboSeries";
+constexpr inline std::string_view ListKeywordsWeaponId = "ListKeywordsWeaponId";
+constexpr inline std::string_view ListKeywordsPointId = "ListKeywordsPointId";
+constexpr inline std::string_view ListCastKeywordsId = "ListCastKeywordsId";
+constexpr inline std::string_view ListCastSpellsId = "ListCastSpellsId";
+constexpr inline std::string_view KeywordNoSourcePointId = "KeywordNoSourcePointId";
+constexpr inline std::string_view KeywordMagicProjectilePointId = "KeywordMagicProjectilePointId";
+constexpr inline std::string_view KeywordMagicProjectileDualCastPointId = "KeywordMagicProjectileDualCastPointId";
+constexpr inline std::string_view KeywordComboPointTimerId = "KeywordComboPointTimerId";
+constexpr inline std::string_view KeywordComboPointsId = "KeywordComboPointsId";
 
 Config::MagicShieldConfig::MagicShieldConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config)
 {
@@ -778,6 +818,10 @@ Config::WeaponCritConfig::WeaponCritConfig(toml::table& tbl, RE::TESDataHandler&
 {
   logger::info("config init: weapon crit"sv);
   enable_ = tbl[WeaponCrit][Enable].value_or(false);
+  let enable_revised = tbl[CritRevised][Enable].value_or(false);
+  if (enable_revised) {
+    enable_ = false;
+  }
   if (enable_) {
     chance_av_ = static_cast<RE::ActorValue>(tbl[WeaponCrit][ActorValueIndexCritChance].value_or(120));
     damage_av_ = static_cast<RE::ActorValue>(tbl[WeaponCrit][ActorValueIndexCritDamage].value_or(120));
@@ -798,6 +842,10 @@ Config::MagickCritConfig::MagickCritConfig(toml::table& tbl, RE::TESDataHandler&
   {
     logger::info("config init: magick crit"sv);
     enable_ = tbl[MagickCrit][Enable].value_or(false);
+    let enable_revised = tbl[CritRevised][Enable].value_or(false);
+    if (enable_revised) {
+      enable_ = false;
+    }
     if (enable_) {
       chance_av_ = static_cast<RE::ActorValue>(tbl[MagickCrit][ActorValueIndexCritChance].value_or(120));
       damage_av_ = static_cast<RE::ActorValue>(tbl[MagickCrit][ActorValueIndexCritDamage].value_or(120));
@@ -822,10 +870,51 @@ Config::MagickCritConfig::MagickCritConfig(toml::table& tbl, RE::TESDataHandler&
   }
 }
 
+Config::CritRevisedConfig::CritRevisedConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config)
+{
+  {
+    logger::info("config init: CritRevised"sv);
+    enable_ = tbl[CritRevised][Enable].value_or(false);
+    if (enable_) {
+      enable_weapon_crit_ = tbl[CritRevised][EnableWeaponCrit].value_or(false);
+      enable_magick_crit_ = tbl[CritRevised][EnableMagickCrit].value_or(false);
+      enable_chance_av_ = tbl[CritRevised][EnableChanceAv].value_or(false);
+      enable_damage_av_ = tbl[CritRevised][EnableDamageAv].value_or(false);
+      if (enable_chance_av_) {
+        chance_av_ = static_cast<RE::ActorValue>(tbl[CritRevised][ActorValueIndexCritChance].value_or(120));
+      }
+      if (enable_damage_av_) {
+        damage_av_ = static_cast<RE::ActorValue>(tbl[CritRevised][ActorValueIndexCritDamage].value_or(120));
+      }
+
+      keyword_immun_ =
+          get_tes_data(RE::BGSKeyword, tbl[CritRevised][KeywordImmunId].value<RE::FormID>().value(), config.mod_name());
+      keyword_damage_ = get_tes_data(
+          RE::BGSKeyword, tbl[CritRevised][KeywordCritDamage].value<RE::FormID>().value(), config.mod_name());
+      keyword_chance_ = get_tes_data(
+          RE::BGSKeyword, tbl[CritRevised][KeywordCritChance].value<RE::FormID>().value(), config.mod_name());
+
+      weapon_crit_sound_ = get_tes_data(
+          RE::BGSSoundDescriptorForm, tbl[CritRevised][WeaponCritSound].value<RE::FormID>().value(), config.mod_name());
+      magick_crit_sound_ = get_tes_data(
+          RE::BGSSoundDescriptorForm, tbl[CritRevised][MagickCritSound].value<RE::FormID>().value(), config.mod_name());
+
+      cast_spells_ =
+          get_tes_data(RE::BGSListForm, tbl[CritRevised][CastSpells].value<RE::FormID>().value(), config.mod_name());
+      cast_keywords_ =
+          get_tes_data(RE::BGSListForm, tbl[CritRevised][CastKeywords].value<RE::FormID>().value(), config.mod_name());
+    }
+  }
+}
+
 Config::CastOnCritConfig::CastOnCritConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config)
 {
   logger::info("config init: cast on crit"sv);
   enable_ = tbl[CastOnCrit][Enable].value_or(false);
+  let enable_revised = tbl[CritRevised][Enable].value_or(false);
+  if (enable_revised) {
+    enable_ = false;
+  }
   if ((config.weapon_crit().enable() || config.magick_crit().enable()) && enable_) {
     enable_weapon_ = tbl[CastOnCrit][EnableWeapon].value_or(false);
     physical_ = tbl[CastOnCrit][Physical].value_or(false);
@@ -1038,6 +1127,19 @@ Config::CastOnKillConfig::CastOnKillConfig(toml::table& tbl, RE::TESDataHandler&
     formlist_spells_ = data_handler.LookupForm<RE::BGSListForm>(form_spells_form_id.value(), config.mod_name());
   }
 }
+
+Config::CastOnDrinkConfig::CastOnDrinkConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config)
+{
+  logger::info("config init: CastOnDrinkConfig"sv);
+  enable_ = tbl[CastOnDrink][Enable].value_or(false);
+  if (enable_) {
+    const auto form_keywords_form_id = tbl[CastOnDrink][FormListKeywordId].value<RE::FormID>();
+    const auto form_spells_form_id = tbl[CastOnDrink][FormListSpellsId].value<RE::FormID>();
+    formlist_needkw_ = data_handler.LookupForm<RE::BGSListForm>(form_keywords_form_id.value(), config.mod_name());
+    formlist_spells_ = data_handler.LookupForm<RE::BGSListForm>(form_spells_form_id.value(), config.mod_name());
+  }
+}
+
 Config::CastOnSoulTrapConfig::CastOnSoulTrapConfig(toml::table& tbl,
                                                    RE::TESDataHandler& data_handler,
                                                    const Config& config)
@@ -1466,6 +1568,12 @@ Config::SpecialTechniquesConfig::SpecialTechniquesConfig(toml::table& tbl,
         tbl[SpecialTechniques][KeywordAddSpeedMultToDamageResist].value<RE::FormID>();
     keyword_add_speed_mult_to_damage_resist_ =
         data_handler.LookupForm<RE::BGSKeyword>(keyword_add_speed_mult_to_damage_resist_id.value(), config.mod_name());
+    keyword_actor_value_to_actor_value_ =
+        get_tes_data(RE::BGSKeyword,
+                     tbl[SpecialTechniques][KeywordActorValueToActorValueId].value<RE::FormID>().value(),
+                     config.mod_name());
+    keyword_always_sneak_ = get_tes_data(
+        RE::BGSKeyword, tbl[SpecialTechniques][KeywordAlwaysSneak].value<RE::FormID>().value(), config.mod_name());
 
     // enable_360_block_ = tbl[SpecialTechniques][Enable360PlayerBlock].value_or(false);
     dynamic_regeneration_health_ = tbl[SpecialTechniques][DynamicRegenerationHealth].value_or(false);
@@ -1532,6 +1640,10 @@ Config::TimingBlockConfig::TimingBlockConfig(toml::table& tbl, RE::TESDataHandle
     enable_sparks_ = tbl[TimingBlock][EnableSparks].value_or(false);
     parry_stagger_count_ = tbl[TimingBlock][ParryStaggerCount].value_or(3);
     parry_stagger_count_timer_ = tbl[TimingBlock][ParryStaggerCountTimer].value_or(10.f);
+    stagger_event_pc_ = tbl[TimingBlock][StaggerEventPC].value_or("staggerStart");
+    stagger_event_npc_ = tbl[TimingBlock][StaggerEventNPC].value_or("staggerStart");
+    stagger_power_pc_ = tbl[TimingBlock][StaggerPowerPC].value_or(5.f);
+    stagger_power_npc_ = tbl[TimingBlock][StaggerPowerNPC].value_or(5.f);
 
     const auto blank_activator_form_id = tbl[TimingBlock][BlankActivatorId].value<RE::FormID>();
     blank_activator_ = data_handler.LookupForm<RE::TESObjectACTI>(blank_activator_form_id.value(), config.mod_name());
@@ -1611,6 +1723,10 @@ Config::ParryBashConfig::ParryBashConfig(toml::table& tbl, RE::TESDataHandler& d
     enable_weapon_swing_ = tbl[ParryBash][EnableWeaponSwing].value_or(true);
     enable_vanilla_bash_ranged_ = tbl[ParryBash][EnableVanillaBashRanged].value_or(false);
     enable_precision_weapon_collide_ = tbl[ParryBash][EnablePrecisionWeaponCollide].value_or(true);
+    stagger_event_pc_ = tbl[ParryBash][StaggerEventPC].value_or("staggerStart");
+    stagger_event_npc_ = tbl[ParryBash][StaggerEventNPC].value_or("staggerStart");
+    stagger_power_pc_ = tbl[ParryBash][StaggerPowerPC].value_or(5.f);
+    stagger_power_npc_ = tbl[ParryBash][StaggerPowerNPC].value_or(5.f);
 
     const auto parry_keyword_form_id = tbl[ParryBash][ParryKeywordId].value<RE::FormID>();
     parry_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(parry_keyword_form_id.value(), config.mod_name());
@@ -1694,6 +1810,7 @@ Config::SoulLinkConfig::SoulLinkConfig(toml::table& tbl, RE::TESDataHandler& dat
     magick_ = tbl[SoulLink][Magick].value_or(false);
     const auto exclusive_keyword_id = tbl[SoulLink][ExclusiveKeywordId].value<RE::FormID>();
     const auto summon_split_keyword_id = tbl[SoulLink][SummonSplitKeywordId].value<RE::FormID>();
+    const auto summon_split_no_caster_keyword_id = tbl[SoulLink][SummonSplitNoCasterKeywordId].value<RE::FormID>();
 
     exclusive_keyword_ = data_handler.LookupForm<RE::BGSKeyword>(exclusive_keyword_id.value(), config.mod_name());
     summons_split_keyword_ =
@@ -2033,6 +2150,49 @@ Config::MiscFixesConfig::MiscFixesConfig(toml::table& tbl, RE::TESDataHandler&, 
   enable_enchants_ignore_absorb_ = tbl[MiscFixes][EnableEnchantsIgnoreAbsorb].value_or(false);
   enable_npc_always_spend_stamina_on_attack_ = tbl[MiscFixes][EnableNpcAlwaysSpendStaminaOnAttack].value_or(false);
 }
+
+Config::FollowersSummonsApplySpellConfig::FollowersSummonsApplySpellConfig(toml::table& tbl,
+                                                                           RE::TESDataHandler& data_handler,
+                                                                           const Config& config)
+{
+  logger::info("config init: FollowersSummonsApplySpellConfig"sv);
+  enable_ = tbl[FollowersSummonsApplySpell][Enable].value_or(false);
+  if (enable_) {
+    keywords_to_player_from_summons_ =
+        get_tes_data(RE::BGSListForm,
+                     tbl[FollowersSummonsApplySpell][KeywordsToPlayerFromSummonsId].value<RE::FormID>().value(),
+                     config.mod_name());
+    keywords_to_player_from_followers_ =
+        get_tes_data(RE::BGSListForm,
+                     tbl[FollowersSummonsApplySpell][KeywordsToPlayerFromFollowersId].value<RE::FormID>().value(),
+                     config.mod_name());
+    spells_to_player_from_summons_ =
+        get_tes_data(RE::BGSListForm,
+                     tbl[FollowersSummonsApplySpell][SpellsToPlayerFromSummonsId].value<RE::FormID>().value(),
+                     config.mod_name());
+    spells_to_player_from_followers_ =
+        get_tes_data(RE::BGSListForm,
+                     tbl[FollowersSummonsApplySpell][SpellsToPlayerFromFollowersId].value<RE::FormID>().value(),
+                     config.mod_name());
+    keywords_from_player_to_summons_ =
+        get_tes_data(RE::BGSListForm,
+                     tbl[FollowersSummonsApplySpell][KeywordsFromPlayerToSummonsId].value<RE::FormID>().value(),
+                     config.mod_name());
+    keywords_from_player_to_followers_ =
+        get_tes_data(RE::BGSListForm,
+                     tbl[FollowersSummonsApplySpell][KeywordsFromPlayerToFollowersId].value<RE::FormID>().value(),
+                     config.mod_name());
+    spells_from_player_to_summons_ =
+        get_tes_data(RE::BGSListForm,
+                     tbl[FollowersSummonsApplySpell][SpellsFromPlayerToSummonsId].value<RE::FormID>().value(),
+                     config.mod_name());
+    spells_from_player_to_followers_ =
+        get_tes_data(RE::BGSListForm,
+                     tbl[FollowersSummonsApplySpell][SpellsFromPlayerToFollowersId].value<RE::FormID>().value(),
+                     config.mod_name());
+  }
+}
+
 Config::PoisonReworkConfig::PoisonReworkConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config)
 {
   logger::info("config init: PoisonRework"sv);
@@ -2157,6 +2317,35 @@ Config::CastOnMagicProjectileGetHitConfig::CastOnMagicProjectileGetHitConfig(tom
   }
 }
 
+Config::ComboSeriesConfig::ComboSeriesConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config)
+{
+  logger::info("config init: ComboSeriesConfig"sv);
+  enable_ = tbl[ComboSeries][Enable].value_or(false);
+  if (enable_) {
+
+    list_keywords_weapon_ = get_tes_data(
+        RE::BGSListForm, tbl[ComboSeries][ListKeywordsWeaponId].value<RE::FormID>().value(), config.mod_name());
+    list_keywords_point_ = get_tes_data(
+        RE::BGSListForm, tbl[ComboSeries][ListKeywordsPointId].value<RE::FormID>().value(), config.mod_name());
+    list_cast_keywords_ = get_tes_data(
+        RE::BGSListForm, tbl[ComboSeries][ListCastKeywordsId].value<RE::FormID>().value(), config.mod_name());
+    list_cast_spells_ = get_tes_data(
+        RE::BGSListForm, tbl[ComboSeries][ListCastSpellsId].value<RE::FormID>().value(), config.mod_name());
+    keyword_no_source_point_ = get_tes_data(
+        RE::BGSKeyword, tbl[ComboSeries][KeywordNoSourcePointId].value<RE::FormID>().value(), config.mod_name());
+    keyword_magic_projectile_point_ = get_tes_data(
+        RE::BGSKeyword, tbl[ComboSeries][KeywordMagicProjectilePointId].value<RE::FormID>().value(), config.mod_name());
+    keyword_magic_projectile_dual_cast_point_ =
+        get_tes_data(RE::BGSKeyword,
+                     tbl[ComboSeries][KeywordMagicProjectileDualCastPointId].value<RE::FormID>().value(),
+                     config.mod_name());
+    keyword_combo_point_timer_ = get_tes_data(
+        RE::BGSKeyword, tbl[ComboSeries][KeywordComboPointTimerId].value<RE::FormID>().value(), config.mod_name());
+    keyword_combo_points_ = get_tes_data(
+        RE::BGSKeyword, tbl[ComboSeries][KeywordComboPointsId].value<RE::FormID>().value(), config.mod_name());
+  }
+}
+
 Config::AbsorbShieldConfig::AbsorbShieldConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config)
 {
   logger::info("config init: AbsorbShieldConfig"sv);
@@ -2173,7 +2362,7 @@ Config::AbsorbShieldConfig::AbsorbShieldConfig(toml::table& tbl, RE::TESDataHand
     base_mult_shield_value_from_max_magicka_ = tbl[AbsorbShield][BaseMultShieldValueFromMaxMagicka].value_or(0.f);
     base_mult_shield_value_from_armor_ = tbl[AbsorbShield][BaseMultShieldValueFromArmor].value_or(0.f);
     base_drain_shield_value_percent_ = tbl[AbsorbShield][BaseDrainShieldValuePercent].value_or(0.05f);
-    base_drain_shield_value_current_percent_ = tbl[AbsorbShield][BaseDrainShieldValuePercent].value_or(0.05f);
+    base_drain_shield_value_current_percent_ = tbl[AbsorbShield][BaseDrainShieldValueCurrentPercent].value_or(0.05f);
     base_drain_shield_value_flat_ = tbl[AbsorbShield][BaseDrainShieldValueFlat].value_or(2.f);
     base_shield_value_gettin_weapon_damage_ = tbl[AbsorbShield][BaseShieldValueGettinWeaponDamage].value_or(0.f);
     base_shield_value_gettin_magick_damage_ = tbl[AbsorbShield][BaseShieldValueGettinMagickDamage].value_or(0.f);
@@ -2478,6 +2667,7 @@ auto Config::load() -> void
   cast_on_timing_block_ = CastOnTimingBlockConfig{tbl, *data_handler, *this};
   cast_on_parry_bash_ = CastOnParryBashConfig{tbl, *data_handler, *this};
   cast_on_kill_ = CastOnKillConfig{tbl, *data_handler, *this};
+  cast_on_drink_ = CastOnDrinkConfig{tbl, *data_handler, *this};
   cast_on_soul_trap_ = CastOnSoulTrapConfig{tbl, *data_handler, *this};
   resource_manager_ = ResourceManagerConfig{tbl, *data_handler, *this};
   tk_dodge_ = TkDodgeConfig{tbl, *data_handler, *this};
@@ -2518,6 +2708,9 @@ auto Config::load() -> void
   spell_strike_effect_ = SpellStrikeEffectConfig{tbl, *data_handler, *this};
   bound_spell_swap_ = BoundSpellSwapConfig{tbl, *data_handler, *this};
   stagger_system_ = StaggerSystemConfig{tbl, *data_handler, *this};
+  followers_summons_apply_spell_ = FollowersSummonsApplySpellConfig{tbl, *data_handler, *this};
+  combo_series_ = ComboSeriesConfig{tbl, *data_handler, *this};
+  crit_revised_ = CritRevisedConfig{tbl, *data_handler, *this};
 
   logger::info("finish load config"sv);
 }

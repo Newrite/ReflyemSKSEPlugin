@@ -305,6 +305,44 @@ private:
     RE::BGSSoundDescriptorForm* crit_sound_;
   };
 
+  struct CritRevisedConfig final
+  {
+  public:
+    [[nodiscard]] bool enable() const { return enable_; }
+    [[nodiscard]] bool enable_damage_av() const { return enable_damage_av_; }
+    [[nodiscard]] bool enable_chance_av() const { return enable_chance_av_; }
+    [[nodiscard]] bool enable_weapon_crit() const { return enable_weapon_crit_; }
+    [[nodiscard]] bool enable_magick_crit() const { return enable_magick_crit_; }
+    [[nodiscard]] RE::ActorValue chance_av() const { return chance_av_; }
+    [[nodiscard]] RE::ActorValue damage_av() const { return damage_av_; }
+    [[nodiscard]] RE::BGSKeyword* keyword_immun() const { return keyword_immun_; }
+    [[nodiscard]] RE::BGSKeyword* keyword_damage() const { return keyword_damage_; }
+    [[nodiscard]] RE::BGSKeyword* keyword_chance() const { return keyword_chance_; }
+    [[nodiscard]] RE::BGSSoundDescriptorForm* weapon_crit_sound() const { return weapon_crit_sound_; }
+    [[nodiscard]] RE::BGSSoundDescriptorForm* magick_crit_sound() const { return magick_crit_sound_; }
+    [[nodiscard]] RE::BGSListForm* cast_spells() const { return cast_spells_; }
+    [[nodiscard]] RE::BGSListForm* cast_keywords() const { return cast_keywords_; }
+
+    CritRevisedConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
+    CritRevisedConfig() = default;
+
+  private:
+    bool enable_;
+    bool enable_damage_av_;
+    bool enable_chance_av_;
+    bool enable_weapon_crit_;
+    bool enable_magick_crit_;
+    RE::ActorValue chance_av_;
+    RE::ActorValue damage_av_;
+    RE::BGSKeyword* keyword_immun_;
+    RE::BGSKeyword* keyword_damage_;
+    RE::BGSKeyword* keyword_chance_;
+    RE::BGSSoundDescriptorForm* weapon_crit_sound_;
+    RE::BGSSoundDescriptorForm* magick_crit_sound_;
+    RE::BGSListForm* cast_spells_;
+    RE::BGSListForm* cast_keywords_;
+  };
+
   struct CastOnCritConfig final
   {
     [[nodiscard]] bool enable() const { return enable_; }
@@ -543,6 +581,23 @@ private:
     CastOnKillConfig() = default;
 
 private:
+    bool enable_;
+    RE::BGSListForm* formlist_spells_;
+    RE::BGSListForm* formlist_needkw_;
+  };
+
+  struct CastOnDrinkConfig final
+  {
+    [[nodiscard]] bool enable() const { return enable_; }
+
+    [[nodiscard]] RE::BGSListForm* formlist_spells() const { return formlist_spells_; }
+
+    [[nodiscard]] RE::BGSListForm* formlist_needkw() const { return formlist_needkw_; }
+
+    CastOnDrinkConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
+    CastOnDrinkConfig() = default;
+
+  private:
     bool enable_;
     RE::BGSListForm* formlist_spells_;
     RE::BGSListForm* formlist_needkw_;
@@ -1043,11 +1098,13 @@ private:
     [[nodiscard]] RE::BGSKeyword* no_block_rotate_keyword() const { return no_block_rotate_keyword_; }
     [[nodiscard]] RE::BGSKeyword* active_block_keyword() const { return active_block_keyword_; }
     [[nodiscard]] RE::BGSKeyword* stamina_cost_spell_keyword() const { return stamina_cost_spell_keyword_; }
+    [[nodiscard]] RE::BGSKeyword* keyword_actor_value_to_actor_value() const { return keyword_actor_value_to_actor_value_; }
     [[nodiscard]] RE::BGSKeyword* keyword_add_speed_mult_to_damage_resist() const
     {
       return keyword_add_speed_mult_to_damage_resist_;
     }
     [[nodiscard]] float add_speed_mult_to_damage_resist_mult() const { return add_speed_mult_to_damage_resist_mult_; }
+    [[nodiscard]] RE::BGSKeyword* keyword_always_sneak() const { return keyword_always_sneak_; }
 
     SpecialTechniquesConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     SpecialTechniquesConfig() = default;
@@ -1072,7 +1129,9 @@ private:
     float slow_after_block_hit_mult_;
     float slow_after_block_hit_duration_;
     RE::BGSKeyword* keyword_add_speed_mult_to_damage_resist_;
+    RE::BGSKeyword* keyword_actor_value_to_actor_value_;
     float add_speed_mult_to_damage_resist_mult_;
+    RE::BGSKeyword* keyword_always_sneak_;
   };
 
   struct ResistTweaksConfig final
@@ -1188,6 +1247,11 @@ private:
 
     [[nodiscard]] RE::Explosion* spark_halo() const { return spark_halo_; }
 
+    [[nodiscard]] std::string stagger_event_npc() const { return stagger_event_npc_; }
+    [[nodiscard]] float stagger_power_npc() const { return stagger_power_npc_; }
+    [[nodiscard]] std::string stagger_event_pc() const { return stagger_event_pc_; }
+    [[nodiscard]] float stagger_power_pc() const { return stagger_power_pc_; }
+
     TimingBlockConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     TimingBlockConfig() = default;
 
@@ -1212,6 +1276,10 @@ private:
     RE::Explosion* spark_;
     RE::Explosion* spark_flare_;
     RE::Explosion* spark_halo_;
+    std::string stagger_event_npc_;
+    float stagger_power_npc_;
+    std::string stagger_event_pc_;
+    float stagger_power_pc_;
   };
 
   struct EquipLoadConfig final
@@ -1287,6 +1355,11 @@ private:
 
     [[nodiscard]] RE::BGSKeyword* bash_block_keyword() const { return bash_block_keyword_; }
 
+    [[nodiscard]] std::string stagger_event_npc() const { return stagger_event_npc_; }
+    [[nodiscard]] float stagger_power_npc() const { return stagger_power_npc_; }
+    [[nodiscard]] std::string stagger_event_pc() const { return stagger_event_pc_; }
+    [[nodiscard]] float stagger_power_pc() const { return stagger_power_pc_; }
+
     ParryBashConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     ParryBashConfig() = default;
 
@@ -1306,6 +1379,10 @@ private:
     bool enable_bash_block_with_timing_parry_block_;
     RE::BGSKeyword* bash_block_keyword_;
     bool enable_vanilla_bash_ranged_;
+    std::string stagger_event_npc_;
+    float stagger_power_npc_;
+    std::string stagger_event_pc_;
+    float stagger_power_pc_;
   };
 
   struct ItemLimitConfig final
@@ -1536,7 +1613,10 @@ private:
     [[nodiscard]] RE::BGSListForm* ki_reservation_abilities() const { return ki_reservation_abilities_; }
     [[nodiscard]] bool enable_ki_summons() const { return enable_ki_summons_; }
     [[nodiscard]] RE::BGSListForm* ki_summons_list() const { return ki_summons_list_; }
-    [[nodiscard]] RE::BGSListForm* ki_reservation_abilities_no_condition() const { return ki_reservation_abilities_no_condition_; }
+    [[nodiscard]] RE::BGSListForm* ki_reservation_abilities_no_condition() const
+    {
+      return ki_reservation_abilities_no_condition_;
+    }
 
     KiEnergyPowerConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     KiEnergyPowerConfig() = default;
@@ -1787,6 +1867,40 @@ private:
     bool enable_npc_always_spend_stamina_on_attack_;
   };
 
+  struct FollowersSummonsApplySpellConfig final
+  {
+
+    [[nodiscard]] bool enable() const { return enable_; }
+    [[nodiscard]] RE::BGSListForm* keywords_to_player_from_summons() const { return keywords_to_player_from_summons_; }
+    [[nodiscard]] RE::BGSListForm* keywords_to_player_from_followers() const
+    {
+      return keywords_to_player_from_followers_;
+    }
+    [[nodiscard]] RE::BGSListForm* spells_to_player_from_summons() const { return spells_to_player_from_summons_; }
+    [[nodiscard]] RE::BGSListForm* spells_to_player_from_followers() const { return spells_to_player_from_followers_; }
+    [[nodiscard]] RE::BGSListForm* keywords_from_player_to_summons() const { return keywords_from_player_to_summons_; }
+    [[nodiscard]] RE::BGSListForm* keywords_from_player_to_followers() const
+    {
+      return keywords_from_player_to_followers_;
+    }
+    [[nodiscard]] RE::BGSListForm* spells_from_player_to_summons() const { return spells_from_player_to_summons_; }
+    [[nodiscard]] RE::BGSListForm* spells_from_player_to_followers() const { return spells_from_player_to_followers_; }
+
+    FollowersSummonsApplySpellConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
+    FollowersSummonsApplySpellConfig() = default;
+
+private:
+    bool enable_;
+    RE::BGSListForm* keywords_to_player_from_summons_;
+    RE::BGSListForm* keywords_to_player_from_followers_;
+    RE::BGSListForm* spells_to_player_from_summons_;
+    RE::BGSListForm* spells_to_player_from_followers_;
+    RE::BGSListForm* keywords_from_player_to_summons_;
+    RE::BGSListForm* keywords_from_player_to_followers_;
+    RE::BGSListForm* spells_from_player_to_summons_;
+    RE::BGSListForm* spells_from_player_to_followers_;
+  };
+
   struct PoisonReworkConfig final
   {
     [[nodiscard]] bool enable() const { return enable_; }
@@ -1949,6 +2063,38 @@ private:
     bool enable_;
     RE::BGSListForm* formlist_spells_;
     RE::BGSListForm* formlist_needkw_;
+  };
+
+  struct ComboSeriesConfig final
+  {
+
+    [[nodiscard]] bool enable() const { return enable_; }
+    [[nodiscard]] RE::BGSListForm* list_keywords_weapon() const { return list_keywords_weapon_; }
+    [[nodiscard]] RE::BGSListForm* list_keywords_point() const { return list_keywords_point_; }
+    [[nodiscard]] RE::BGSKeyword* keyword_no_source_point() const { return keyword_no_source_point_; }
+    [[nodiscard]] RE::BGSKeyword* keyword_magic_projectile_point() const { return keyword_magic_projectile_point_; }
+    [[nodiscard]] RE::BGSKeyword* keyword_magic_projectile_dual_cast_point() const
+    {
+      return keyword_magic_projectile_dual_cast_point_;
+    }
+    [[nodiscard]] RE::BGSKeyword* keyword_combo_point_timer() const { return keyword_combo_point_timer_; }
+    [[nodiscard]] RE::BGSKeyword* keyword_combo_points() const { return keyword_combo_points_; }
+    [[nodiscard]] RE::BGSListForm* list_cast_keywords() const { return list_cast_keywords_; }
+    [[nodiscard]] RE::BGSListForm* list_cast_spells() const { return list_cast_spells_; }
+
+    ComboSeriesConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
+    ComboSeriesConfig() = default;
+  private:
+    bool enable_;
+    RE::BGSListForm* list_keywords_weapon_;
+    RE::BGSListForm* list_keywords_point_;
+    RE::BGSListForm* list_cast_keywords_;
+    RE::BGSListForm* list_cast_spells_;
+    RE::BGSKeyword* keyword_no_source_point_;
+    RE::BGSKeyword* keyword_magic_projectile_point_;
+    RE::BGSKeyword* keyword_magic_projectile_dual_cast_point_;
+    RE::BGSKeyword* keyword_combo_point_timer_;
+    RE::BGSKeyword* keyword_combo_points_;
   };
 
   struct AbsorbShieldConfig final
@@ -2245,7 +2391,7 @@ private:
     float effect_cooldown_;
     RE::Explosion* hit_effect_;
   };
-  
+
   struct StaggerSystemConfig final
   {
 
@@ -2288,7 +2434,7 @@ private:
     StaggerSystemConfig(toml::table& tbl, RE::TESDataHandler& data_handler, const Config& config);
     StaggerSystemConfig() = default;
 
-  private:
+private:
     bool enable_;
 
     RE::BGSKeyword* poise_recovery_time_;
@@ -2301,7 +2447,7 @@ private:
     RE::BGSKeyword* poise_damage_cooldown_;
     RE::BGSKeyword* poise_damage_immunity_;
     RE::BGSKeyword* poise_regeneration_;
-    
+
     RE::BGSListForm* list_small_spells_magick_;
     RE::BGSListForm* list_small_spells_melee_;
     RE::BGSListForm* list_small_spells_ranged_;
@@ -2400,6 +2546,7 @@ private:
 
   // cast on kill bash
   CastOnKillConfig cast_on_kill_;
+  CastOnDrinkConfig cast_on_drink_;
 
   CastOnMagicProjectileHitConfig cast_on_magic_projectile_hit_;
 
@@ -2477,6 +2624,9 @@ private:
   LeechEffectConfig leech_effect_;
   SpellStrikeEffectConfig spell_strike_effect_;
   BoundSpellSwapConfig bound_spell_swap_;
+  FollowersSummonsApplySpellConfig followers_summons_apply_spell_;
+  ComboSeriesConfig combo_series_;
+  CritRevisedConfig crit_revised_;
 
   public:
   [[nodiscard]] static auto get_singleton() noexcept -> Config&;
@@ -2501,6 +2651,11 @@ private:
   [[nodiscard]] const RecoupEffectConfig& recoup_effect() const { return recoup_effect_; }
   [[nodiscard]] const LeechEffectConfig& leech_effect() const { return leech_effect_; }
   [[nodiscard]] const AbsorbShieldConfig& absorb_shield() const { return absorb_shield_; }
+  [[nodiscard]] const ComboSeriesConfig& combo_series() const { return combo_series_; }
+  [[nodiscard]] const FollowersSummonsApplySpellConfig& followers_summons_apply_spell() const
+  {
+    return followers_summons_apply_spell_;
+  }
   [[nodiscard]] const CastOnMagicProjectileGetHitConfig& cast_on_magic_projectile_get_hit() const
   {
     return cast_on_magic_projectile_get_hit_;
@@ -2530,6 +2685,8 @@ private:
   [[nodiscard]] const SpeedCastingConfig& speed_casting() const { return speed_casting_; }
 
   [[nodiscard]] const WeaponCritConfig& weapon_crit() const { return weapon_crit_; }
+  
+  [[nodiscard]] const CritRevisedConfig& crit_revised() const { return crit_revised_; }
 
   [[nodiscard]] const MagicBlockerConfig& magic_blocker() const { return magic_blocker_config_; }
 
@@ -2561,6 +2718,7 @@ private:
   [[nodiscard]] const ClairvoyanceConfig& clairvoyance() const { return clairvoyance_; }
 
   [[nodiscard]] const CastOnKillConfig& cast_on_kill() const { return cast_on_kill_; }
+  [[nodiscard]] const CastOnDrinkConfig& cast_on_drink() const { return cast_on_drink_; }
 
   [[nodiscard]] const CastOnDodgeConfig& cast_on_dodge() const { return cast_on_dodge_; }
 

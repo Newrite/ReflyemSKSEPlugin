@@ -67,10 +67,16 @@ auto parry_bash_handler(RE::Actor& target, RE::Actor& attacker, const Config& co
   if (attacker.IsPlayerRef() && config.slow_time().enable_on_parry_bash()) {
     SlowTime::start_slow_time(config);
   }
+
+  let stagger_event =
+      target.IsPlayerRef() ? config.parry_bash().stagger_event_pc() : config.parry_bash().stagger_event_npc();
+  let stagger_power =
+      target.IsPlayerRef() ? config.parry_bash().stagger_power_pc() : config.parry_bash().stagger_power_npc();
+
   cast_on_parry_bash(target, attacker, config);
   Core::play_sound(config.parry_bash().parry_sound(), &attacker);
-  target.SetGraphVariableFloat("StaggerMagnitude", 5.f);
-  target.NotifyAnimationGraph("staggerStart");
+  target.SetGraphVariableFloat("StaggerMagnitude", stagger_power);
+  target.NotifyAnimationGraph(stagger_event.c_str());
 }
 
 auto precision_pre_hit_callback(const PRECISION_API::PrecisionHitData& hit_data) -> PRECISION_API::PreHitCallbackReturn
@@ -79,6 +85,11 @@ auto precision_pre_hit_callback(const PRECISION_API::PrecisionHitData& hit_data)
   result.bIgnoreHit = false;
   const auto& config = Config::get_singleton();
   if (!hit_data.target || !hit_data.attacker || !config.parry_bash().enable()) {
+    return result;
+  }
+
+  if (Core::is_bashing(hit_data.attacker) && Core::try_has_absolute_keyword(hit_data.target->As<RE::Actor>(), config.parry_bash().parry_immun_keyword())) {
+    logger::debug("Target has immun"sv);
     return result;
   }
 
@@ -120,6 +131,11 @@ auto precision_weapons_collide_callback(const PRECISION_API::PrecisionHitData& h
     return result;
   }
 
+  if (Core::is_bashing(hit_data.attacker) && Core::try_has_absolute_keyword(hit_data.target->As<RE::Actor>(), config.parry_bash().parry_immun_keyword())) {
+    logger::debug("Target has immun"sv);
+    return result;
+  }
+
   if (hit_data.target->As<RE::Actor>() && config.parry_bash().enable_vanilla_bash_ranged() &&
       Core::is_bashing(hit_data.attacker) &&
       (Core::is_casting_actor(*hit_data.target->As<RE::Actor>()) ||
@@ -149,6 +165,11 @@ auto precision_weapons_collide_callback(const PRECISION_API::PrecisionHitData& h
 
 auto on_melee_collision(RE::Actor& attacker, RE::Actor& victim, const Config& config) -> bool
 {
+
+  if (Core::is_bashing(&attacker) && Core::try_has_absolute_keyword(&victim, config.parry_bash().parry_immun_keyword())) {
+    logger::debug("Target has immun"sv);
+    return true;
+  }
 
   if (config.parry_bash().enable_vanilla_bash_ranged() &&
       (Core::is_casting_actor(victim) || Core::is_bow_or_crossbow_attack_actor(victim))) {

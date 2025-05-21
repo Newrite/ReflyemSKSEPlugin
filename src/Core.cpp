@@ -37,6 +37,16 @@ auto get_random_int() -> int
   return uni(rng);
 }
 
+auto get_random_float() -> float
+{
+  // StackOverflow:
+  // https://stackoverflow.com/questions/5008804/generating-a-random-integer-from-a-range
+  static std::random_device rd;                          // Only used once to initialise (seed) engine
+  static std::mt19937 rng(rd());                         // Random-number engine used (Mersenne-Twister in this case)
+  static std::uniform_int_distribution<int> uni(1, 100); // Guaranteed unbiased
+  return static_cast<float>(uni(rng));
+}
+
 auto actor_from_ni_pointer(const RE::NiPointer<RE::TESObjectREFR>* ni_actor) -> RE::Actor*
 {
   if (!ni_actor) {
@@ -457,7 +467,7 @@ auto is_menu_allow() -> bool
   return true;
 }
 
-auto get_dual_value_mult(const RE::ValueModifierEffect& active_effect) -> float
+auto get_second_av_weight_from_effect(const RE::ActiveEffect& active_effect) -> float
 {
   if (!active_effect.effect || !active_effect.effect->baseEffect) {
     return 0.f;
@@ -465,7 +475,7 @@ auto get_dual_value_mult(const RE::ValueModifierEffect& active_effect) -> float
   return active_effect.effect->baseEffect->data.secondAVWeight;
 }
 
-auto get_second_av(const RE::ActiveEffect& active_effect) -> RE::ActorValue
+auto get_second_av_from_effect(const RE::ActiveEffect& active_effect) -> RE::ActorValue
 {
   if (!active_effect.effect || !active_effect.effect->baseEffect) {
     return RE::ActorValue::kNone;
@@ -476,6 +486,27 @@ auto get_second_av(const RE::ActiveEffect& active_effect) -> RE::ActorValue
   }
 
   return active_effect.effect->baseEffect->data.secondaryAV;
+}
+
+auto get_av_from_effect(const RE::ActiveEffect& active_effect) -> RE::ActorValue
+{
+  if (!active_effect.effect || !active_effect.effect->baseEffect) {
+    return RE::ActorValue::kNone;
+  }
+
+  if (active_effect.effect->baseEffect->HasArchetype(RE::EffectSetting::Archetype::kDualValueModifier)) {
+    return active_effect.effect->baseEffect->data.primaryAV;
+  }
+
+  if (active_effect.effect->baseEffect->HasArchetype(RE::EffectSetting::Archetype::kValueModifier)) {
+    return active_effect.effect->baseEffect->data.primaryAV;
+  }
+
+  if (active_effect.effect->baseEffect->HasArchetype(RE::EffectSetting::Archetype::kPeakValueModifier)) {
+    return active_effect.effect->baseEffect->data.primaryAV;
+  }
+
+  return RE::ActorValue::kNone;
 }
 
 auto set_av_regen_delay(RE::AIProcess* process, RE::ActorValue av, float time) -> void
@@ -1412,6 +1443,23 @@ auto is_blocking(RE::Actor* actor) -> bool
   }
 
   return result;
+}
+
+
+auto vector_keyword_form_exist(std::vector<RE::BGSKeyword*>* vector, const RE::BGSKeyword* value) -> bool
+{
+
+  if (!vector) {
+    return false;
+  }
+  
+  for (auto* vector_value : *vector) {
+    if (vector_value && vector_value == value) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 auto is_power_attacking(RE::Actor& actor) -> bool

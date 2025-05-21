@@ -195,7 +195,10 @@ auto is_allow_timing_block(RE::Actor& attacker,
   return true;
 }
 
-auto parry_stagger_handler(RE::Actor& attacker, RE::Actor& blocker, Core::ActorsCache::Data& actor_data, const Config& config) -> void
+auto parry_stagger_handler(RE::Actor& attacker,
+                           RE::Actor& blocker,
+                           Core::ActorsCache::Data& actor_data,
+                           const Config& config) -> void
 {
   const auto parry_count_effects =
       Core::try_get_effects_by_keyword(&attacker, config.timing_block().parry_stagger_count_keyword());
@@ -209,12 +212,17 @@ auto parry_stagger_handler(RE::Actor& attacker, RE::Actor& blocker, Core::Actors
        need_parry_count,
        actor_data.timing_parry_counter());
 
+  let stagger_event =
+      attacker.IsPlayerRef() ? config.timing_block().stagger_event_pc() : config.timing_block().stagger_event_npc();
+  let stagger_power =
+      attacker.IsPlayerRef() ? config.timing_block().stagger_power_pc() : config.timing_block().stagger_power_npc();
+
   if (actor_data.timing_parry_counter() >= need_parry_count) {
     cast_on_stagger(attacker, blocker, config);
     actor_data.timing_parry_counter(0);
     logger::debug("Parry stagger");
-    attacker.SetGraphVariableFloat("StaggerMagnitude", 5.f);
-    attacker.NotifyAnimationGraph("staggerStart");
+    attacker.SetGraphVariableFloat("StaggerMagnitude", stagger_power);
+    attacker.NotifyAnimationGraph(stagger_event.c_str());
   }
 }
 

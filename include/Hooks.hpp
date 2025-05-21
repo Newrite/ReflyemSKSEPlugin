@@ -1,4 +1,5 @@
 #pragma once
+#include "Core.hpp"
 
 namespace Adresses {
 static inline REL::Relocation<uintptr_t> on_weapon_hit{RELOCATION_ID(37673, 0)};
@@ -6,6 +7,11 @@ static inline REL::Relocation<uintptr_t> on_sneak_requirement_for_sneak_attack{R
 static inline REL::Relocation<uintptr_t> on_get_combat_style_for_offensive{RELOCATION_ID(49710, 0)};
 static inline REL::Relocation<uintptr_t> on_get_combat_style_for_offensive_2{RELOCATION_ID(49711, 0)};
 static inline REL::Relocation<uintptr_t> on_arrow_call_hit{RELOCATION_ID(43027, 0)};
+static inline REL::Relocation<uintptr_t> on_is_sneaking_update{RELOCATION_ID(39375, 0)};              // 0xBBA
+static inline REL::Relocation<uintptr_t> on_is_sneaking_update_check_flag01{RELOCATION_ID(39514, 0)}; // 0xDA
+static inline REL::Relocation<uintptr_t> on_is_sneaking_update_check_flag02{RELOCATION_ID(39514, 0)}; // 0xEF
+static inline REL::Relocation<uintptr_t> on_is_sneaking_detection_calc01{RELOCATION_ID(36758, 0)};    // 0x300
+static inline REL::Relocation<uintptr_t> on_is_sneaking_detection_calc02{RELOCATION_ID(36758, 0)};    // 0x83D
 static inline REL::Relocation<uintptr_t> on_is_blocked{RELOCATION_ID(42842, 0)};
 static inline REL::Relocation<uintptr_t> on_fill_actor_caster_enchant_data{RELOCATION_ID(33370, 0)};
 static inline REL::Relocation<uintptr_t> on_container_menu{RELOCATION_ID(268222, 0)};
@@ -14,8 +20,12 @@ static inline REL::Relocation<uintptr_t> on_equip_manager_equip_shout{RELOCATION
 static inline REL::Relocation<uintptr_t> on_send_hud_message{RELOCATION_ID(39535, 40621)};
 static inline REL::Relocation<uintptr_t> on_papyrus_equip_spell{RELOCATION_ID(227783, 0)};
 static inline REL::Relocation<uintptr_t> on_magic_hit_first{RELOCATION_ID(43015, 0)};
+static inline REL::Relocation<uintptr_t> on_number_of_enchantments{RELOCATION_ID(50532, 0)};
 static inline REL::Relocation<uintptr_t> on_magic_hit_two{RELOCATION_ID(42943, 0)};
 static inline REL::Relocation<uintptr_t> on_equip_spell_47{RELOCATION_ID(37939, 0)};
+static inline REL::Relocation<uintptr_t> on_perk_entry_crit_chance01{RELOCATION_ID(42844, 0)};
+static inline REL::Relocation<uintptr_t> on_perk_entry_crit_chance02{RELOCATION_ID(42844, 0)};
+static inline REL::Relocation<uintptr_t> on_actor_owner_crit_chance{RELOCATION_ID(42844, 0)};
 static inline REL::Relocation<uintptr_t> on_is_blocking_in_hit{RELOCATION_ID(42842, 0)};
 static inline REL::Relocation<uintptr_t> on_shout_handler_vtable{RELOCATION_ID(263067, 0)};
 static inline REL::Relocation<uintptr_t> on_equip_spell_C5{RELOCATION_ID(37950, 0)};
@@ -77,6 +87,7 @@ static inline REL::Relocation<uintptr_t> on_effect_added_npc{RELOCATION_ID(26140
 static inline REL::Relocation<uintptr_t> on_check_resistance_pc{RELOCATION_ID(261920, 0)};
 static inline REL::Relocation<uintptr_t> on_effect_added_pc{RELOCATION_ID(261920, 0)};
 static inline REL::Relocation<uintptr_t> on_drink_potion_pc{RELOCATION_ID(261916, 0)};
+static inline REL::Relocation<uintptr_t> on_reset_elapsed_effect_time{RELOCATION_ID(33785, 0)};
 static inline REL::Relocation<uintptr_t> on_set_current_spell_pc{RELOCATION_ID(37813, 0)};
 static inline REL::Relocation<uintptr_t> on_set_current_spell_block{RELOCATION_ID(41338, 0)};
 static inline REL::Relocation<uintptr_t> on_set_current_spell_FUN{RELOCATION_ID(48037, 0)};
@@ -115,6 +126,12 @@ static inline auto on_get_combat_style_for_offensive = RELOCATION_OFFSET(0xE, 0)
 static inline auto on_get_combat_style_for_offensive_2 = RELOCATION_OFFSET(0x4, 0);
 static inline auto on_allow_character_magicka_regen = RELOCATION_OFFSET(0x196, 0);
 static inline auto on_arrow_call_hit = RELOCATION_OFFSET(0x90, 0);
+static inline auto on_is_sneaking_update = RELOCATION_OFFSET(0xBBA, 0);
+static inline auto on_is_sneaking_update_check_flag01 = RELOCATION_OFFSET(0xDA, 0);
+static inline auto on_is_sneaking_update_check_flag02 = RELOCATION_OFFSET(0xEF, 0);
+static inline auto on_is_sneaking_detection_calc01 = RELOCATION_OFFSET(0x300, 0);
+static inline auto on_is_sneaking_detection_calc02 = RELOCATION_OFFSET(0x83D, 0);
+static inline auto on_number_of_enchantments = RELOCATION_OFFSET(0xA7, 0);
 static inline auto on_is_blocked = RELOCATION_OFFSET(0x2EA, 0);
 static inline auto on_shout_handler_process_button = RELOCATION_OFFSET(0x4, 0);
 static inline auto on_send_hud_message = RELOCATION_OFFSET(0x289, 0x280);
@@ -126,6 +143,9 @@ static inline auto on_equip_manager_equip_shout = RELOCATION_OFFSET(0x21, 0);
 static inline auto on_equip_spell_47 = RELOCATION_OFFSET(0x47, 0);
 static inline auto on_equip_spell_C5 = RELOCATION_OFFSET(0xC5, 0);
 static inline auto on_equip_spell_D7 = RELOCATION_OFFSET(0xD7, 0);
+static inline auto on_perk_entry_crit_chance01 = RELOCATION_OFFSET(0x2CE, 0);
+static inline auto on_perk_entry_crit_chance02 = RELOCATION_OFFSET(0x2EF, 0);
+static inline auto on_actor_owner_crit_chance = RELOCATION_OFFSET(0x2A6, 0);
 static inline auto on_get_attack_cost = RELOCATION_OFFSET(0x16E, 0);
 static inline auto on_standard_item_data_equip_state = RELOCATION_OFFSET(0x03, 0);
 static inline auto on_papyrus_equip_spell = RELOCATION_OFFSET(0x3A, 0);
@@ -168,6 +188,7 @@ static inline auto on_cost_for_cast_ff_during_cast = RELOCATION_OFFSET(0x1FB, 0)
 static inline auto on_melee_collision = RELOCATION_OFFSET(0x38B, 0);
 static inline auto on_main_update = RELOCATION_OFFSET(0x11f, 0);
 static inline auto on_adjust_active_effect = RELOCATION_OFFSET(0x4A3, 0);
+static inline auto on_reset_elapsed_effect_time = RELOCATION_OFFSET(0x72, 0);
 static inline auto on_animation_event_npc = RELOCATION_OFFSET(0x1, 0);
 static inline auto on_animation_event_pc = RELOCATION_OFFSET(0x1, 0);
 static inline auto on_get_bow_power = RELOCATION_OFFSET(0x604, 0);
@@ -871,6 +892,22 @@ struct OnActorIsOverEncumbered final
   static inline REL::Relocation<decltype(is_actor_on_mount)> is_actor_on_mount_;
 };
 
+struct OnNumberEnchantAllowed final
+{
+  public:
+  static auto install_hook(SKSE::Trampoline& trampoline) -> void
+  {
+    logger::info("start hook OnNumberEnchantAllowed"sv);
+    number_enchant_ = trampoline.write_branch<5>(
+        Adresses::on_number_of_enchantments.address() + Offsets::on_number_of_enchantments, number_enchant);
+    logger::info("finish hook OnNumberEnchantAllowed"sv);
+  }
+
+  private:
+  static auto number_enchant(RE::CraftingSubMenus::EnchantConstructMenu* menu) -> void;
+  static inline REL::Relocation<decltype(number_enchant)> number_enchant_;
+};
+
 struct OnGetCombatStyleForCheckOffensiveMult final
 {
   public:
@@ -999,6 +1036,40 @@ struct OnRegenerationPermanentValue final
   static inline REL::Relocation<decltype(calculate_regeneration_value_stamina)> calculate_regeneration_value_stamina_;
 };
 
+struct OnIsSneakingDetection final
+{
+  static auto install_hook(SKSE::Trampoline& trampoline) -> void
+  {
+    logger::info("start hook OnIsSneakingDetection"sv);
+    is_sneaking_update_ = trampoline.write_call<5>(
+        Adresses::on_is_sneaking_update.address() + Offsets::on_is_sneaking_update, is_sneaking_update);
+    is_sneaking_check_flag01_ = trampoline.write_call<5>(Adresses::on_is_sneaking_update_check_flag01.address() +
+                                                             Offsets::on_is_sneaking_update_check_flag01,
+                                                         is_sneaking_check_flag01);
+    is_sneaking_check_flag02_ = trampoline.write_call<5>(Adresses::on_is_sneaking_update_check_flag02.address() +
+                                                             Offsets::on_is_sneaking_update_check_flag02,
+                                                         is_sneaking_check_flag02);
+    is_sneaking_detection_calc01_ = trampoline.write_call<5>(Adresses::on_is_sneaking_detection_calc01.address() +
+                                                                 Offsets::on_is_sneaking_detection_calc01,
+                                                             is_sneaking_detection_calc01);
+    is_sneaking_detection_calc02_ = trampoline.write_call<5>(Adresses::on_is_sneaking_detection_calc02.address() +
+                                                                 Offsets::on_is_sneaking_detection_calc02,
+                                                             is_sneaking_detection_calc02);
+    logger::info("finish hook OnIsSneakingDetection"sv);
+  }
+
+  static auto is_sneaking_update(RE::Actor* actor) -> bool;
+  static auto is_sneaking_check_flag01(RE::ActorState* actor_state, std::uint16_t flag) -> bool; // check sneaking actor state - need return true 
+  static auto is_sneaking_check_flag02(RE::ActorState* actor_state, std::uint16_t flag) -> bool; // check swimming actor state - need return false
+  static auto is_sneaking_detection_calc01(RE::Actor* actor) -> bool;
+  static auto is_sneaking_detection_calc02(RE::Actor* actor) -> bool;
+  static inline REL::Relocation<decltype(is_sneaking_update)> is_sneaking_update_;
+  static inline REL::Relocation<decltype(is_sneaking_check_flag01)> is_sneaking_check_flag01_;
+  static inline REL::Relocation<decltype(is_sneaking_check_flag02)> is_sneaking_check_flag02_;
+  static inline REL::Relocation<decltype(is_sneaking_detection_calc01)> is_sneaking_detection_calc01_;
+  static inline REL::Relocation<decltype(is_sneaking_detection_calc02)> is_sneaking_detection_calc02_;
+};
+
 struct OnArrowCallHit final
 {
   static auto install_hook(SKSE::Trampoline& trampoline) -> void
@@ -1012,6 +1083,35 @@ struct OnArrowCallHit final
   static auto arrow_call_hit(RE::Character* attacker, RE::Actor* target, RE::Projectile* projectile, bool is_left)
       -> void;
   static inline REL::Relocation<decltype(arrow_call_hit)> arrow_call_hit_;
+};
+
+struct OnCalculateCritChancePerkEntry final
+{
+  static auto install_hook(SKSE::Trampoline& trampoline) -> void
+  {
+    logger::info("start hook OnCalculateCritChancePerkEntry"sv);
+    get_base_crit_chance_ = trampoline.write_call<5>(
+        Adresses::on_actor_owner_crit_chance.address() + Offsets::on_actor_owner_crit_chance, get_base_crit_chance);
+    logger::info("finish hook OnCalculateCritChancePerkEntry"sv);
+  }
+
+  static auto get_base_crit_chance(RE::ActorValueOwner* owner, RE::TESObjectWEAP* weapon, int a3) -> float;
+  static inline REL::Relocation<decltype(get_base_crit_chance)> get_base_crit_chance_;
+};
+
+struct OnEffectElapsedTimeReset final
+{
+  static auto install_hook(SKSE::Trampoline& trampoline) -> void
+  {
+    logger::info("start hook OnEffectElapsedTimeReset"sv);
+    effect_elapsed_time_reset_ = trampoline.write_call<5>(Adresses::on_reset_elapsed_effect_time.address() +
+                                                              Offsets::on_reset_elapsed_effect_time,
+                                                          effect_elapsed_time_reset);
+    logger::info("finish hook OnEffectElapsedTimeReset"sv);
+  }
+
+  static auto effect_elapsed_time_reset(RE::ActiveEffect* active_effect) -> void;
+  static inline REL::Relocation<decltype(effect_elapsed_time_reset)> effect_elapsed_time_reset_;
 };
 
 struct OnAttackIsBlocked final
@@ -1442,9 +1542,38 @@ struct OnEnchGetNoAbsorb final
   static inline REL::Relocation<decltype(get_no_absorb)> get_no_absorb_;
 };
 
+static auto get_av_call_count = 0;
+static constexpr int MAX_CALL_COUNT = 512;
 struct OnActorValueOwner final
 {
   public:
+  static auto get_map_av(const RE::ActorValue primary_av,
+                         RE::Actor* owner,
+                         std::map<RE::ActorValue, std::map<RE::ActorValue, float>>& map,
+                         const bool is_player) -> float
+  {
+    auto result = 0.f;
+    get_av_call_count = get_av_call_count + 1;
+    if (get_av_call_count > MAX_CALL_COUNT) {
+      loge("RECURSION GET_AV DETECTED");
+      return result;
+    }
+    for (auto [secondary_av, mult] : map[primary_av]) {
+      let is_stat_av = secondary_av == RE::ActorValue::kHealth || secondary_av == RE::ActorValue::kStamina ||
+                       secondary_av == RE::ActorValue::kMagicka;
+      if (map.contains(secondary_av)) {
+        let secondary_av_value = get_map_av(secondary_av, owner, map, is_player);
+        result = result + (secondary_av_value * mult);
+      } else {
+        let av_value = is_stat_av ? Reflyem::Core::get_actor_value_max(owner, secondary_av)
+                                  : (is_player ? get_actor_value_pc_(owner, secondary_av)
+                                               : get_actor_value_npc_(owner, secondary_av));
+        result = result + (av_value * mult);
+      }
+    }
+    return result;
+  }
+
   static auto install_hook() -> void
   {
     logger::info("start hook OnActorValueOwner"sv);

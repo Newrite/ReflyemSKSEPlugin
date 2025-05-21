@@ -843,4 +843,42 @@ auto ModifyKiEnergyCooldown(RE::StaticFunctionTag*, RE::Actor* actor, const floa
   modify_active_cooldowns(actor, amount, config);
 }
 
+// papyrus function
+// ReSharper disable once CppInconsistentNaming
+auto SpendKiEnergy(RE::StaticFunctionTag*, RE::Actor* actor, const int cost) -> void
+{
+
+
+  letr config = Config::get_singleton();
+
+  auto duration = get_duration(actor, config);
+
+  if (duration <= 0.f) {
+    duration = 5.f;
+  }
+
+  auto& ki_data = Core::ActorsCache::get_singleton().get_or_add(actor->formID).get();
+  let cap = get_cap_with_reservation(actor, config);
+
+  if (cap <= 0) {
+    return;
+  }
+
+  let availbe = get_available_ki_energy(actor, config);
+
+  if (availbe.slots >= cost) {
+    auto used_slots = 0;
+    for (auto& ki_energy_cooldown_timer : ki_data.ki_energy_cooldown_timers) {
+      if (ki_energy_cooldown_timer.duration <= 0.f) {
+        ki_energy_cooldown_timer = Core::ActorsCache::Data::BaseCooldown(duration, duration);
+        used_slots = used_slots + 1;
+        if (used_slots >= cost) {
+          return;
+        }
+      }
+    }
+  }
+  
+}
+
 } // namespace Reflyem::PotionsDrinkLimit

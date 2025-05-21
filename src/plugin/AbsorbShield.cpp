@@ -377,7 +377,7 @@ auto get_current_shield_value_degen_delay(const RE::Actor* actor) -> float
   return actor_data.absorb_shield_degen_delay();
 }
 
-auto set_new_shield_value_degen_delay(const RE::Actor* actor, const float new_delay) -> void
+auto set_new_shield_value_degen_delay(const RE::Actor* actor, const float new_delay, const bool papyrus_call = false) -> void
 {
   auto& actor_data = Core::ActorsCache::get_or_add_actor_data(actor->formID);
   letr config = Config::get_singleton();
@@ -385,7 +385,7 @@ auto set_new_shield_value_degen_delay(const RE::Actor* actor, const float new_de
   let absolute_max = config.absorb_shield().absolute_max_shield_value_degen_delay();
 
   let current_delay = actor_data.absorb_shield_degen_delay();
-  if (current_delay > new_delay) {
+  if (current_delay > new_delay && !papyrus_call) {
     return;
   }
 
@@ -549,6 +549,20 @@ auto get_drain_shield_percent(RE::Actor* actor) -> float
   return base_value + sum_effects;
 }
 
+auto get_drain_current_shield_percent(RE::Actor* actor) -> float
+{
+  if (!actor) {
+    return 0.f;
+  }
+
+  letr config = Config::get_singleton();
+  let base_value = config.absorb_shield().base_drain_shield_value_current_percent();
+  let effects = Core::try_get_effects_by_keyword(actor, config.absorb_shield().keyword_shield_value_drain_current_percent());
+  let sum_effects = Core::get_effects_magnitude_sum(effects).value_or(0.f);
+
+  return base_value + sum_effects;
+}
+
 auto get_drain_shield_mult(RE::Actor* actor) -> float
 {
   if (!actor) {
@@ -603,7 +617,7 @@ auto get_drain_shield_threshold_value(RE::Actor* actor) -> float
   let threshold_flat_value = get_drain_shield_threshold_flat(actor);
   let threshold_flat_value_from_stats = get_drain_shield_threshold_from_stats(actor);
   let threshold_mult = get_drain_shield_threshold_mult(actor);
-  let threshold_percent_value = max_shield_value * get_drain_shield_percent(actor);
+  let threshold_percent_value = max_shield_value * get_drain_shield_threshold_percent(actor);
 
   let result = (threshold_flat_value + threshold_flat_value_from_stats + threshold_percent_value) * threshold_mult;
 
@@ -680,7 +694,7 @@ auto calculate_drain_shield_value(RE::Actor* actor) -> float
 
   let drain_flat = get_drain_shield_flat(actor);
   let drain_percent = max_shield_value * get_drain_shield_percent(actor);
-  let drain_current_percent = current_shield * get_drain_shield_percent(actor);
+  let drain_current_percent = current_shield * get_drain_current_shield_percent(actor);
   let drain_mult = get_drain_shield_mult(actor);
 
   let result = (drain_flat + drain_percent + drain_current_percent) * drain_mult;
@@ -920,6 +934,9 @@ auto set_graph_values(RE::Actor* actor) -> void
   constexpr auto fAbsorbShieldDrainValue = "fAbsorbShieldDrainValue"sv;
   constexpr auto fAbsorbShieldPercent = "fAbsorbShieldPercent"sv;
   constexpr auto fAbsorbShieldCurrentDelay = "fAbsorbShieldCurrentDelay"sv;
+  constexpr auto fAbsorbShieldMaxWeaponDelay = "fAbsorbShieldMaxWeaponDelay"sv;
+  constexpr auto fAbsorbShieldMaxMagickaDelay = "fAbsorbShieldMaxMagickaDelay"sv;
+  constexpr auto fAbsorbShieldMaxCastCostDelay = "fAbsorbShieldMaxCastCostDelay"sv;
 
   constexpr auto bAbsorbShieldEnableWeapon = "bAbsorbShieldEnableWeapon"sv;
   constexpr auto bAbsorbShieldEnableMagick = "bAbsorbShieldEnableMagick"sv;
@@ -936,6 +953,9 @@ auto set_graph_values(RE::Actor* actor) -> void
   let drain_value = calculate_drain_shield_value(actor);
   let shield_percent = get_current_shield_value_as_percent(actor);
   let current_delay = get_current_shield_value_degen_delay(actor);
+  let weapon_delay = get_shield_value_degen_delay(actor, kAfterWeapon);
+  let magick_delay = get_shield_value_degen_delay(actor, kAfterMagick);
+  let cast_cost_delay = get_shield_value_degen_delay(actor, kAfterCastCost);
 
   let enable_weapon = is_enable_weapon_shield(actor);
   let enable_magick = is_enable_magick_shield(actor);
@@ -951,6 +971,9 @@ auto set_graph_values(RE::Actor* actor) -> void
   actor->SetGraphVariableFloat(fAbsorbShieldDrainValue, drain_value);
   actor->SetGraphVariableFloat(fAbsorbShieldPercent, shield_percent);
   actor->SetGraphVariableFloat(fAbsorbShieldCurrentDelay, current_delay);
+  actor->SetGraphVariableFloat(fAbsorbShieldMaxWeaponDelay, weapon_delay);
+  actor->SetGraphVariableFloat(fAbsorbShieldMaxMagickaDelay, magick_delay);
+  actor->SetGraphVariableFloat(fAbsorbShieldMaxCastCostDelay, cast_cost_delay);
 
   actor->SetGraphVariableBool(bAbsorbShieldEnableWeapon, enable_weapon);
   actor->SetGraphVariableBool(bAbsorbShieldEnableMagick, enable_magick);
@@ -1077,7 +1100,7 @@ auto GetAbsorbShieldValueDegenDelay(RE::StaticFunctionTag*, RE::Actor* actor) ->
 // ReSharper disable once CppInconsistentNaming
 auto SetAbsorbShieldValueDegenDelay(RE::StaticFunctionTag*, RE::Actor* actor, const float amount) -> void
 {
-  set_new_shield_value_degen_delay(actor, amount);
+  set_new_shield_value_degen_delay(actor, amount, true);
 }
 
 }

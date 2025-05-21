@@ -46,7 +46,7 @@ auto resist_value_after_penetration(RE::Actor* value_owner, const RE::ActorValue
       Core::get_effects_by_keyword(*value_owner, *config.resist_tweaks().penetration_kw());
 
   for (const auto active_effect : active_effects_with_keyword) {
-    if (Core::get_second_av(*active_effect) != resist_av) {
+    if (Core::get_second_av_from_effect(*active_effect) != resist_av) {
       continue;
     }
 
